@@ -95,3 +95,15 @@
 | Tampilan HP kecil | Tidak ada scroll horizontal | Viewport 320 px; lebar dokumen 320 px | PASS | Tombol langkah dan Simpan terlihat |
 | Syntax frontend | Tidak ada parse error | `node --check app.js` exit 0 | PASS | Lokal |
 | Live setelah login | Perubahan tampil dan simpan lama berjalan | Belum diuji | NOT TESTED | Verifikasi aset setelah GitHub Pages build; sesi Yasir tidak tersedia di browser uji |
+## Tema RAY dan klien aktif 0.5.0 — 2026-10-04
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Logo dan warna | Lambang RAY asli, biru/emas sesuai portal pembanding | Hash logo Keuangan dan RAY AI sama; aset lokal terverifikasi; pratinjau menampilkan biru/navy/emas | PASS | Browser lokal |
+| Syntax frontend | JavaScript dapat diparse | `node --check app.js` dan `node --check clients-preview.js` exit 0 | PASS | Lokal |
+| Pencarian dan filter | Klien contoh terpilah | Cari “Hotel” menghasilkan 1 kartu; filter jatuh tempo menghasilkan 2 kartu | PASS | Browser lokal |
+| Detail dan simulasi | Tahap/riwayat dan ringkasan diperbarui | Status contoh diubah menjadi Disetujui; riwayat bertambah dan jatuh tempo turun 2→1 | PASS | Memori browser |
+| Reload | Data contoh kembali ke awal | Riwayat kembali 1 catatan dan jatuh tempo 2 | PASS | Tidak ada penyimpanan |
+| Responsif HP | Tidak ada scroll horizontal halaman | Pada viewport 390 px dan 320 px, lebar dokumen sama dengan viewport | PASS | Browser lokal |
+| Integrasi klien nyata | Daftar klien/penawaran tersimpan dan terhubung | Belum diterapkan | NOT TESTED | Menunggu data klien tervalidasi dan persetujuan backend |
+| Publikasi Pages | Menu terlihat di `marketing.raykerja.cloud` | Belum dilakukan | NOT TESTED | Git push/deploy memerlukan persetujuan eksplisit |

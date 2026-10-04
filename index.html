@@ -3,23 +3,25 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#123b37">
+  <meta name="theme-color" content="#0a4fa6">
   <title>Marketing | PT Ray Mitra Perkasa</title>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="theme-ray.css">
   <script src="config.js"></script>
+  <script defer src="clients-preview.js"></script>
   <script type="module" src="app.js"></script>
 </head>
 <body>
-  <header><div class="brand"><span class="mark">R</span><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="logout" hidden>Keluar</button></header>
+  <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="logout" hidden>Keluar</button></header>
   <main>
-    <section id="login-panel" class="card login"><p class="eyebrow">AKSES TIM MARKETING</p><h1>Masuk ke Marketing</h1><p>Gunakan akun yang telah didaftarkan oleh admin.</p>
+    <section id="login-panel" class="card login"><img class="login-logo" src="logo-ray.png" alt="Lambang RAY"><p class="eyebrow">AKSES TIM MARKETING</p><h1>Masuk ke Marketing</h1><p>Gunakan akun yang telah didaftarkan oleh admin.</p>
       <form id="login-form"><label>Email<input id="email" type="email" autocomplete="username" required></label><label>Kata sandi<input id="password" type="password" autocomplete="current-password" required></label><button class="primary">Masuk</button></form><p id="login-status" role="status"></p>
     </section>
-    <section id="setup-panel" class="card login" hidden><p class="eyebrow">AKTIVASI AKUN</p><h1>Buat kata sandi</h1><p>Undangan diterima. Buat kata sandi untuk masuk berikutnya.</p><form id="setup-form"><label>Kata sandi baru<input id="new-password" type="password" minlength="12" autocomplete="new-password" required></label><button class="primary">Simpan kata sandi</button></form><p id="setup-status" role="status"></p></section>
+    <section id="setup-panel" class="card login" hidden><img class="login-logo" src="logo-ray.png" alt="Lambang RAY"><p class="eyebrow">AKTIVASI AKUN</p><h1>Buat kata sandi</h1><p>Undangan diterima. Buat kata sandi untuk masuk berikutnya.</p><form id="setup-form"><label>Kata sandi baru<input id="new-password" type="password" minlength="12" autocomplete="new-password" required></label><button class="primary">Simpan kata sandi</button></form><p id="setup-status" role="status"></p></section>
     <section id="workspace" hidden>
-      <div class="hero"><div><p class="eyebrow">WORKSPACE MARKETING</p><h1>Target pasar & kunjungan</h1><p>Riset calon klien, catat kunjungan lapangan, pantau tindak lanjut, dan siapkan surat bisnis.</p></div></div>
-      <nav class="tabs" aria-label="Menu Marketing"><button data-tab="visits" class="active">Kunjungan</button><button data-tab="progress">Progres & Pengingat</button><button data-tab="research">Cari Target Market</button><button data-tab="leads">Database Target</button><button data-tab="letters">Surat & Penawaran</button><button data-tab="settings">Pengaturan</button></nav>
+      <div class="hero"><div><p class="eyebrow">WORKSPACE MARKETING</p><h1>Target pasar, kunjungan & klien aktif</h1><p>Riset calon klien, catat kunjungan lapangan, pantau penawaran ulang, dan siapkan surat bisnis.</p></div></div>
+      <nav class="tabs" aria-label="Menu Marketing"><button data-tab="visits" class="active">Kunjungan</button><button data-tab="progress">Progres & Pengingat</button><button data-tab="research">Cari Target Market</button><button data-tab="leads">Database Target</button><button data-tab="clients">Klien Aktif & Penawaran Ulang</button><button data-tab="letters">Surat & Penawaran</button><button data-tab="settings">Pengaturan</button></nav>
       <section id="visits" class="panel">
         <button id="visit-reminder-banner" class="reminder-banner" type="button" hidden></button>
         <div class="visit-layout">
@@ -79,6 +81,15 @@
           <label>Link file proposal/penawaran di Drive <small>Opsional; gunakan file dari folder akun ini.</small><input id="progress-attachment" type="url" maxlength="500" placeholder="https://drive.google.com/file/d/..."></label>
           <button id="save-progress" class="primary" type="submit">Simpan perkembangan</button><p id="progress-status" role="status"></p>
         </form></div><div class="card"><h2>Riwayat target</h2><div id="progress-history" class="list"><p class="hint">Pilih target untuk melihat riwayatnya.</p></div></div></div>
+      </section>
+      <section id="clients" class="panel" hidden>
+        <div class="preview-note"><strong>PRATINJAU · DATA CONTOH</strong><span>Perusahaan, kontrak, dan penawaran di menu ini hanya contoh. Perubahan di sini berlaku sementara di browser dan belum tersimpan ke Supabase, Google Sheet, atau Drive.</span></div>
+        <div class="card"><div class="section-head"><div><p class="eyebrow">RELASI KLIEN</p><h2>Klien aktif & penawaran ulang</h2><p class="hint">Pantau masa kontrak, kebutuhan layanan tambahan, penawaran kembali, dan jadwal follow up dalam satu tempat.</p></div></div>
+          <div id="client-summary" class="progress-summary" aria-label="Ringkasan klien"></div>
+          <div class="client-filters"><label>Cari klien<input id="client-search" type="search" placeholder="Nama perusahaan atau layanan"></label><label>Status penawaran<select id="client-filter"><option value="all">Semua status</option><option value="due">Perlu follow up</option><option value="review">Perlu review</option><option value="proposal">Menyiapkan penawaran</option><option value="sent">Penawaran terkirim</option><option value="follow_up">Negosiasi / follow up</option><option value="won">Disetujui</option><option value="lost">Tidak lanjut</option></select></label></div>
+        </div>
+        <div class="client-layout"><div class="card"><h2>Perusahaan yang bekerja sama</h2><div id="client-list" class="list" aria-live="polite"></div></div>
+          <div class="card"><h2>Detail & tindak lanjut</h2><div id="client-detail"><p class="hint">Pilih klien untuk melihat detail dan riwayat penawaran.</p></div></div></div>
       </section>
       <section id="research" class="panel" hidden>
         <div class="columns"><div class="card"><h2>Riset target baru</h2><p class="hint">AI dan verifikasi internet dijalankan oleh workflow n8n. Proses dapat memerlukan beberapa menit.</p>

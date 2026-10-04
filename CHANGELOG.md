@@ -63,3 +63,11 @@ CHANGED: Form kunjungan menampilkan satu bagian aktif, sehingga halaman HP lebih
 FIXED: Validasi saat Simpan membuka bagian tersembunyi yang berisi kolom belum valid.
 REMOVED: Tidak ada field atau alur simpan yang dihapus.
 NOTES: Perubahan hanya HTML, CSS, dan JavaScript halaman; Supabase, Sheet, Edge Function, dan n8n tidak diubah.
+VERSION: 0.5.0 (tema RAY dan pratinjau klien aktif)
+DATE: 2026-10-04
+
+ADDED: Logo RAY asli, stylesheet tema biru/emas, menu pratinjau Klien Aktif & Penawaran Ulang, filter/tenggat, detail kontrak, dan simulasi riwayat; dokumentasi referensi CRM GitHub.
+CHANGED: Judul workspace mencakup klien aktif; warna status frontend mengikuti biru RAY.
+FIXED: Logo huruf R sementara diganti aset yang sama dengan portal Keuangan dan RAY AI.
+REMOVED: Tidak ada fungsi lama yang dihapus.
+NOTES: Hanya file lokal. Menu baru memakai tiga perusahaan fiktif di memori browser. Git push/Pages production dan backend tidak dilakukan tanpa persetujuan eksplisit sesuai kebijakan keselamatan RMP.

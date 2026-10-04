@@ -82,3 +82,10 @@ GitHub Pages build commit `91811aa` selesai dan tiga aset pratinjau dapat dibaca
 ## Menu langkah form kunjungan — 2026-10-04
 
 Atas permintaan pengguna, tiga bagian utama form kunjungan diganti menjadi tombol langkah huruf besar. Struktur fieldset dan field data lama dipertahankan. Satu panel aktif pada satu waktu; tombol lanjut tersedia dari langkah 1 dan 2. Form memakai validasi manual berbasis aturan HTML yang sudah ada agar klik Simpan membuka panel dengan kolom belum valid sebelum proses API. Pratinjau mock login di 320 px lulus navigasi, persistensi nilai saat pindah, validasi panel tersembunyi, dan pemeriksaan lebar halaman.
+## 2026-10-04 — Tema bersama dan menu klien aktif (0.5.0)
+
+1. Membaca source dan dokumentasi portal Marketing, lalu membandingkan UI login portal Keuangan dan RAY AI yang aktif. Domain AI aktif adalah `ai.ptraymitraperkasa.com`; `ai.pttraymitraperkasa.com` pada permintaan tidak terdaftar di DNS. Kedua portal aktif memakai logo RAY yang identik (SHA-256 `3b646c1afe4c94090d81a6935dbd3a57e1e247424afd5d37279e6a47a3326bdd`) dan warna dasar `#f3f6fb`, `#0e1b2e`, `#0a4fa6`.
+2. Meneliti dokumentasi/repository GitHub EspoCRM, Frappe CRM/ERPNext, Twenty, dan Odoo. Pola yang dipilih: pisahkan prospek dari akun klien, kaitkan semua penawaran dengan perusahaan, dan tampilkan aktivitas serta tenggat pada detail akun. Daftar tautan dan keputusan ada di `MARKETING_REFERENCES.md`.
+3. Menyalin aset logo publik yang sama, membuat `theme-ray.css` sebagai lapisan warna di atas CSS lama, serta menambahkan menu pratinjau `clients-preview.js`. Halaman lama dan API tidak diubah kecuali satu warna pesan status.
+4. Menguji syntax, pencarian, filter, simulasi tahap, reload, dan lebar 390/320 px di browser lokal. Semua pemeriksaan yang dijalankan lulus; lihat `TEST_RESULTS.md`.
+5. Kendala/keputusan: sumber perusahaan yang sudah bekerja sama belum ada di repo Marketing dan portal pembanding hanya dapat dilihat pada halaman login. Mengisi klien nyata dari tebakan berisiko salah, sehingga menu memakai data fiktif yang ditandai jelas. Penyimpanan/backend dan publikasi menunggu keputusan terpisah.

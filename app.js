@@ -24,7 +24,7 @@ let editingVisitId = null;
 let editingLetterId = null;
 
 function status(id, message, error = false) {
-  const el = $(id); el.textContent = message; el.style.color = error ? '#b73729' : '#17634e';
+  const el = $(id); el.textContent = message; el.style.color = error ? '#b73729' : '#0a4fa6';
 }
 function printDocument(html) {
   const area = $('#print-area');
