@@ -56,5 +56,5 @@
 | Kunjungan tanpa foto | Webhook → Sheet → callback | 1 baris berisi data & ID; status Supabase `synced`; retry memperbarui baris yang sama | PASS | Data uji dibersihkan |
 | Kunjungan dengan foto | Foto Supabase → Drive akun → Sheet → callback | Foto PNG berada di folder Yasir, URL sama di Sheet dan Supabase; status `synced` | PASS | Jalur webhook; foto uji Drive perlu diperiksa lagi saat cleanup |
 | Tampilan HP | Tanpa scroll mendatar, input dan tombol nyaman disentuh | Chrome 390×844 dan 320×640; lebar dokumen 320 pada viewport 320; tombol simpan terlihat | PASS | Pratinjau lokal tanpa login |
-| Tombol simpan dari akun Yasir | Supabase + Sheet + foto Drive dari browser | Belum diuji | NOT TESTED | Perlu aktivasi login dan sertifikat HTTPS valid |
-| HTTPS domain | Login & lokasi browser melalui HTTPS | Sertifikat GitHub Pages belum terbit pada pemeriksaan terakhir | PARTIAL | DNS GitHub health valid; lanjut diagnosis sertifikat |
+| Tombol simpan dari akun Yasir | Supabase + Sheet + foto Drive dari browser | Belum diuji | NOT TESTED | Akun undangan belum diaktivasi pengguna |
+| HTTPS domain | Login & lokasi browser melalui HTTPS | Sertifikat GitHub Pages approved, HTTPS enforced, GET 200; HTTP mengarah ke HTTPS | PASS | Custom domain dipasang ulang sesuai panduan GitHub |
