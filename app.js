@@ -93,14 +93,34 @@ function visitPayload() {
   result.nama_marketing = currentMember?.display_name || currentMember?.email || currentUser?.email || '';
   return result;
 }
+function openVisitStep(step) {
+  document.querySelectorAll('[data-visit-step]').forEach((button) => {
+    const active = button.dataset.visitStep === String(step);
+    button.classList.toggle('active', active);
+    button.setAttribute('aria-expanded', String(active));
+  });
+  document.querySelectorAll('[data-visit-step-panel]').forEach((panel) => {
+    panel.hidden = panel.dataset.visitStepPanel !== String(step);
+  });
+}
+$('#visit-step-nav').addEventListener('click', (event) => {
+  const step = event.target.closest('[data-visit-step]')?.dataset.visitStep;
+  if (step) openVisitStep(step);
+});
+$('#visit-form').addEventListener('click', (event) => {
+  const step = event.target.closest('[data-visit-next]')?.dataset.visitNext;
+  if (step) { openVisitStep(step); $('#visit-step-nav').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+});
 function resetVisitForm() {
   $('#visit-form').reset(); editingVisitId = null;
+  openVisitStep(1);
   $('#visit-form-title').textContent = 'Catat kunjungan'; $('#new-visit').hidden = true;
   $('#visit-form').elements.tanggal_realisasi_kunjungan.value = localToday();
   $('#photo-note').textContent = ''; status('#visit-status', '');
 }
 function fillVisitForm(row) {
   editingVisitId = row.id; $('#visit-form-title').textContent = 'Lengkapi kunjungan'; $('#new-visit').hidden = false;
+  openVisitStep(1);
   for (const name of visitFields) if ($('#visit-form').elements[name]) $('#visit-form').elements[name].value = row.data?.[name] || '';
   $('#visit-photo').value = '';
   $('#photo-note').textContent = row.photo_drive_url ? 'Foto tersimpan di Drive. Pilih foto baru hanya jika ingin menggantinya.' : row.photo_path ? 'Foto tersimpan; sinkronisasi Drive sedang diproses.' : '';
@@ -153,6 +173,17 @@ async function syncVisit(id) {
 $('#visit-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!client || !currentUser) return;
+  const firstInvalid = Array.from($('#visit-form').elements).find((field) => field.willValidate && !field.checkValidity());
+  if (firstInvalid) {
+    const step = firstInvalid.closest('[data-visit-step-panel]')?.dataset.visitStepPanel;
+    if (step) openVisitStep(step);
+    const details = firstInvalid.closest('details');
+    if (details) details.open = true;
+    firstInvalid.reportValidity();
+    firstInvalid.focus();
+    status('#visit-status', 'Lengkapi kolom yang ditandai sebelum menyimpan laporan.', true);
+    return;
+  }
   const button = $('#save-visit'); button.disabled = true;
   status('#visit-status', 'Menyimpan laporan…');
   try {

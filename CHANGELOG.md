@@ -54,3 +54,12 @@ CHANGED: `config.js` menetapkan `progressEnabled: false`, sehingga halaman tidak
 FIXED: Menu pratinjau dapat dinilai tanpa perubahan Supabase, Sheet, workflow n8n, atau Edge Function produksi.
 REMOVED: Tidak ada.
 NOTES: Sesuai arahan terbaru, hanya halaman GitHub Pages yang dipublikasikan pada tahap ini; backend progres tetap menunggu penilaian.
+
+VERSION: 0.4.2 (menu langkah kunjungan)
+DATE: 2026-10-04
+
+ADDED: Tiga tombol langkah berjudul huruf besar dan tombol lanjut pada langkah 1–2.
+CHANGED: Form kunjungan menampilkan satu bagian aktif, sehingga halaman HP lebih ringkas. Nilai isian tetap ada saat pindah langkah.
+FIXED: Validasi saat Simpan membuka bagian tersembunyi yang berisi kolom belum valid.
+REMOVED: Tidak ada field atau alur simpan yang dihapus.
+NOTES: Perubahan hanya HTML, CSS, dan JavaScript halaman; Supabase, Sheet, Edge Function, dan n8n tidak diubah.

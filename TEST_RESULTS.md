@@ -84,3 +84,14 @@
 | Tampilan HP | Tidak melebar | Viewport dan dokumen sama sama 390 px | PASS | Browser mock login |
 | Publikasi GitHub Pages | Pratinjau dapat diakses pada domain marketing | Build `91811aa` selesai; index, JS, dan config baru HTTP 200 di `marketing.raykerja.cloud` | PASS | Browser live berhenti di login; simulasi diuji dengan mock login lokal |
 | Isolasi backend produksi | Tabel progres belum dibuat dan workflow lama tetap sama | Dua tabel progres masih tidak ada; dua node n8n kunjungan sama dengan backup | PASS | Tidak ada write Supabase, Sheet, atau n8n pada tahap ini |
+
+## Menu langkah kunjungan 0.4.2 — 2026-10-04
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Navigasi langkah | Satu bagian terbuka pada satu waktu | Tombol 1 dan 2 berpindah panel; panel lain tertutup | PASS | Browser mock login |
+| Isian saat pindah | Nilai tidak hilang | Nama `PT Uji` tetap ada setelah langkah 2 dan kembali ke langkah 1 | PASS | Tidak ada write backend |
+| Validasi kolom wajib | Bagian tersembunyi dibuka saat Simpan | Respons target kosong membuat langkah 3 terbuka dan field fokus | PASS | Browser mock login |
+| Tampilan HP kecil | Tidak ada scroll horizontal | Viewport 320 px; lebar dokumen 320 px | PASS | Tombol langkah dan Simpan terlihat |
+| Syntax frontend | Tidak ada parse error | `node --check app.js` exit 0 | PASS | Lokal |
+| Live setelah login | Perubahan tampil dan simpan lama berjalan | Belum diuji | NOT TESTED | Verifikasi aset setelah GitHub Pages build; sesi Yasir tidak tersedia di browser uji |
