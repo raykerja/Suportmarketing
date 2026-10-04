@@ -116,6 +116,10 @@ Deno.serve(async (request) => {
     const email = String(data.email || '').trim().toLowerCase();
     const destination = folder(data.drive_folder_url);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !destination) return response({ error: 'Email atau folder Drive tidak valid' }, 400, origin);
+    const { data: currentMember, error: currentError } = await admin.from('marketing_members')
+      .select('user_id').eq('email', email).maybeSingle();
+    if (currentError) return response({ error: 'Akun gagal diperiksa' }, 500, origin);
+    if (currentMember) return response({ error: 'Akun sudah ada. Ubah foldernya pada daftar akun.' }, 409, origin);
     const { data: invited, error: inviteError } = await admin.auth.admin.generateLink({ type: 'invite', email,
       options: { redirectTo: 'https://marketing.raykerja.cloud' } });
     if (inviteError || !invited.user || !invited.properties?.action_link) return response({ error: 'Link aktivasi gagal dibuat: ' + (inviteError?.message || 'Unknown') }, 502, origin);
