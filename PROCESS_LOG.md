@@ -76,3 +76,5 @@ Catatan keputusan: belum ada credential Gmail/SMTP di n8n saat pemeriksaan. Peng
 ## Arahan pratinjau halaman — 2026-10-04
 
 Pengguna meminta halaman dulu untuk dinilai. Mode `progressEnabled: false` menampilkan data contoh yang dapat disimulasikan tanpa menulis ke backend. Uji browser dengan mock login: tahap Deal menutup pengingat; Follow up membuat jadwal baru; reload mengembalikan contoh awal. Form kunjungan dan menu lama tetap terpisah. Tahap ini hanya memerlukan publikasi GitHub Pages; migration dan n8n draft tidak dieksekusi.
+
+GitHub Pages build commit `91811aa` selesai dan tiga aset pratinjau dapat dibaca lewat HTTPS. Browser live menampilkan login karena sesi pengguna tidak tersedia dalam browser uji; alur setelah login diuji memakai mock lokal. Supabase tetap tanpa tabel progres dan dua node workflow kunjungan aktif sama dengan backup. Validasi link simulasi dibatasi ke `https://drive.google.com/` sebelum publikasi final.

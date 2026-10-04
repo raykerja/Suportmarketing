@@ -273,12 +273,18 @@ $('#progress-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = $('#save-progress'); button.disabled = true;
   if (progressPreviewMode) {
+    const attachment = $('#progress-attachment').value.trim();
+    if (attachment && !/^https:\/\/drive\.google\.com\//.test(attachment)) {
+      status('#progress-status', 'Gunakan link file Google Drive untuk simulasi.', true);
+      button.disabled = false;
+      return;
+    }
     const visitId = $('#progress-visit').value;
     const stage = $('#progress-stage').value;
     const nextFollowUp = ['deal','gagal'].includes(stage) ? null : $('#progress-next').value;
     const row = { id: crypto.randomUUID(), visit_id: visitId, stage, activity_date: $('#progress-date').value,
       note: $('#progress-note').value.trim(), next_follow_up: nextFollowUp,
-      attachment_url: $('#progress-attachment').value.trim() || null };
+      attachment_url: attachment || null };
     progressEvents.unshift(row);
     progressCache = [{ visit_id: visitId, stage, next_follow_up: nextFollowUp,
       last_note: row.note, last_activity_date: row.activity_date }];

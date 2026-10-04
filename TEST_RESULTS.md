@@ -82,4 +82,5 @@
 | Simulasi Follow up | Jadwal baru terlihat | Follow up 2026-10-05 muncul, jumlah akan datang menjadi 1 | PASS | Hanya memori browser |
 | Reload | Data simulasi hilang | Timeline kembali ke Penawaran contoh dan jatuh tempo hari ini | PASS | Tidak ada write backend |
 | Tampilan HP | Tidak melebar | Viewport dan dokumen sama sama 390 px | PASS | Browser mock login |
-| Publikasi GitHub Pages | Pratinjau dapat diakses pada domain marketing | Belum dilakukan saat penulisan | NOT TESTED | Verifikasi setelah push |
+| Publikasi GitHub Pages | Pratinjau dapat diakses pada domain marketing | Build `91811aa` selesai; index, JS, dan config baru HTTP 200 di `marketing.raykerja.cloud` | PASS | Browser live berhenti di login; simulasi diuji dengan mock login lokal |
+| Isolasi backend produksi | Tabel progres belum dibuat dan workflow lama tetap sama | Dua tabel progres masih tidak ada; dua node n8n kunjungan sama dengan backup | PASS | Tidak ada write Supabase, Sheet, atau n8n pada tahap ini |
