@@ -95,4 +95,4 @@ ADDED: Menu Review Hasil; generator Google Docs surat pengantar dan Google Sheet
 CHANGED: Workflow riset memakai SiRUP langsung dengan parameter dan header lengkap, tahun anggaran sebelumnya, pembacaan halaman detail paket, dan pencarian dokumen resmi sebagai cadangan. Generator RAB web memakai tahun dinamis dan payload JSON aman untuk nama target bertanda kutip.
 FIXED: Perpindahan dari Review Hasil ke penawaran menunggu opsi target selesai dimuat.
 REMOVED: Tidak ada fitur production yang dihapus.
-NOTES: Migration, workflow n8n, secret, dan Edge Function sudah diterapkan. Penawaran web lulus uji webhook sampai file Drive. Pembacaan SiRUP di server n8n masih HTTP 403 sehingga riset anggaran pemerintah belum lulus. Tombol setelah login belum diuji.
+NOTES: Migration, workflow n8n, secret, dan Edge Function sudah diterapkan. Penawaran web lulus uji webhook sampai file Drive. Pembacaan SiRUP di server n8n masih HTTP 403 sehingga riset anggaran pemerintah belum lulus. GitHub Pages telah diperbarui dan diverifikasi. Tombol setelah login belum diuji.

@@ -157,4 +157,5 @@
 | Proxy Supabase | SiRUP dapat dibaca dari Edge | Upstream juga HTTP 403; fungsi percobaan dihapus | FAIL | Tidak dipakai production |
 | Riset pemerintah ke Review/Drive | Profil dan bukti RUP tersimpan | Status riset `done`, lead dan file Drive tersimpan; pagu/personel `Belum ditemukan` | PARTIAL | Tidak boleh dianggap verifikasi anggaran |
 | Form HP Review/Penawaran | Tidak ada scroll horizontal | Pratinjau lokal 320/390 px sesuai viewport | PASS | Mock statis, belum sesi Auth nyata |
+| GitHub Pages live | Versi repository tampil di domain | Build `975e8a7` sukses; HTML/JS/CSS/config cocok byte per byte | PASS | HTTPS `marketing.raykerja.cloud` |
 | Tombol penawaran pada situs live | Aksi dari sesi Yasir hingga file | Belum diuji dengan sesi login Yasir | NOT TESTED | Backend webhook/Drive lulus |
