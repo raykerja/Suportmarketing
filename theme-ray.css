@@ -8,6 +8,10 @@
   --ray-gold: #d9b15e;
 }
 header { background: linear-gradient(115deg, #14204a, #071c45); }
+.brand { min-width: 0; }
+#open-settings { flex: none; background: #fff; color: var(--ray-blue); }
+#open-settings.active { border-color: var(--ray-gold); box-shadow: 0 0 0 2px var(--ray-gold); }
+.account-actions { margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--ray-line); }
 .brand-logo { display: block; width: 58px; height: 42px; object-fit: contain; flex: none; padding: 3px; border-radius: 8px; background: #fff; }
 .brand small { color: #dbe4f2; }
 .login-logo { display: block; width: 150px; height: 104px; object-fit: contain; margin: 0 auto 10px; }
@@ -60,3 +64,4 @@ th { color: var(--ray-muted); background: #f7faff; }
   .client-item-top { flex-wrap: wrap; }
 }
 @media (max-width: 390px) { .client-facts { grid-template-columns: 1fr; } }
+@media (max-width: 480px) { .brand small { display: none; } }

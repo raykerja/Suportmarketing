@@ -35,10 +35,17 @@ function printDocument(html) {
 }
 function showWorkspace(user) {
   currentUser = user;
-  if (!user) { $('#activation-link').value = ''; $('#activation-panel').hidden = true; }
+  if (!user) {
+    currentMember = null;
+    $('#activation-link').value = ''; $('#activation-panel').hidden = true;
+    $('#account-info').textContent = ''; $('#folder-url').value = '';
+    $('#member-list').textContent = ''; $('#admin-settings').hidden = true;
+    document.querySelector('[data-tab="visits"]').click();
+  }
   $('#login-panel').hidden = !!user;
   $('#setup-panel').hidden = !user || !invitePending;
   $('#workspace').hidden = !user || invitePending;
+  $('#open-settings').hidden = !user || invitePending;
   $('#logout').hidden = !user || invitePending;
   if (user && !invitePending) { loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadVisits(); loadProgress(); }
   else {
@@ -60,7 +67,11 @@ $('#login-form').addEventListener('submit', async (event) => {
   const { error } = await client.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#password').value });
   status('#login-status', error ? 'Email atau kata sandi tidak sesuai.' : '', !!error);
 });
-$('#logout').addEventListener('click', async () => { await client.auth.signOut(); showWorkspace(null); });
+$('#logout').addEventListener('click', async () => {
+  const { error } = await client.auth.signOut();
+  if (error) { status('#folder-status', 'Gagal keluar: ' + error.message, true); return; }
+  showWorkspace(null);
+});
 $('#setup-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!client || !currentUser) return;

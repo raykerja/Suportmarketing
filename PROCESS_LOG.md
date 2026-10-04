@@ -97,3 +97,9 @@ Atas permintaan pengguna, tiga bagian utama form kunjungan diganti menjadi tombo
 3. Menambahkan peta layanan dan status fitur di `PROJECT_HANDOFF.md`, petunjuk agen di `AGENTS.md`, serta instruksi impor template. Workflow production dibaca secara read-only: tiga alur Raykerja aktif; tidak ada perubahan pada n8n.
 4. Perbandingan awal menemukan draft kunjungan memuat dua parameter progres masa depan yang belum aktif. Template kunjungan lalu dibuat dari backup read-only workflow production sebelum progres, sehingga parameter, node, dan koneksi mewakili alur yang berjalan.
 5. Memeriksa JSON, struktur node dan koneksi, ketiadaan nilai secret lama dan credential binding, serta syntax. GitHub tetap tidak memuat data privat dan token. Hasil rinci dicatat di `TEST_RESULTS.md`.
+## 2026-10-04 — Navigasi Pengaturan (0.5.2)
+
+1. Memeriksa `AGENTS.md`, source, dan status repository. Header semula memiliki tombol `#logout`; menu Pengaturan berada di deretan tab utama.
+2. Memindahkan akses Pengaturan ke tombol header `data-tab="settings"` agar memakai handler navigasi yang sama. Tombol Keluar dipindah ke dalam panel Pengaturan. Saat keluar, detail akun dibersihkan dan tab kembali ke Kunjungan; kegagalan sign out ditampilkan.
+3. Menambah CSS kecil untuk header dan layar HP sempit. Tidak ada perubahan tabel, Edge Function, n8n, atau Google Workspace.
+4. Menguji dengan browser mock: buka Pengaturan, kembali ke Kunjungan, keluar, dan lebar 320 px. Semua lulus; hasil di `TEST_RESULTS.md`.

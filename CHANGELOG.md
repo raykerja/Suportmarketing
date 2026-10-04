@@ -79,3 +79,11 @@ CHANGED: README menunjuk panduan pindah platform.
 FIXED: Repository sekarang memuat definisi alur n8n yang aman untuk dibagikan, sehingga platform lain tidak bergantung pada draft privat di komputer asal.
 REMOVED: Tidak ada fitur production yang dihapus.
 NOTES: Template n8n belum siap diaktifkan sebelum credential, Sheet ID, dan secret dikonfigurasi di lingkungan tujuan. Tidak ada perubahan pada workflow n8n production, Supabase, atau data.
+VERSION: 0.5.2 (navigasi Pengaturan)
+DATE: 2026-10-04
+
+ADDED: Tombol Pengaturan di header dan tombol Keluar dari akun di dalam halaman Pengaturan.
+CHANGED: Pengaturan dikeluarkan dari tab menu utama; tombol Keluar tidak lagi berada di header.
+FIXED: Header HP 320 px tetap muat; data akun dan panel admin dibersihkan saat keluar, dan kegagalan sign out ditampilkan.
+REMOVED: Tidak ada fungsi Auth atau Pengaturan yang dihapus.
+NOTES: Perubahan lokal pada HTML, CSS, dan visibilitas tombol; Supabase, n8n, serta data tidak diubah.

@@ -119,3 +119,14 @@
 | Pemisahan credential | Tidak ada credential binding/secret asli pada template | Diperiksa terhadap draft privat dan placeholder | PASS | Pemeriksaan statis |
 | Koneksi platform baru | Dapat langsung memakai akun/integrasi | Dokumen dan template siap; otorisasi layanan belum dipindah | PARTIAL | Setiap platform butuh izin GitHub/Supabase/n8n/Google sendiri |
 | Workflow n8n production | Tidak berubah akibat pembuatan template | Hanya dibaca, tidak ada API write | PASS | Tiga workflow aktif |
+## Navigasi Pengaturan 0.5.2 — 2026-10-04
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Header → Pengaturan | Halaman Pengaturan terbuka | Panel Pengaturan tampil; panel Kunjungan tertutup; tab Pengaturan lama tidak ada | PASS | Browser mock login |
+| Kembali ke Kunjungan | Tab lain tetap berfungsi | Kunjungan tampil dan Pengaturan tertutup | PASS | Browser mock login |
+| Keluar dari akun | Sesi berakhir dan login tampil | Login tampil, workspace dan tombol header tersembunyi | PASS | Mock Auth; Supabase signOut asli belum diuji ulang |
+| Isolasi akun setelah keluar | Detail akun sebelumnya tidak tertinggal | Info akun kosong, panel admin tertutup, Kunjungan menjadi tab awal | PASS | Browser mock login |
+| HP 320 px | Tidak overlap/scroll horizontal | Lebar dokumen 320 px; tombol header dan tombol keluar terlihat | PASS | Browser lokal |
+| JavaScript | Tidak ada syntax/console error | `node --check app.js` lulus; console error kosong | PASS | Lokal |
+| Production | Perubahan terlihat di domain live | Belum dipublikasikan | NOT TESTED | Push/deploy membutuhkan persetujuan eksplisit |
