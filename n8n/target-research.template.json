@@ -1,0 +1,560 @@
+{
+  "name": "Raykerja Marketing - Target Research (Supabase)",
+  "nodes": [
+    {
+      "id": "237ac3d7-f8fe-4358-97be-7591f3007abd",
+      "name": "OpenAI Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1744,
+        -432
+      ],
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5",
+          "mode": "list",
+          "cachedResultName": "gpt-5"
+        },
+        "builtInTools": {},
+        "options": {
+          "reasoningEffort": "low"
+        }
+      }
+    },
+    {
+      "id": "73b110b5-4d00-4b26-8726-87dcf4d7fac6",
+      "name": "Target Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        -1520,
+        -432
+      ],
+      "parameters": {
+        "jsonSchemaExample": "{\"targets\":[{\"nama_target\":\"PT Contoh Sejahtera\",\"jenis\":\"Hotel\",\"direktur\":\"Belum ditemukan\",\"hrd\":\"Belum ditemukan\",\"hrga\":\"Belum ditemukan\",\"general_affairs\":\"Belum ditemukan\",\"procurement\":\"Belum ditemukan\",\"kepala_dinas\":\"Belum ditemukan\",\"sekretaris\":\"Belum ditemukan\",\"kabag_umum\":\"Belum ditemukan\",\"kasubbag_umum\":\"Belum ditemukan\",\"bagian_pengadaan\":\"Belum ditemukan\",\"procurement_ppk\":\"Belum ditemukan\",\"telepon\":\"024-1234567\",\"nomor_profesional\":\"Belum ditemukan\",\"email\":\"info@contoh.co.id\",\"website\":\"https://contoh.co.id\",\"alamat\":\"Jl. Contoh No. 1\",\"kecamatan\":\"Mijen\",\"kabupaten_kota\":\"Kota Semarang\",\"provinsi\":\"Jawa Tengah\",\"potensi_outsourcing\":\"Security, Cleaning Service\",\"procurement_paket\":\"Belum ditemukan\",\"procurement_jenis\":\"Belum ditemukan\",\"procurement_tahun\":\"Belum ditemukan\",\"procurement_pagu\":\"Belum ditemukan\",\"procurement_volume\":\"Belum ditemukan\",\"procurement_idrup\":\"Belum ditemukan\",\"satker\":\"Belum ditemukan\",\"procurement_link\":\"Belum ditemukan\",\"sumber\":\"https://contoh.co.id\",\"lead_score\":82}]}"
+      }
+    },
+    {
+      "id": "71b93919-afae-45cc-ad4d-b8297f618dee",
+      "name": "google_search",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        -1856,
+        -400
+      ],
+      "parameters": {
+        "toolDescription": "Cari informasi di Google (via Serper.dev) untuk sebuah query pencarian. Kembalikan judul, link, dan cuplikan (snippet) hasil pencarian organik. Gunakan untuk mencari nama perusahaan/instansi, alamat, telepon, website, email, nama pejabat, atau info SiRUP/INAPROC.",
+        "method": "POST",
+        "url": "https://google.serper.dev/search",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `Kata kunci pencarian Google yang spesifik dan efektif, contoh: 'PT Gumaya Tower Hotel Semarang alamat telepon website'`, 'string') }}"
+            },
+            {
+              "name": "gl",
+              "value": "id"
+            },
+            {
+              "name": "hl",
+              "value": "id"
+            },
+            {
+              "name": "num",
+              "value": "10"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "123ec240-dc27-41e3-bdde-f8006e2c475b",
+      "name": "sirup_search",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        -1456,
+        -304
+      ],
+      "parameters": {
+        "toolDescription": "Cari paket Rencana Umum Pengadaan (RUP) pemerintah dari database resmi SiRUP/INAPROC (LKPP) berdasarkan kata kunci (gabungkan jenis jasa + nama wilayah, contoh: \"jasa security Kota Semarang\" atau \"cleaning service Semarang\"). Hasil berisi: paket (nama paket), pagu (anggaran dalam Rupiah), jenisPengadaan, kldi (nama instansi/kementerian/lembaga), satuanKerja (unit kerja pelaksana/satker), lokasi, pemilihan (bulan/tahun pemilihan penyedia), dan id (gunakan untuk membentuk link: https://sirup.inaproc.id/sirup/rup/detailPaketPenyedia2020?idPaket=ID).",
+        "url": "https://sirup.inaproc.id/sirup/caripaketctr/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "tahunAnggaran",
+              "value": "2026"
+            },
+            {
+              "name": "draw",
+              "value": "1"
+            },
+            {
+              "name": "start",
+              "value": "0"
+            },
+            {
+              "name": "length",
+              "value": "15"
+            },
+            {
+              "name": "columns[1][data]",
+              "value": "paket"
+            },
+            {
+              "name": "columns[2][data]",
+              "value": "pagu"
+            },
+            {
+              "name": "columns[3][data]",
+              "value": "jenisPengadaan"
+            },
+            {
+              "name": "columns[4][data]",
+              "value": "isPDN"
+            },
+            {
+              "name": "columns[5][data]",
+              "value": "isUMK"
+            },
+            {
+              "name": "columns[6][data]",
+              "value": "metode"
+            },
+            {
+              "name": "columns[7][data]",
+              "value": "pemilihan"
+            },
+            {
+              "name": "columns[8][data]",
+              "value": "kldi"
+            },
+            {
+              "name": "columns[9][data]",
+              "value": "satuanKerja"
+            },
+            {
+              "name": "columns[10][data]",
+              "value": "lokasi"
+            },
+            {
+              "name": "columns[11][data]",
+              "value": "id"
+            },
+            {
+              "name": "order[0][column]",
+              "value": "5"
+            },
+            {
+              "name": "order[0][dir]",
+              "value": "DESC"
+            },
+            {
+              "name": "search[value]",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters17_Value', `K`, 'string') }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "63b7c522-f952-4f55-b2ac-1177a8584ae7",
+      "name": "Webhook RAY AI Target",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2128,
+        244
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "raykerja-target",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "ec169f50-3a7a-42d9-9540-e27aebde8786",
+      "name": "Siapkan Data Target (RAY AI)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1908,
+        244
+      ],
+      "parameters": {
+        "jsCode": "\nconst item = $input.first();\nconst secret = (item.json.headers || {})['x-ray-secret'];\nif (secret !== \"SET_MARKETING_WEBHOOK_SECRET\") {\n  throw new Error('Unauthorized: token rahasia tidak cocok');\n}\nconst b = item.json.body || {};\nconst now = new Date();\nconst pad = (n) => String(n).padStart(2, '0');\nconst ymd = now.getFullYear() + pad(now.getMonth() + 1) + pad(now.getDate());\nconst rnd3 = String(Math.floor(Math.random() * 900) + 100);\nconst research_id = /^RK-[0-9a-f-]{36}$/i.test(String(b.research_id || '')) ? String(b.research_id) : 'SEARCH-' + ymd + '-' + rnd3;\nconst tanggal = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());\n\nconst type = String(b.target_type || '').toUpperCase();\nconst kecamatan = String(b.kecamatan || '').trim();\nconst kabupaten_kota = String(b.kabupaten_kota || '').trim();\nconst provinsi = String(b.provinsi || '').trim();\nconst bidang = String(b.bidang || '').trim();\nconst jumlahNum = parseInt(b.jumlah, 10);\n\nconst missing = [];\nif (type !== 'SWASTA' && type !== 'PEMERINTAH') missing.push('target_type');\nif (!kecamatan) missing.push('kecamatan');\nif (!kabupaten_kota) missing.push('kabupaten_kota');\nif (!provinsi) missing.push('provinsi');\nif (type === 'SWASTA' && !bidang) missing.push('bidang');\nif (!Number.isFinite(jumlahNum) || jumlahNum <= 0) missing.push('jumlah');\n\nreturn [{\n  json: {\n    valid: missing.length === 0,\n    missing,\n    chat_id: 'rayai',\n    target_type: type,\n    kecamatan, kabupaten_kota, provinsi, bidang,\n    jumlah: Math.min(Number.isFinite(jumlahNum) ? jumlahNum : 0, 10),\n    research_id, tanggal, drive_folder_id: String(b.drive_folder_id || '')\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "d7cc6d4d-f3d0-4853-aee2-72366dfb8291",
+      "name": "If Target (RAY AI)",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1688,
+        244
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "70fd9943-31be-45e9-8f9d-be9484a2d067",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "764f1a9b-44c2-449a-8e15-73902f612beb",
+      "name": "Respond Error Target ke RAY AI",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1468,
+        344
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"ok\": false, \"error\": \"Data target tidak lengkap/valid.\", \"missing\": $json.missing} }}",
+        "options": {
+          "responseCode": 400
+        }
+      }
+    },
+    {
+      "id": "a471483e-088a-4cfe-9924-6913de4c9dbe",
+      "name": "AI Research + Verify + Score (RAY AI)",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "onError": "continueErrorOutput",
+      "position": [
+        -1468,
+        124
+      ],
+      "parameters": {
+        "promptType": "define",
+        "text": "=Cari target market untuk RMP.\nJenis target: {{ $('Siapkan Data Target (RAY AI)').first().json.target_type }}\nKecamatan: {{ $('Siapkan Data Target (RAY AI)').first().json.kecamatan }}\nKabupaten/Kota: {{ $('Siapkan Data Target (RAY AI)').first().json.kabupaten_kota }}\nProvinsi: {{ $('Siapkan Data Target (RAY AI)').first().json.provinsi }}\nBidang usaha (khusus SWASTA): {{ $('Siapkan Data Target (RAY AI)').first().json.bidang }}\nJumlah target yang diminta: {{ $('Siapkan Data Target (RAY AI)').first().json.jumlah }}\n\nHasilkan hingga {{ $('Siapkan Data Target (RAY AI)').first().json.jumlah }} target valid dan terverifikasi. Gunakan pencarian secara EFISIEN sesuai strategi di system message — jangan sampai kehabisan langkah. Isi \"Belum ditemukan\" hanya jika benar-benar tidak ada. Jangan mengarang. Jika langkah hampir habis, langsung kembalikan hasil yang sudah terkumpul.",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "Anda adalah AI Research + Verify + Lead Score untuk RMP Target Market Research (perusahaan penyedia jasa outsourcing: security, cleaning service, driver, pramubakti, administrasi, tenaga operasional).\n\nTUGAS:\n1) RESEARCH — temukan target nyata sesuai wilayah & jenis yang diminta, menggunakan tool pencarian \"google_search\".\n2) VERIFY — periksa nama organisasi, kesesuaian wilayah, alamat, website, nomor telepon, nama decision maker. Bandingkan beberapa sumber bila tersedia.\n3) LEAD SCORE — beri skor 0-100 sebagai tingkat potensi kebutuhan jasa outsourcing.\n\nSTANDAR PENCARIAN DECISION MAKER — SWASTA (wajib dicoba untuk setiap target swasta):\n- Direktur / Pimpinan Perusahaan\n- HRD (Human Resources Development)\n- HRGA (bagian HR & General Affairs, jika terpisah dari HRD)\n- General Affairs (jika tersedia terpisah)\n- Procurement / bagian Pengadaan perusahaan (jika tersedia)\nGunakan query gabungan seperti: \"NAMA PERUSAHAAN direktur HRD HRGA general affairs procurement kontak\". Jika struktur organisasi tidak terpublikasi, isi field terkait dengan \"Belum ditemukan\" — jangan menebak nama orang.\n\nSTANDAR PENCARIAN DECISION MAKER — PEMERINTAH (WAJIB dicari SEMUA jabatan berikut, bukan hanya satu):\n- Kepala Dinas / Kepala Instansi\n- Sekretaris Dinas (jika tersedia)\n- Kabag Umum\n- Kasubbag Umum\n- Bagian terkait pengadaan (nama bagian/divisi, field \"bagian_pengadaan\")\n- PPK / Pejabat Pengadaan (nama orang, field \"procurement_ppk\")\nPENTING: jabatan-jabatan ini saling berkaitan dan BIASANYA tercantum bersamaan di satu halaman yang sama (halaman \"Profil\"/\"Struktur Organisasi\"/\"Pejabat\" di website resmi instansi, atau di dokumen SK/Perwal struktur organisasi). Jangan berhenti setelah menemukan satu nama saja (misalnya hanya Kepala Dinas) — buka halaman struktur organisasi tersebut dan catat SEMUA jabatan yang tersedia di sana sekaligus dalam 1-2 kali kunjungan/pencarian menggunakan google_search. Gunakan query seperti: \"struktur organisasi NAMA INSTANSI kepala dinas sekretaris kabag umum kasubbag umum bagian pengadaan PPK\" dan juga coba \"pejabat NAMA INSTANSI\" atau kunjungi halaman \"profil\"/\"tentang kami\" di website resmi instansi.\n\nSTANDAR PENCARIAN PROCUREMENT PEMERINTAH — WAJIB gunakan tool \"sirup_search\" (BUKAN google_search) untuk setiap target PEMERINTAH:\nsirup_search adalah tool khusus yang mengambil data resmi dan real-time dari database SiRUP/INAPROC (LKPP) — JANGAN mencari data SiRUP lewat google_search karena situs SiRUP tidak terindeks Google. Panggil sirup_search dengan kata kunci gabungan jenis jasa outsourcing + nama wilayah, contoh: \"jasa security Kota Semarang\", \"cleaning service Semarang Tengah\", \"outsourcing Kota Semarang\". Jika hasil pertama kosong/tidak relevan, coba variasi lain: ganti jenis jasa (security/cleaning service/driver/pramubakti/tenaga administrasi/alih daya) atau perluas ke nama kabupaten/kota saja tanpa kecamatan.\nsirup_search mengembalikan array paket dengan field: paket (nama paket), pagu (angka Rupiah), jenisPengadaan, kldi (nama instansi/kementerian/lembaga), satuanKerja (unit kerja pelaksana), lokasi, pemilihan (bulan+tahun, contoh \"January 2026\"), dan id.\nPilih paket yang satuanKerja atau kldi-nya paling cocok dengan instansi target yang sedang diteliti, atau paket apapun yang lokasinya sesuai wilayah dan jenis jasanya relevan dengan outsourcing. Petakan ke field berikut:\n- procurement_paket = paket\n- procurement_jenis = jenisPengadaan\n- procurement_tahun = ambil dari kata \"pemilihan\" (contoh \"January 2026\" -> \"2026\")\n- procurement_pagu = pagu (format sebagai Rupiah, contoh \"Rp 312.811.059\")\n- satker = satuanKerja\n- procurement_idrup = id\n- procurement_link = \"https://sirup.inaproc.id/sirup/rup/detailPaketPenyedia2020?idPaket=\" + id\n- sumber = procurement_link yang sama\n- procurement_volume = \"Belum ditemukan\" kecuali Anda menemukan info jumlah/qty secara eksplisit\nJika sirup_search benar-benar tidak mengembalikan hasil relevan setelah beberapa variasi kata kunci, isi field procurement_* dengan \"Belum ditemukan\" — tetap lengkapi data instansi lain (kepala dinas, alamat, kontak, dll).\n\nBATASAN EFISIENSI WAKTU (PENTING):\n- Sistem ini dipakai lewat bot Telegram yang harus merespons dalam waktu wajar. Jangan menghabiskan seluruh 60 langkah hanya untuk jumlah target yang kecil.\n- Patokan kasar: total pemanggilan tool (google_search + sirup_search) sebaiknya sekitar (jumlah_target x 6) hingga (jumlah_target x 10), bukan lebih.\n- Untuk tiap target SWASTA: 1 query google_search untuk alamat+telepon+website+email, dan 1 query google_search untuk decision maker.\n- Untuk tiap target PEMERINTAH: 1 query google_search untuk alamat+telepon+website+email, 1-2 query google_search untuk struktur organisasi/semua decision maker sekaligus, dan 1 kali panggil sirup_search (maksimal 2 kali jika perlu variasi kata kunci).\n- Setelah jumlah target yang diminta tercapai dengan data minimal (nama, alamat, salah satu dari telepon/website/email), SEGERA hentikan pencarian dan kembalikan hasil — jangan terus memverifikasi ulang target yang sudah cukup lengkap.\n\nATURAN KETAT:\n- DILARANG mengarang / menebak data. Jika informasi tidak ditemukan setelah pencarian yang wajar, isi persis dengan teks: \"Belum ditemukan\".\n- Untuk nomor telepon, email, dan nama orang: hanya isi jika benar-benar ditemukan dari sumber; jika ragu tulis \"Belum ditemukan\". Nomor telepon harus lengkap dan valid.\n- Selalu sertakan \"sumber\" (URL / nama sumber) untuk setiap target yang datanya ditemukan.\n- Jangan menciptakan target palsu untuk memenuhi jumlah — namun usahakan mencapai jumlah yang diminta melalui variasi kata kunci sebelum menyerah.\n\nKembalikan HANYA data terstruktur sesuai schema (objek dengan array \"targets\").",
+          "maxIterations": 60
+        }
+      }
+    },
+    {
+      "id": "2987db60-f66f-499d-ae6f-443e771369fe",
+      "name": "Respond Timeout Target ke RAY AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1248,
+        244
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://ewicmiekwzmxkkokmpzf.supabase.co/functions/v1/marketing",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-RAY-Secret",
+              "value": "SET_MARKETING_WEBHOOK_SECRET"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\"ok\": false, \"research_id\": $('Siapkan Data Target (RAY AI)').first().json.research_id, \"error\": \"Riset terlalu lama atau terjadi kendala teknis. Coba lagi dengan JUMLAH lebih kecil atau wilayah lebih spesifik.\"} }}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "c2ebf6cb-3e54-424a-b42c-587eab5a7b46",
+      "name": "Susun Baris Target (RAY AI)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "alwaysOutputData": true,
+      "position": [
+        -1248,
+        44
+      ],
+      "parameters": {
+        "jsCode": "\nconst p = $('Siapkan Data Target (RAY AI)').first().json;\nconst agent = ($input.first().json && $input.first().json.output) || {};\nconst targets = Array.isArray(agent.targets) ? agent.targets : [];\nconst seed = Date.now() % 1000000;\nconst catOf = (s) => { const n = Number(s) || 0; return n >= 80 ? 'HOT' : n >= 60 ? 'WARM' : n >= 40 ? 'POTENTIAL' : 'LOW'; };\nconst NF = 'Belum ditemukan';\nconst phoneVal = (v) => { const s = val(v); return s === NF ? NF : String.fromCharCode(39) + s; };\nconst val = (v) => { const s = (v == null ? '' : String(v)).trim(); return s === '' ? NF : s; };\n\nif (!targets.length) { return [{json:{_no_target:true}}]; }\n\nreturn targets.map((t, idx) => {\n  const leadNum = String((seed + idx) % 1000000).padStart(6, '0');\n  const score = Number(t.lead_score) || 0;\n  return {\n    json: {\n      lead_id: 'RMP-2026-' + leadNum,\n      research_id: p.research_id,\n      tanggal: p.tanggal,\n      target_type: p.target_type,\n      nama_target: val(t.nama_target),\n      jenis: val(t.jenis),\n      bidang: p.target_type === 'SWASTA' ? p.bidang : 'Pemerintah',\n      kecamatan: val(t.kecamatan) === NF ? p.kecamatan : t.kecamatan,\n      kabupaten_kota: val(t.kabupaten_kota) === NF ? p.kabupaten_kota : t.kabupaten_kota,\n      provinsi: val(t.provinsi) === NF ? p.provinsi : t.provinsi,\n      alamat: val(t.alamat),\n      telepon: phoneVal(t.telepon),\n      nomor_profesional: phoneVal(t.nomor_profesional),\n      email: val(t.email),\n      website: val(t.website),\n      direktur: val(t.direktur),\n      hrd: val(t.hrd),\n      hrga: val(t.hrga),\n      general_affairs: val(t.general_affairs),\n      procurement: val(t.procurement),\n      kepala_dinas: val(t.kepala_dinas),\n      sekretaris: val(t.sekretaris),\n      kabag_umum: val(t.kabag_umum),\n      kasubbag_umum: val(t.kasubbag_umum),\n      bagian_pengadaan: val(t.bagian_pengadaan),\n      procurement_ppk: val(t.procurement_ppk),\n      potensi_outsourcing: val(t.potensi_outsourcing),\n      procurement_paket: val(t.procurement_paket),\n      procurement_jenis: val(t.procurement_jenis),\n      procurement_tahun: val(t.procurement_tahun),\n      procurement_pagu: val(t.procurement_pagu),\n      procurement_volume: val(t.procurement_volume),\n      procurement_idrup: val(t.procurement_idrup),\n      satker: val(t.satker),\n      procurement_link: val(t.procurement_link),\n      sumber: val(t.sumber),\n      lead_score: score,\n      kategori: catOf(score)\n    }\n  };\n});\n"
+      }
+    },
+    {
+      "id": "40a9835f-5318-4a6a-9040-bbf97cfc9431",
+      "name": "Susun Hasil untuk RAY AI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "alwaysOutputData": true,
+      "position": [
+        -1028,
+        124
+      ],
+      "parameters": {
+        "jsCode": "\nconst p = $('Siapkan Data Target (RAY AI)').first().json;\nconst rows = $input.all().map(i => i.json).filter(r => !r._no_target);\nreturn [{\n  json: {\n    ok: true,\n    research_id: p.research_id,\n    tanggal: p.tanggal,\n    target_type: p.target_type,\n    kecamatan: p.kecamatan,\n    kabupaten_kota: p.kabupaten_kota,\n    provinsi: p.provinsi,\n    bidang: p.bidang,\n    jumlah_diminta: p.jumlah,\n    jumlah_ditemukan: rows.length,\n    targets: rows\n  }\n}];\n"
+      }
+    },
+    {
+      "id": "82ad988b-a7e2-4fa8-bbea-97d1a470abbf",
+      "name": "Respond Target ke RAY AI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -588,
+        124
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://ewicmiekwzmxkkokmpzf.supabase.co/functions/v1/marketing",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-RAY-Secret",
+              "value": "SET_MARKETING_WEBHOOK_SECRET"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { ...$('Susun Hasil untuk RAY AI').first().json, drive_status: $json.id ? 'done' : 'error', drive_file_id: $json.id || null, drive_error: $json.error?.message || ($json.id ? null : 'Unggah Google Drive tidak menghasilkan file ID') } }}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "0b9667b7-bf7f-4138-8ed0-53d096b229ca",
+      "name": "Respond Diterima ke RAY AI",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -1588,
+        4
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"ok\": true, \"status\": \"processing\", \"research_id\": $json.research_id, \"tanggal\": $json.tanggal} }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "02f2dad0-598e-4584-9f9c-153b4ffa9c8e",
+      "name": "Simpan Riset ke Drive Akun",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -808,
+        124
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ JSON.stringify($('Susun Hasil untuk RAY AI').first().json, null, 2) }}",
+        "name": "={{ 'Riset_Target_' + $json.research_id + '.json' }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Siapkan Data Target (RAY AI)').first().json.drive_folder_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      }
+    }
+  ],
+  "connections": {
+    "OpenAI Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Research + Verify + Score (RAY AI)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Target Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Research + Verify + Score (RAY AI)",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "google_search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Research + Verify + Score (RAY AI)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "sirup_search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Research + Verify + Score (RAY AI)",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook RAY AI Target": {
+      "main": [
+        [
+          {
+            "node": "Siapkan Data Target (RAY AI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Siapkan Data Target (RAY AI)": {
+      "main": [
+        [
+          {
+            "node": "If Target (RAY AI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Target (RAY AI)": {
+      "main": [
+        [
+          {
+            "node": "Respond Diterima ke RAY AI",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error Target ke RAY AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Research + Verify + Score (RAY AI)": {
+      "main": [
+        [
+          {
+            "node": "Susun Baris Target (RAY AI)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Timeout Target ke RAY AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Susun Baris Target (RAY AI)": {
+      "main": [
+        [
+          {
+            "node": "Susun Hasil untuk RAY AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Susun Hasil untuk RAY AI": {
+      "main": [
+        [
+          {
+            "node": "Simpan Riset ke Drive Akun",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond Diterima ke RAY AI": {
+      "main": [
+        [
+          {
+            "node": "AI Research + Verify + Score (RAY AI)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simpan Riset ke Drive Akun": {
+      "main": [
+        [
+          {
+            "node": "Respond Target ke RAY AI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  }
+}

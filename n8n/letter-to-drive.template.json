@@ -1,0 +1,161 @@
+{
+  "name": "Raykerja Marketing - Surat ke Drive",
+  "nodes": [
+    {
+      "id": "9aff8351-a564-441d-acae-49b1ad25ad2d",
+      "name": "Webhook Surat Raykerja",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "raykerja-letter",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "148c6802-8042-4a0f-a01c-ef283b36190d",
+      "name": "Validasi Surat",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst secret = (input.headers || {})['x-ray-secret'];\nif (secret !== \"SET_MARKETING_WEBHOOK_SECRET\") throw new Error('Unauthorized');\nconst b = input.body || {};\nif (!/^[0-9a-f-]{36}$/i.test(String(b.letter_id || '')) ||\n    !/^[A-Za-z0-9_-]{10,200}$/.test(String(b.drive_folder_id || '')) ||\n    !String(b.body || '').trim()) throw new Error('Surat atau folder tidak valid');\nreturn [{json:{letter_id:String(b.letter_id), drive_folder_id:String(b.drive_folder_id),\n  subject:String(b.subject || ''), recipient:String(b.recipient || ''), body:String(b.body)}}];\n"
+      }
+    },
+    {
+      "id": "2af49b7b-7be7-40fc-ac85-b75367dd3782",
+      "name": "Respons Surat Diterima",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"ok\": true, \"status\": \"processing\", \"letter_id\": $json.letter_id} }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "0035a550-5cd7-406b-b33c-147ee6cb845d",
+      "name": "Simpan Surat ke Drive Akun",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        660,
+        0
+      ],
+      "onError": "continueRegularOutput",
+      "parameters": {
+        "operation": "createFromText",
+        "content": "={{ 'SURAT PENAWARAN\\n\\nPerihal: ' + $('Validasi Surat').first().json.subject + '\\nPenerima: ' + $('Validasi Surat').first().json.recipient + '\\n\\n' + $('Validasi Surat').first().json.body }}",
+        "name": "={{ 'Surat_Penawaran_' + $json.letter_id + '.txt' }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Validasi Surat').first().json.drive_folder_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "1596646c-d3c7-4346-b092-0172e7127a2a",
+      "name": "Callback Surat Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://ewicmiekwzmxkkokmpzf.supabase.co/functions/v1/marketing",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-RAY-Secret",
+              "value": "SET_MARKETING_WEBHOOK_SECRET"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {kind:'letter', letter_id:$('Validasi Surat').first().json.letter_id, drive_status:$json.id ? 'done' : 'error', drive_file_id:$json.id || null, drive_error:$json.error?.message || ($json.id ? null : 'Unggah Google Drive tidak menghasilkan file ID')} }}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Surat Raykerja": {
+      "main": [
+        [
+          {
+            "node": "Validasi Surat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validasi Surat": {
+      "main": [
+        [
+          {
+            "node": "Respons Surat Diterima",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respons Surat Diterima": {
+      "main": [
+        [
+          {
+            "node": "Simpan Surat ke Drive Akun",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simpan Surat ke Drive Akun": {
+      "main": [
+        [
+          {
+            "node": "Callback Surat Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  }
+}

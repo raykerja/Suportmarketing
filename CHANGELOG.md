@@ -71,3 +71,11 @@ CHANGED: Judul workspace mencakup klien aktif; warna status frontend mengikuti b
 FIXED: Logo huruf R sementara diganti aset yang sama dengan portal Keuangan dan RAY AI.
 REMOVED: Tidak ada fungsi lama yang dihapus.
 NOTES: Disetujui untuk production dan dipublikasikan ke GitHub Pages pada 2026-10-04. Menu baru memakai tiga perusahaan fiktif di memori browser. Backend klien aktif tidak diubah.
+VERSION: 0.5.1 (paket serah terima GitHub)
+DATE: 2026-10-04
+
+ADDED: `PROJECT_HANDOFF.md`, `AGENTS.md`, tiga template workflow n8n tanpa credential/secret, dan script ekspor template.
+CHANGED: README menunjuk panduan pindah platform.
+FIXED: Repository sekarang memuat definisi alur n8n yang aman untuk dibagikan, sehingga platform lain tidak bergantung pada draft privat di komputer asal.
+REMOVED: Tidak ada fitur production yang dihapus.
+NOTES: Template n8n belum siap diaktifkan sebelum credential, Sheet ID, dan secret dikonfigurasi di lingkungan tujuan. Tidak ada perubahan pada workflow n8n production, Supabase, atau data.

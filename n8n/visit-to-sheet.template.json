@@ -1,0 +1,640 @@
+{
+  "name": "Raykerja Marketing - Kunjungan ke DataMarketing",
+  "nodes": [
+    {
+      "id": "a54d8eae-b55c-48d9-af71-71db19bd5cc5",
+      "name": "Webhook Kunjungan Raykerja",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "raykerja-visit",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "d8fd8980-b9d4-4c43-8570-81d187e056c7",
+      "name": "Validasi Kunjungan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nif ((input.headers || {})['x-ray-secret'] !== \"SET_MARKETING_WEBHOOK_SECRET\") throw new Error('Unauthorized');\nconst b = input.body || {};\nif (!/^[0-9a-f-]{36}$/i.test(String(b.visit_id || '')) || !b.visit ||\n    (b.photo_url && !/^https:\\/\\/ewicmiekwzmxkkokmpzf\\.supabase\\.co\\//.test(String(b.photo_url))) ||\n    (b.drive_folder_id && !/^[A-Za-z0-9_-]{10,200}$/.test(String(b.drive_folder_id))))\n  throw new Error('Data laporan tidak valid');\nreturn [{json:{visit_id:String(b.visit_id), visit:b.visit, email:String(b.email || ''),\n  photo_url:b.photo_url || null, photo_drive_file_id:b.photo_drive_file_id || null,\n  drive_folder_id:b.drive_folder_id || null}}];\n"
+      }
+    },
+    {
+      "id": "ebb578f0-de0c-455e-a423-2102f4cf2ce3",
+      "name": "Respons Kunjungan Diterima",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {\"ok\": true, \"status\": \"processing\", \"visit_id\": $json.visit_id} }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "3dd45048-65b4-43c3-83c9-890d90516899",
+      "name": "Ada Foto Baru?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "70fd9943-31be-45e9-8f9d-be9484a2d067",
+              "leftValue": "={{ !!$json.photo_url }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "243441a3-7bbe-4679-b650-57150a1a964f",
+      "name": "Unduh Foto Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "onError": "continueRegularOutput",
+      "position": [
+        880,
+        -100
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Validasi Kunjungan').first().json.photo_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          },
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "1537ea21-a240-4b0d-b6b6-053466b260c6",
+      "name": "Unggah Foto ke Drive Akun",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "onError": "continueRegularOutput",
+      "position": [
+        1100,
+        -100
+      ],
+      "parameters": {
+        "operation": "upload",
+        "inputDataFieldName": "data",
+        "name": "={{ 'Kunjungan_' + $('Validasi Kunjungan').first().json.visit_id + '.' + ($binary.data?.fileExtension || 'jpg') }}",
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Validasi Kunjungan').first().json.drive_folder_id }}",
+          "mode": "id"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "927d04a8-fe69-4832-a6d1-6e25153fe5ff",
+      "name": "Susun Baris Sheet",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const base = $('Validasi Kunjungan').first().json;\nconst photoId = $json.id || base.photo_drive_file_id || null;\nconst photoUrl = photoId ? `https://drive.google.com/file/d/${photoId}/view` : '';\nconst v = base.visit;\nconst safe = (x) => { const s = String(x ?? '').trim(); return /^[=+@]/.test(s) ? \"'\" + s : s; };\nconst date = (x) => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(x || '')) ? String(x).split('-').reverse().join('/') : '';\nconst fields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_input',\n  'tanggal_janji_kunjungan','jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2',\n  'nomor_kontak_pic','foto_kunjungan','tanggal_realisasi_kunjungan','respon','tanggal_follow_up',\n  'catatan','titik_lokasi_laporan','koordinat_target','tanggal_follow_up_aktual',\n  'catatan_hasil_follow_up','nama_marketing','plotting_area','informasi_penting',\n  'tenaga_kerja_saat_ini','bagian_kerja_outsourcing','jumlah_calon_tenaga_kerja',\n  'petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing'];\nconst dates = new Set(['tanggal_input','tanggal_janji_kunjungan','tanggal_realisasi_kunjungan',\n  'tanggal_follow_up','tanggal_follow_up_aktual','tanggal_menghubungi']);\nconst sheet = {};\nfor (const key of fields) sheet[key] = key === 'foto_kunjungan' ? photoUrl : dates.has(key) ? date(v[key]) : safe(v[key]);\nreturn [{json:{visit_id:base.visit_id, photo_drive_file_id:photoId,\n  photo_expected:!!base.photo_url, sheet, email:base.email}}];\n"
+      }
+    },
+    {
+      "id": "7681081d-d427-46b4-a4ba-d78512d20081",
+      "name": "Sinkron DataMarketing",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "onError": "continueRegularOutput",
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "SET_SPREADSHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "DataMarketing",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "AREA": "={{ $json.sheet.area }}",
+            "  NAMA PERUSAHAAN": "={{ $json.sheet.nama_perusahaan }}",
+            "KATEGORI": "={{ $json.sheet.kategori }}",
+            "NOMOR KONTAK PERUSAHAAN": "={{ $json.sheet.nomor_kontak_perusahaan }}",
+            "ALAMAT": "={{ $json.sheet.alamat }}",
+            "TANGGAL INPUT": "={{ $json.sheet.tanggal_input }}",
+            "TANGGAL JANJI KUNJUNGAN": "={{ $json.sheet.tanggal_janji_kunjungan }}",
+            "JABATAN PIC": "={{ $json.sheet.jabatan_pic }}",
+            "NAMA PEJABAT PIC 1": "={{ $json.sheet.nama_pejabat_pic_1 }}",
+            "NAMA PEJABAT PIC 2": "={{ $json.sheet.nama_pejabat_pic_2 }}",
+            "NOMOR KONTAK PIC": "={{ $json.sheet.nomor_kontak_pic }}",
+            "FOTO KUNJUNGAN": "={{ $json.sheet.foto_kunjungan }}",
+            "TANGGAL REALISASI KUNJUNGAN": "={{ $json.sheet.tanggal_realisasi_kunjungan }}",
+            "RESPON": "={{ $json.sheet.respon }}",
+            "TANGGAL FOLLOW UP": "={{ $json.sheet.tanggal_follow_up }}",
+            "CATATAN": "={{ $json.sheet.catatan }}",
+            "TITIK LOKASI LAPORAN": "={{ $json.sheet.titik_lokasi_laporan }}",
+            "KOORDINAT TARGET": "={{ $json.sheet.koordinat_target }}",
+            "TANGGAL FOLLOW UP AKTUAL": "={{ $json.sheet.tanggal_follow_up_aktual }}",
+            "CATATAN HASIL FOLLOW UP": "={{ $json.sheet.catatan_hasil_follow_up }}",
+            " NAMA MARKETING": "={{ $json.sheet.nama_marketing }}",
+            "PLOTTING AREA": "={{ $json.sheet.plotting_area }}",
+            "INFORMASI PENTING": "={{ $json.sheet.informasi_penting }}",
+            "TENAGA KERJA SAAT INI": "={{ $json.sheet.tenaga_kerja_saat_ini }}",
+            "BAGIAN KERJA OUTSOURCING": "={{ $json.sheet.bagian_kerja_outsourcing }}",
+            "JUMLAH CALON TENAGA KERJA": "={{ $json.sheet.jumlah_calon_tenaga_kerja }}",
+            "PETUGAS TELEMARKETING": "={{ $json.sheet.petugas_telemarketing }}",
+            "STATUS TELEMARKETING": "={{ $json.sheet.status_telemarketing }}",
+            "TANGGAL MENGHUBUNGI": "={{ $json.sheet.tanggal_menghubungi }}",
+            "CATATAN TELEMARKETING": "={{ $json.sheet.catatan_telemarketing }}",
+            "ID LAPORAN": "={{ $json.visit_id }}",
+            "EMAIL MARKETING": "={{ $json.email }}"
+          },
+          "matchingColumns": [
+            "ID LAPORAN"
+          ],
+          "schema": [
+            {
+              "id": "AREA",
+              "displayName": "AREA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "  NAMA PERUSAHAAN",
+              "displayName": "  NAMA PERUSAHAAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "KATEGORI",
+              "displayName": "KATEGORI",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NOMOR KONTAK PERUSAHAAN",
+              "displayName": "NOMOR KONTAK PERUSAHAAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ALAMAT",
+              "displayName": "ALAMAT",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TANGGAL INPUT",
+              "displayName": "TANGGAL INPUT",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TANGGAL JANJI KUNJUNGAN",
+              "displayName": "TANGGAL JANJI KUNJUNGAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "JABATAN PIC",
+              "displayName": "JABATAN PIC",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NAMA PEJABAT PIC 1",
+              "displayName": "NAMA PEJABAT PIC 1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NAMA PEJABAT PIC 2",
+              "displayName": "NAMA PEJABAT PIC 2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NOMOR KONTAK PIC",
+              "displayName": "NOMOR KONTAK PIC",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "FOTO KUNJUNGAN",
+              "displayName": "FOTO KUNJUNGAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TANGGAL REALISASI KUNJUNGAN",
+              "displayName": "TANGGAL REALISASI KUNJUNGAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RESPON",
+              "displayName": "RESPON",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TANGGAL FOLLOW UP",
+              "displayName": "TANGGAL FOLLOW UP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CATATAN",
+              "displayName": "CATATAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TITIK LOKASI LAPORAN",
+              "displayName": "TITIK LOKASI LAPORAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "KOORDINAT TARGET",
+              "displayName": "KOORDINAT TARGET",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TANGGAL FOLLOW UP AKTUAL",
+              "displayName": "TANGGAL FOLLOW UP AKTUAL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CATATAN HASIL FOLLOW UP",
+              "displayName": "CATATAN HASIL FOLLOW UP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": " NAMA MARKETING",
+              "displayName": " NAMA MARKETING",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PLOTTING AREA",
+              "displayName": "PLOTTING AREA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "INFORMASI PENTING",
+              "displayName": "INFORMASI PENTING",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TENAGA KERJA SAAT INI",
+              "displayName": "TENAGA KERJA SAAT INI",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "BAGIAN KERJA OUTSOURCING",
+              "displayName": "BAGIAN KERJA OUTSOURCING",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "JUMLAH CALON TENAGA KERJA",
+              "displayName": "JUMLAH CALON TENAGA KERJA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "PETUGAS TELEMARKETING",
+              "displayName": "PETUGAS TELEMARKETING",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "STATUS TELEMARKETING",
+              "displayName": "STATUS TELEMARKETING",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TANGGAL MENGHUBUNGI",
+              "displayName": "TANGGAL MENGHUBUNGI",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "CATATAN TELEMARKETING",
+              "displayName": "CATATAN TELEMARKETING",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID LAPORAN",
+              "displayName": "ID LAPORAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "EMAIL MARKETING",
+              "displayName": "EMAIL MARKETING",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "cellFormat": "USER_ENTERED"
+        }
+      }
+    },
+    {
+      "id": "61be14e6-9138-4eed-a6f0-b2700a4b6909",
+      "name": "Callback Kunjungan Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://ewicmiekwzmxkkokmpzf.supabase.co/functions/v1/marketing",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-RAY-Secret",
+              "value": "SET_MARKETING_WEBHOOK_SECRET"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {kind:'visit', visit_id:$('Validasi Kunjungan').first().json.visit_id, ok:$json['ID LAPORAN']===$('Validasi Kunjungan').first().json.visit_id && (!$('Susun Baris Sheet').first().json.photo_expected || !!$('Susun Baris Sheet').first().json.photo_drive_file_id), sheet_row:$json.row_number || null, photo_drive_file_id:$('Susun Baris Sheet').first().json.photo_drive_file_id, error:$json.error?.message || ($json['ID LAPORAN'] ? 'Foto gagal disimpan di Drive' : 'Sheet tidak mengembalikan ID laporan')} }}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Kunjungan Raykerja": {
+      "main": [
+        [
+          {
+            "node": "Validasi Kunjungan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validasi Kunjungan": {
+      "main": [
+        [
+          {
+            "node": "Respons Kunjungan Diterima",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respons Kunjungan Diterima": {
+      "main": [
+        [
+          {
+            "node": "Ada Foto Baru?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ada Foto Baru?": {
+      "main": [
+        [
+          {
+            "node": "Unduh Foto Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Susun Baris Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unduh Foto Supabase": {
+      "main": [
+        [
+          {
+            "node": "Unggah Foto ke Drive Akun",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unggah Foto ke Drive Akun": {
+      "main": [
+        [
+          {
+            "node": "Susun Baris Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Susun Baris Sheet": {
+      "main": [
+        [
+          {
+            "node": "Sinkron DataMarketing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sinkron DataMarketing": {
+      "main": [
+        [
+          {
+            "node": "Callback Kunjungan Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  }
+}

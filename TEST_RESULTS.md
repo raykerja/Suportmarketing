@@ -109,3 +109,13 @@
 | Publikasi Pages | Source dan aset baru tersedia di `marketing.raykerja.cloud` | GitHub Pages build commit `c8f75d5` sukses; HTML, CSS, JS, logo HTTP 200 dan marker konten cocok | PASS | Push disetujui pengguna |
 | Login production | Logo dan warna benar, tanpa error browser | Logo 520 px termuat; latar `rgb(243,246,251)`, tombol `rgb(10,79,166)`; console error kosong | PASS | Browser live |
 | Menu setelah login nyata | Klien dapat membuka menu baru | Belum diuji dengan sesi akun Yasir | NOT TESTED | Pratinjau lokal dan aset live telah diuji |
+## Paket portabilitas 0.5.1 — 2026-10-04
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Source GitHub | Source lokal dan `main` remote sama sebelum perubahan | Kedua HEAD `9b456be` | PASS | Sebelum paket handoff |
+| Template n8n | JSON valid, node/koneksi ada | Riset 15 node, surat 5, kunjungan 9; semua valid JSON | PASS | Belum diimpor ulang |
+| Kesesuaian dengan n8n aktif | Template mewakili tiga workflow production | Nama/tipe node dan koneksi identik; parameter kunjungan disesuaikan dengan backup production | PASS | Verifikasi read-only; secret/credential sengaja berbeda |
+| Pemisahan credential | Tidak ada credential binding/secret asli pada template | Diperiksa terhadap draft privat dan placeholder | PASS | Pemeriksaan statis |
+| Koneksi platform baru | Dapat langsung memakai akun/integrasi | Dokumen dan template siap; otorisasi layanan belum dipindah | PARTIAL | Setiap platform butuh izin GitHub/Supabase/n8n/Google sendiri |
+| Workflow n8n production | Tidak berubah akibat pembuatan template | Hanya dibaca, tidak ada API write | PASS | Tiga workflow aktif |

@@ -2,6 +2,8 @@
 
 Portal Marketing PT Ray Mitra Perkasa untuk `marketing.raykerja.cloud`. Source halaman berada di GitHub Pages; data terstruktur dan pengaturan akun berada di Supabase. Hasil riset dan surat yang dibuat pengguna disalin ke folder Google Drive milik pengguna melalui n8n.
 
+**Pindah ke platform coding lain:** mulai dari [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md). Repository ini memuat source, migration, Edge Function, template workflow n8n yang telah dibersihkan, dan riwayat pekerjaan. Credential serta data privat harus disambungkan terpisah.
+
 ## Struktur
 
 | File | Fungsi |
@@ -10,6 +12,8 @@ Portal Marketing PT Ray Mitra Perkasa untuk `marketing.raykerja.cloud`. Source h
 | `logo-ray.png`, `theme-ray.css` | Lambang RAY dan warna yang disamakan dengan portal Keuangan dan RAY AI |
 | `clients-preview.js` | Pratinjau interaktif klien aktif dan penawaran ulang; hanya data contoh di memori browser |
 | `MARKETING_REFERENCES.md` | Hasil kajian referensi CRM GitHub dan rancangan tahap berikutnya |
+| `PROJECT_HANDOFF.md`, `AGENTS.md` | Peta integrasi dan petunjuk bagi platform/agen pengembang lain |
+| `n8n/*.template.json` | Template tiga workflow n8n tanpa credential dan secret; baca `n8n/README.md` sebelum impor |
 | `config.js` | URL dan publishable key Supabase untuk browser |
 | `supabase/migrations/20261004_marketing.sql` | Tabel, indeks, status Drive, RLS per akun |
 | `supabase/migrations/20261004_marketing_visits.sql` | Tabel kunjungan, RLS, bucket foto privat |
