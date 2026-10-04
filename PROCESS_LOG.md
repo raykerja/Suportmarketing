@@ -112,3 +112,12 @@ Atas permintaan pengguna, tiga bagian utama form kunjungan diganti menjadi tombo
 4. Menyiapkan jalur cadangan pencarian ekspor RUP/SiRUP pada situs instansi resmi `go.id` lewat credential Serper yang sudah dipakai workflow. Prompt membedakan tahun anggaran dari bulan pemilihan, pagu dari realisasi, serta jumlah tenaga terverifikasi dari perkiraan. Field bukti baru diteruskan ke hasil JSON/Supabase dan ditampilkan pada Review Hasil.
 5. Perbaikan lokal: tahun label UMK RAB dinamis, payload Google Sheets berupa ekspresi objek agar nama target bertanda kutip aman, dan pilihan target dari Review menunggu pemuatan data.
 6. Tidak ada penulisan ke n8n/Supabase/GitHub production. Uji end-to-end dan perbandingan terhadap dokumen RUP resmi masih diperlukan sebelum aktivasi.
+
+## 2026-10-04 — Eksekusi penawaran web dan diagnosis SiRUP
+
+1. Membuat backup skema, Edge Function, dan workflow aktif sebelum mengubah produksi. Migration `20261004_marketing_offers.sql` diterapkan; 58 lead lama tetap ada. RLS dan grant tabel baru diperiksa.
+2. Membuat dan mengaktifkan workflow web penawaran `R7kXoTLBk8X0d4cy`; generator Telegram lama tidak diubah. Menambah secret webhook dan deploy Edge Function `marketing` versi 7.
+3. Uji internal akun Yasir menghasilkan satu record penawaran `done`, satu Google Docs dan satu Google Sheets di folder akun yang ditentukan. Isi surat, UMK, rumus RAB, dan PPN 12% diperiksa.
+4. Memperbarui workflow riset `NxD7a2bT0G29RZOE` untuk TA sebelumnya, pembacaan SiRUP langsung, halaman detail, dan cadangan pencarian PDF resmi. Tiga riset pemerintah selesai secara teknis dan tersimpan, tetapi tidak memuat pagu.
+5. Koreksi diagnosis sebelumnya: endpoint SiRUP memberi JSON bila parameter DataTables dan header lengkap. Dari komputer lokal ditemukan paket ID 53701725 TA 2025 dengan pagu Rp231.504.000 dan volume `4 Orang x 12 Bulan` pada halaman detail resmi. Dari server n8n, pemanggilan `sirup_search` tetap HTTP 403; Supabase Edge juga 403. Fungsi proxy percobaan dihapus. Akar masalah yang teramati ialah pembatasan akses berdasarkan lingkungan/jaringan server, sedangkan penyebab spesifik kebijakan SiRUP belum dapat dipastikan.
+6. Data pemerintah yang belum memiliki bukti tetap `Belum ditemukan` / `Belum terverifikasi`; tidak ada angka pagu atau jumlah tenaga yang direkayasa. Perbaikan pembacaan SiRUP production masih terbuka.

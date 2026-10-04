@@ -144,3 +144,17 @@
 | UI HP Review/Penawaran | Form dan kartu tidak meluber pada 320/390 px | Belum ada uji visual dengan sesi login/mock untuk perubahan ini | NOT TESTED | CSS mobile disiapkan, perlu pratinjau browser |
 | End-to-end riset pemerintah | Dokumen resmi → n8n → Supabase → Review → Drive | Belum dijalankan | NOT TESTED | Workflow aktif belum diubah dan perlu persetujuan production |
 | End-to-end penawaran | Review → webhook → Docs/RAB → folder akun → Supabase | Belum dijalankan | NOT TESTED | Migration, Edge, workflow web, dan frontend belum diterapkan |
+
+## Uji produksi penawaran web dan SiRUP — 2026-10-04
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Migration penawaran | Tabel/RLS ada dan data lama utuh | `marketing_offers` ada; 58 lead lama tetap; browser SELECT boleh, INSERT/UPDATE ditolak | PASS | Supabase production |
+| Penawaran web internal | Record `done`, Docs/RAB masuk folder Yasir | Kedua file ditemukan dalam folder `1yPPnp-ZmM6xaRdAgQuS0mke404K1vjTJ`; status `done` | PASS | Webhook n8n dipanggil langsung; tombol browser login belum diuji |
+| Konten dokumen | UMK, nomor, nama target, rumus, PPN benar | UMK Rp3.701.709; nomor surat terisi; 21 rumus; PPN 12% di baris 34 | PASS | Data uji internal, belum dikirim ke klien |
+| SiRUP lokal | Paket TA 2025 terbaca | Paket 53701725, pagu Rp231.504.000, `4 Orang x 12 Bulan` dari detail resmi | PASS | Hanya koneksi komputer lokal |
+| SiRUP server n8n | Tool memberi JSON paket | Tiga panggilan `sirup_search` pada eksekusi 1268 HTTP 403 | FAIL | Perlu jalur jaringan resmi yang diizinkan |
+| Proxy Supabase | SiRUP dapat dibaca dari Edge | Upstream juga HTTP 403; fungsi percobaan dihapus | FAIL | Tidak dipakai production |
+| Riset pemerintah ke Review/Drive | Profil dan bukti RUP tersimpan | Status riset `done`, lead dan file Drive tersimpan; pagu/personel `Belum ditemukan` | PARTIAL | Tidak boleh dianggap verifikasi anggaran |
+| Form HP Review/Penawaran | Tidak ada scroll horizontal | Pratinjau lokal 320/390 px sesuai viewport | PASS | Mock statis, belum sesi Auth nyata |
+| Tombol penawaran pada situs live | Aksi dari sesi Yasir hingga file | Belum diuji dengan sesi login Yasir | NOT TESTED | Backend webhook/Drive lulus |
