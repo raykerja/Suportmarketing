@@ -27,3 +27,17 @@
 | GitHub Pages subdomain | HTTPS marketing.raykerja.cloud | Belum dipublikasikan | NOT TESTED | Apex tidak akan diubah |
 | Syntax Edge Function TypeScript | Dapat diparse dan dibundle | `esbuild --bundle` exit 0 | PASS | Belum memverifikasi koneksi Supabase/n8n |
 | Dry run Auth/admin | Tidak ada mutation | Site URL rencana subdomain, undangan dan keanggotaan dry run | PASS | Belum ada email terkirim |
+
+## Verifikasi produksi 2026-10-04
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Migration Supabase | Empat tabel dan RLS aktif | 4 tabel, seluruh RLS aktif | PASS | Query sistem katalog |
+| Impor data target | 57 baris unik | 57 baris dan 57 `source_row` unik | PASS | Database tujuan |
+| Auth admin dan surat historis | Satu akun admin, satu surat | 1 user diundang, 1 membership admin, 1 surat | PASS | Pengguna belum aktivasi login |
+| Isolasi RLS | Anggota melihat data, nonanggota ditolak | Admin 57 lead, identitas luar 0 lead | PASS | Belum uji staf kedua |
+| Edge Function tanpa login | HTTP 401 dan CORS subdomain | HTTP 401, origin sesuai | PASS | Tidak menguji riset dengan JWT |
+| Workflow baru | Keduanya aktif tanpa mengubah workflow lama | Dua workflow aktif; source lama tetap aktif | PASS | Eksekusi Google Drive belum diuji |
+| DNS subdomain | CNAME ke GitHub Pages, apex tetap | CNAME dari dua nameserver otoritatif; apex 2.57.91.91 | PASS | HTTPS masih menunggu |
+| HTTPS GitHub Pages | Sertifikat valid dan enforced | Sertifikat belum terbit pada pemeriksaan awal | PARTIAL | Perlu pemeriksaan ulang |
+| Riset dan surat ke folder Drive | File tersimpan ke folder tiap akun | Belum ada folder akun pertama | NOT TESTED | Pengaturan dan izin folder diperlukan |

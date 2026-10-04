@@ -30,3 +30,14 @@ Email akun Auth pertama telah ditentukan: `yasir@raykerja.cloud`. Butuh persetuj
 - Hasil riset ditampilkan di preview Supabase dan disalin ke folder per akun. Surat penawaran juga disalin ke folder per akun. Dua draft workflow dibuat terpisah agar jalur lama RAY AI/Telegram aman.
 - Nilai email Google yang dimiliki credential Drive n8n belum tersedia; izin Editor folder harus diverifikasi saat uji produksi. Belum ada folder pengguna yang ditentukan, sehingga uji unggah aktual belum dapat dilakukan.
 - GitHub push, migration/import database, undangan Auth, pembuatan/aktivasi workflow, dan DNS belum dijalankan karena kebijakan produksi RMP memerlukan persetujuan eksplisit.
+
+## Eksekusi produksi 2026-10-04
+
+1. Pengguna memberi persetujuan dengan “lanjutkan” setelah cakupan produksi dan kewajiban persetujuan dijelaskan. Kondisi awal Supabase: 0 tabel Marketing dan 0 akun Yasir; repo remote pada commit awal.
+2. Migration SQL dijalankan. Empat tabel ditemukan dengan RLS aktif. Impor Sheet selesai dan terverifikasi 57 source row unik.
+3. Tiga secret Edge Function dipasang dari penyimpanan lokal; function `marketing` dideploy dengan verifikasi JWT oleh kode function. Permintaan tanpa login dari origin subdomain menghasilkan HTTP 401 dan header CORS yang benar.
+4. Dua workflow baru n8n dibuat dan diaktifkan: riset 15 node, surat 5 node. Workflow RAY AI lama tetap aktif pada versi yang sama.
+5. Source aman di-push ke `raykerja/Suportmarketing` branch `main`; GitHub Pages dibuat dengan custom domain `marketing.raykerja.cloud`.
+6. CNAME Hostinger `marketing` ke `raykerja.github.io` dibuat, TTL 300. Nameserver otoritatif dan dua resolver publik mengembalikan CNAME yang sama. Record apex tetap `2.57.91.91`.
+7. Auth Site URL diset ke subdomain dan signup publik ditutup. Undangan Yasir dibuat; satu anggota admin dan satu surat historis terverifikasi. RLS sebagai admin mengembalikan 57 target historis, sedangkan identitas yang bukan anggota mengembalikan 0.
+8. HTTPS GitHub Pages masih menunggu sertifikat saat pemeriksaan awal. Folder Drive Yasir belum ditetapkan, sehingga uji file Drive end-to-end belum dapat dinyatakan PASS.
