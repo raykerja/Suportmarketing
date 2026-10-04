@@ -44,6 +44,8 @@ Portal Marketing PT Ray Mitra Perkasa untuk `marketing.raykerja.cloud`. Source h
 
 Produksi awal (GitHub Pages, DNS, Supabase, n8n riset/surat) sudah diterapkan pada 4 Oktober 2026. Fitur kunjungan menambah migration `marketing_visits`, workflow n8n `m12aJ6zFGhfgCjqP`, dan Edge Function `marketing` versi 5. Tab `DataMarketing` memiliki header `ID LAPORAN` dan `EMAIL MARKETING` pada kolom AE/AF; baris historis tidak diubah. Alur berikut menjadi runbook untuk pemasangan ulang/pemulihan.
 
+Tema RAY dan menu pratinjau **Klien Aktif & Penawaran Ulang** dipublikasikan pada 4 Oktober 2026 (commit `c8f75d5`). Publikasi ini hanya mengubah halaman GitHub Pages; data klien aktif nyata dan backend penawaran ulang belum diaktifkan.
+
 1. Backup kondisi Supabase dan n8n. Jalankan migration SQL; verifikasi tabel, RLS, dan status kolom Drive.
 2. Set tiga Edge Function secrets: `MARKETING_WEBHOOK_SECRET` dari penyimpanan key lokal, `MARKETING_N8N_WEBHOOK` ke `/webhook/raykerja-target`, `MARKETING_N8N_LETTER_WEBHOOK` ke `/webhook/raykerja-letter`. URL kunjungan diturunkan dari URL target ke `/webhook/raykerja-visit`. Deploy `marketing` dengan `verify_jwt = false`; fungsi sendiri memverifikasi JWT pengguna dan secret callback.
 3. Jalankan `python3 scripts/prepare_n8n.py`, `python3 scripts/prepare_letter_n8n.py`, dan `python3 scripts/prepare_visit_n8n.py`. Review draft di `private/`, buat tiga workflow Raykerja di n8n, lalu aktifkan. Workflow RAY AI/Telegram lama tetap berjalan. Draft kunjungan menggunakan credential Google Sheets dan Drive yang sudah ada di n8n.

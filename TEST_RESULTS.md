@@ -106,4 +106,6 @@
 | Reload | Data contoh kembali ke awal | Riwayat kembali 1 catatan dan jatuh tempo 2 | PASS | Tidak ada penyimpanan |
 | Responsif HP | Tidak ada scroll horizontal halaman | Pada viewport 390 px dan 320 px, lebar dokumen sama dengan viewport | PASS | Browser lokal |
 | Integrasi klien nyata | Daftar klien/penawaran tersimpan dan terhubung | Belum diterapkan | NOT TESTED | Menunggu data klien tervalidasi dan persetujuan backend |
-| Publikasi Pages | Menu terlihat di `marketing.raykerja.cloud` | Belum dilakukan | NOT TESTED | Git push/deploy memerlukan persetujuan eksplisit |
+| Publikasi Pages | Source dan aset baru tersedia di `marketing.raykerja.cloud` | GitHub Pages build commit `c8f75d5` sukses; HTML, CSS, JS, logo HTTP 200 dan marker konten cocok | PASS | Push disetujui pengguna |
+| Login production | Logo dan warna benar, tanpa error browser | Logo 520 px termuat; latar `rgb(243,246,251)`, tombol `rgb(10,79,166)`; console error kosong | PASS | Browser live |
+| Menu setelah login nyata | Klien dapat membuka menu baru | Belum diuji dengan sesi akun Yasir | NOT TESTED | Pratinjau lokal dan aset live telah diuji |

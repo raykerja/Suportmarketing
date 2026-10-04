@@ -70,4 +70,4 @@ ADDED: Logo RAY asli, stylesheet tema biru/emas, menu pratinjau Klien Aktif & Pe
 CHANGED: Judul workspace mencakup klien aktif; warna status frontend mengikuti biru RAY.
 FIXED: Logo huruf R sementara diganti aset yang sama dengan portal Keuangan dan RAY AI.
 REMOVED: Tidak ada fungsi lama yang dihapus.
-NOTES: Hanya file lokal. Menu baru memakai tiga perusahaan fiktif di memori browser. Git push/Pages production dan backend tidak dilakukan tanpa persetujuan eksplisit sesuai kebijakan keselamatan RMP.
+NOTES: Disetujui untuk production dan dipublikasikan ke GitHub Pages pada 2026-10-04. Menu baru memakai tiga perusahaan fiktif di memori browser. Backend klien aktif tidak diubah.
