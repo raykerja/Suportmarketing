@@ -103,3 +103,12 @@ Atas permintaan pengguna, tiga bagian utama form kunjungan diganti menjadi tombo
 2. Memindahkan akses Pengaturan ke tombol header `data-tab="settings"` agar memakai handler navigasi yang sama. Tombol Keluar dipindah ke dalam panel Pengaturan. Saat keluar, detail akun dibersihkan dan tab kembali ke Kunjungan; kegagalan sign out ditampilkan.
 3. Menambah CSS kecil untuk header dan layar HP sempit. Tidak ada perubahan tabel, Edge Function, n8n, atau Google Workspace.
 4. Menguji dengan browser mock: buka Pengaturan, kembali ke Kunjungan, keluar, dan lebar 320 px. Semua lulus; hasil di `TEST_RESULTS.md`.
+
+## 2026-10-04 — Draft webhook penawaran dan pembacaan RUP pemerintah
+
+1. Memeriksa form riset dan generator Telegram yang aktif, skema Supabase, folder per akun, serta backup lokal workflow aktif. Mempertahankan webhook riset, generator Telegram, dan draft surat teks.
+2. Menyiapkan review target dan generator penawaran berbasis UMK: migration, Edge Function, UI HP, dan workflow n8n web portabel. Payload file memakai Google Docs/Sheets native dan folder Drive akun.
+3. Menemukan tool SiRUP aktif memakai `tahunAnggaran=2026`. Uji endpoint yang sama untuk 2025 menghasilkan HTTP 200 dengan `content-length: 0`; halaman SiRUP sendiri masih dapat dibuka. Hipotesis terkuat: endpoint pencarian tidak melayani klien HTTP n8n/curl tanpa konteks aplikasi yang diperlukan. Tahun terkunci juga mencegah pembacaan TA sebelumnya.
+4. Menyiapkan jalur cadangan pencarian ekspor RUP/SiRUP pada situs instansi resmi `go.id` lewat credential Serper yang sudah dipakai workflow. Prompt membedakan tahun anggaran dari bulan pemilihan, pagu dari realisasi, serta jumlah tenaga terverifikasi dari perkiraan. Field bukti baru diteruskan ke hasil JSON/Supabase dan ditampilkan pada Review Hasil.
+5. Perbaikan lokal: tahun label UMK RAB dinamis, payload Google Sheets berupa ekspresi objek agar nama target bertanda kutip aman, dan pilihan target dari Review menunggu pemuatan data.
+6. Tidak ada penulisan ke n8n/Supabase/GitHub production. Uji end-to-end dan perbandingan terhadap dokumen RUP resmi masih diperlukan sebelum aktivasi.

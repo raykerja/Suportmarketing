@@ -18,6 +18,7 @@ Portal Marketing PT Ray Mitra Perkasa untuk `marketing.raykerja.cloud`. Source h
 | `supabase/migrations/20261004_marketing.sql` | Tabel, indeks, status Drive, RLS per akun |
 | `supabase/migrations/20261004_marketing_visits.sql` | Tabel kunjungan, RLS, bucket foto privat |
 | `supabase/migrations/20261004_marketing_progress.sql` | Tahap dan riwayat progres, pengingat, RLS, fungsi transaksi |
+| `supabase/migrations/20261004_marketing_offers.sql` | Review target dan riwayat dokumen penawaran per akun (draft) |
 | `supabase/functions/marketing/index.ts` | Undangan akun, pengaturan folder, pemicu dua webhook, callback |
 | `scripts/prepare_n8n.py`, `scripts/prepare_letter_n8n.py` | Draft privat dua workflow n8n |
 | `scripts/prepare_visit_n8n.py` | Draft privat webhook foto Drive dan sinkronisasi Google Sheet |
@@ -30,6 +31,8 @@ Portal Marketing PT Ray Mitra Perkasa untuk `marketing.raykerja.cloud`. Source h
 ## Alur dan akses
 
 - Cari Target Market tetap **satu formulir** dengan pilihan swasta/pemerintah. Browser → Edge Function → webhook `raykerja-target` → riset n8n → file JSON di Drive akun → callback → preview dan target di Supabase. Bila Drive gagal, hasil tetap tampil dengan status `partial` dan pesan kesalahan.
+- Draft revisi riset pemerintah menelusuri dokumen RUP/SiRUP **tahun anggaran sebelumnya** yang dipublikasikan instansi resmi. Review Hasil menampilkan paket, pagu, satker, kebutuhan, jumlah personel, status verifikasi, dan tautan bukti. Pagu tahun lalu adalah dasar pendekatan, bukan jaminan anggaran tahun berjalan. Jumlah personel hanya terverifikasi bila dokumen KAK/RKS/paket menyebutnya secara eksplisit. Koneksi API SiRUP lama mengembalikan respons kosong saat pemeriksaan; draft memakai pencarian dokumen resmi sebagai jalur cadangan dan belum mengganti workflow aktif.
+- Draft generator penawaran web: target hasil riset disetujui pada **Review Hasil**, kemudian dipilih di **Surat & Penawaran** dan diisi UMK. Edge Function mengirim ke webhook `raykerja-offer`; n8n menyalin Google Docs surat pengantar dan Google Sheets RAB ke folder Drive akun. Status dan tautan dokumen dicatat di `marketing_offers`. Draft surat teks lama tetap tersedia. Workflow, migration, Edge Function, dan halaman ini belum diterapkan ke production.
 - Surat/penawaran: draft disimpan di `marketing_letters`, lalu Edge Function memicu webhook `raykerja-letter` untuk membuat salinan `.txt` di Drive akun. Status dan link file diperbarui lewat callback. Jika Drive gagal, draft Supabase tetap tersedia.
 - Staf hanya melihat riset, target, dan surat miliknya. Admin dapat melihat semua riset dan target serta membuat akun staf dan mengatur folder mereka. Karena proyek belum memiliki SMTP khusus, halaman admin menampilkan link aktivasi satu kali untuk disalin dan dikirim secara privat kepada staf. Staf dapat mengubah link foldernya sendiri di menu **Pengaturan**. Folder riset dibekukan pada saat permintaan dibuat sehingga pergantian folder kemudian tidak mengalihkan hasil riset yang sedang berjalan.
 - Tombol **Pengaturan** berada di kanan atas header; tombol **Keluar dari akun** berada di dalam halaman Pengaturan. Pengaturan tidak lagi menjadi tab pada deretan menu utama.
@@ -67,6 +70,7 @@ DNS subdomain mengikuti [panduan GitHub Pages](https://docs.github.com/en/pages/
 - Link aktivasi adalah kredensial sementara. Jangan kirim di grup atau tempat publik; berikan hanya kepada pemilik alamat email. Jika link kedaluwarsa, admin perlu membuat link baru. SMTP khusus dapat ditambahkan kelak untuk pengiriman undangan otomatis.
 - Form kunjungan memuat 27 bidang yang diisi staf; `TANGGAL INPUT` dan `NAMA MARKETING` ditetapkan sistem. Field telemarketing/follow up tambahan bersifat opsional. Foto maksimal 10 MB dengan format JPEG, PNG, WebP, HEIC, atau HEIF. Formulir memerlukan jaringan saat menyimpan; belum ada mode offline.
 - Akun Drive n8n harus diberi izin Editor pada setiap folder pengguna. Jika file gagal dibuat, cek permission folder, masa berlaku OAuth, dan eksekusi n8n. Untuk riset, cek status `partial`; untuk surat, cek `drive_status=error`.
+- Pencarian dokumen RUP resmi melalui mesin pencari bergantung pada PDF/halaman yang diterbitkan dan terindeks. Jika dokumen tidak memuat jumlah personel, tampilkan **Belum terverifikasi**. Jangan mengonversi pagu menjadi jumlah tenaga tanpa KAK/RKS dan periode layanan.
 - Jika webhook gagal, cek eksekusi workflow, secret, callback HTTP, dan log Edge Function. Respons webhook awal hanya tanda proses diterima.
 - Rollback: nonaktifkan dua workflow Raykerja, kembalikan CNAME `marketing` jika ada nilai sebelumnya, dan rollback source GitHub. Data Supabase tidak dihapus otomatis. Portal RAY AI lama tetap independen.
 

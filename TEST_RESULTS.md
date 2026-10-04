@@ -130,3 +130,17 @@
 | HP 320 px | Tidak overlap/scroll horizontal | Lebar dokumen 320 px; tombol header dan tombol keluar terlihat | PASS | Browser lokal |
 | JavaScript | Tidak ada syntax/console error | `node --check app.js` lulus; console error kosong | PASS | Lokal |
 | Production | Perubahan terlihat di domain live | Belum dipublikasikan | NOT TESTED | Push/deploy membutuhkan persetujuan eksplisit |
+
+## Draft penawaran web dan RUP pemerintah 0.6.0 — 2026-10-04
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Endpoint SiRUP lama | Paket TA 2025 tersedia untuk pencarian | GET dengan TA 2025 mengembalikan HTTP 200, `content-length: 0`; halaman indeks HTML tersedia | FAIL | Akar masalah terkuat: endpoint tidak memberi data ke klien HTTP; workflow aktif juga mengunci TA 2026 |
+| Dokumen RUP resmi | Ekspor RUP/SiRUP instansi dapat ditemukan | PDF resmi PPID Komdigi memuat contoh paket, pagu, ID, satker, dan lokasi | PASS | Sumber pembanding, bukan uji eksekusi n8n |
+| Validasi tahun RUP | TA sebelumnya diterima; TA berbeda tidak dipakai sebagai pagu | Fixture TA 2025 dipertahankan pada riset 2026; fixture TA 2026 dikosongkan | PASS | Kode node n8n dijalankan lokal |
+| Jumlah personel | Tidak mengklaim jumlah tanpa bukti | Fixture tahun salah menghasilkan `Belum terverifikasi`; prompt mewajibkan bukti KAK/RKS | PARTIAL | Verifikasi isi dokumen oleh manusia tetap perlu |
+| Syntax/struktur | Frontend, Edge, JSON n8n, ID HTML valid | `node --check`, esbuild, JSON parse, parser kode n8n, dan ID HTML lulus | PASS | Lokal |
+| RAB tahun berjalan | Label UMK mengikuti tahun permintaan | Ekspresi RAB memakai `tahun` dinamis, tidak mengunci 2026 | PASS | Belum dieksekusi di n8n |
+| UI HP Review/Penawaran | Form dan kartu tidak meluber pada 320/390 px | Belum ada uji visual dengan sesi login/mock untuk perubahan ini | NOT TESTED | CSS mobile disiapkan, perlu pratinjau browser |
+| End-to-end riset pemerintah | Dokumen resmi → n8n → Supabase → Review → Drive | Belum dijalankan | NOT TESTED | Workflow aktif belum diubah dan perlu persetujuan production |
+| End-to-end penawaran | Review → webhook → Docs/RAB → folder akun → Supabase | Belum dijalankan | NOT TESTED | Migration, Edge, workflow web, dan frontend belum diterapkan |

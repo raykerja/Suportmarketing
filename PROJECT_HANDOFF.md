@@ -11,6 +11,7 @@ Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform
 | n8n riset | Workflow `NxD7a2bT0G29RZOE`, path `raykerja-target` | Aktif |
 | n8n surat | Workflow `gZ6PzuR1IUm4A3Vv`, path `raykerja-letter` | Aktif |
 | n8n kunjungan | Workflow `m12aJ6zFGhfgCjqP`, path `raykerja-visit` | Aktif; sinkron ke Sheet dan Drive |
+| n8n dokumen penawaran web | Draft `n8n/offer-documents.template.json`, path `raykerja-offer` | Belum diaktifkan; Telegram generator lama tetap aktif |
 | Google Sheet | `MARKETING RAYMP 2026`, tab `DataMarketing`; ID dan struktur kolom dalam `README.md` | Sinkron kunjungan aktif |
 | Google Drive | Folder diatur per akun pada menu Pengaturan; file riset/surat dan foto dari n8n | Bergantung izin folder setiap akun |
 
@@ -18,6 +19,7 @@ Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform
 
 - **Kunjungan** memakai Supabase dan sinkron ke `DataMarketing`. Formulir HP terdiri dari tiga langkah.
 - **Riset target** dan **Surat & Penawaran** memakai Supabase, n8n, dan folder Drive per akun.
+- **Review hasil riset → dokumen penawaran web** disiapkan pada branch lokal. Riset `raykerja-target` sudah aktif; generator Google Docs dan RAB web memerlukan migration, workflow baru, secret Edge Function, dan deploy sebelum dapat diuji end-to-end.
 - **Progres & Pengingat** masih pratinjau di browser karena `progressEnabled: false`. Migration `20261004_marketing_progress.sql` dan revisi workflow hanya draft; jangan menganggapnya sudah terpasang.
 - **Klien Aktif & Penawaran Ulang** masih pratinjau dengan data fiktif di `clients-preview.js`. Belum ada tabel klien, penawaran ulang, atau data kontrak nyata yang tersambung.
 - Admin pertama: `yasir@raykerja.cloud`. Akun staf dan foldernya dikelola melalui menu Pengaturan.
@@ -33,8 +35,19 @@ Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform
 ## Konfigurasi yang sengaja tidak ada di GitHub
 
 - Secret: `SUPABASE_SERVICE_ROLE_KEY`, `MARKETING_WEBHOOK_SECRET`, token API Supabase/n8n/GitHub, dan OAuth Google. Edge Function juga memakai `MARKETING_N8N_WEBHOOK` dan `MARKETING_N8N_LETTER_WEBHOOK` serta variabel Supabase bawaan.
+- Generator dokumen web menambah `MARKETING_N8N_OFFER_WEBHOOK` pada Edge Function, berisi URL produksi `/webhook/raykerja-offer` tanpa secret di URL.
 - File lokal `private/`, `.env*`, ekspor Sheet, salinan workflow aktif dengan credential, dan data pribadi.
 - Akses ke GitHub **tidak otomatis** memberi akses ke Supabase, n8n, atau Google Workspace. Platform baru memerlukan izin tersendiri untuk layanan tersebut. Jangan menyalin secret ke repo, chat publik, atau URL.
+
+## Urutan aktivasi generator dokumen web (menunggu persetujuan production)
+
+1. Pastikan backup workflow aktif riset dan generator Telegram tersedia di `private/`; backup skema Supabase dan catat commit/versi Edge Function sebelum tindakan production.
+2. Terapkan `supabase/migrations/20261004_marketing_offers.sql`; verifikasi `review_status`, tabel `marketing_offers`, RLS, dan grant baca saja untuk browser.
+3. Siapkan revisi `n8n/target-research.template.json`: pada workflow riset aktif ubah tool SiRUP yang responsnya kosong menjadi pencarian dokumen RUP/SiRUP resmi via Serper, perbarui prompt/parser/penyusun hasil, dan uji paket TA sebelumnya. Simpan backup workflow aktif serta catat perubahan node.
+4. Impor `n8n/offer-documents.template.json` sebagai workflow nonaktif. Isi empat placeholder ID/secret, pasang ulang credential Google, uji satu eksekusi terkontrol, lalu aktifkan webhook `raykerja-offer`. Jangan ubah workflow Telegram lama.
+5. Set secret Edge Function `MARKETING_N8N_OFFER_WEBHOOK`, deploy fungsi `marketing`, lalu push frontend ke `main` agar GitHub Pages memperbarui `marketing.raykerja.cloud`.
+6. Login sebagai Yasir. Jalankan satu riset kecil atau pilih target uji milik akun, setujui di Review Hasil, isi UMK, buat penawaran, lalu verifikasi dua file **di folder Drive akun**, status/URL pada `marketing_offers`, rumus RAB, placeholder Docs, dan nomor surat. Jangan kirim dokumen ke klien sebelum nilai biaya ditinjau.
+7. Jika gagal, hentikan workflow web, kembalikan versi Edge Function dan commit frontend sebelumnya. Biarkan tabel baru sebagai data historis; jangan hapus otomatis. File uji Drive dan record Supabase hanya dibersihkan dengan persetujuan.
 
 ## Pemeriksaan sebelum menyatakan selesai
 

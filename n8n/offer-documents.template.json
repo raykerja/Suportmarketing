@@ -1,0 +1,497 @@
+{
+  "name": "Raykerja Marketing - Generator Penawaran Web",
+  "nodes": [
+    {
+      "id": "81eaed9b-f2da-4b5c-ae7c-3b6fb0685389",
+      "name": "Webhook Penawaran Web",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "raykerja-offer",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "11bcd6db-202b-42e6-88bd-f2ec69916d85",
+      "name": "Validasi Penawaran Web",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst secret = (input.headers || {})['x-ray-secret'];\nif (secret !== 'SET_MARKETING_WEBHOOK_SECRET') throw new Error('Unauthorized');\nconst b = input.body || {};\nconst validId = v => /^[0-9a-f-]{36}$/i.test(String(v || ''));\nif (!validId(b.offer_id) || !validId(b.lead_id) || !/^[A-Za-z0-9_-]{10,200}$/.test(String(b.drive_folder_id || '')) ||\n    !String(b.nama_target || '').trim() || !Number.isSafeInteger(Number(b.umk)) || Number(b.umk) < 1 || Number(b.umk) > 1000000000)\n  throw new Error('Data penawaran tidak valid');\nconst now = new Date();\nconst dateParts = new Intl.DateTimeFormat('id-ID', {timeZone:'Asia/Jakarta',year:'numeric',month:'long',day:'numeric'}).formatToParts(now);\nconst part = type => dateParts.find(p => p.type === type)?.value || '';\nconst monthNumber = Number(new Intl.DateTimeFormat('en-US', {timeZone:'Asia/Jakarta',month:'numeric'}).format(now));\nreturn [{json:{offer_id:String(b.offer_id),lead_id:String(b.lead_id),drive_folder_id:String(b.drive_folder_id),\n  nama_target:String(b.nama_target).trim().slice(0,180),alamat:String(b.alamat || '').slice(0,500),\n  kecamatan:String(b.kecamatan || '').slice(0,100),kabupaten_kota:String(b.kabupaten_kota || '').slice(0,100),\n  provinsi:String(b.provinsi || '').slice(0,100),umk:Number(b.umk),tahun:Number(part('year')),\n  tanggal:`${part('day')} ${part('month')} ${part('year')}`,\n  bulanRomawi:['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][monthNumber-1]}}];"
+      }
+    },
+    {
+      "id": "89420f5d-f97d-4bdb-93e1-fdb9ca018d8a",
+      "name": "Respons Penawaran Diterima",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {ok:true,status:'processing',offer_id:$json.offer_id} }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "d9cc0f79-6ed8-4275-9aaa-c9d14b157e97",
+      "name": "Ambil Counter Nomor Surat",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "SET_COUNTER_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "tahun",
+              "lookupValue": "={{ String($('Validasi Penawaran Web').first().json.tahun) }}"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "dc54260c-1de8-40bc-8b79-8908c5fc0b24",
+      "name": "Siapkan Penawaran Web",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const meta = $('Validasi Penawaran Web').first().json;\nconst counter = $input.first().json;\nconst nomorTerakhir = Number(counter.nomor_terakhir || 0);\nif (!Number.isSafeInteger(nomorTerakhir) || nomorTerakhir < 0 || String(counter.tahun) !== String(meta.tahun))\n  throw new Error('Counter nomor surat tahun ini tidak valid');\nconst nomorUrutBaru = nomorTerakhir + 1;\nreturn [{json:{...meta,nomorUrutBaru,nomorSurat:`${nomorUrutBaru}/202/RAYMP/${meta.bulanRomawi}/${meta.tahun}`,\n  namaClient:meta.nama_target,alamat1:meta.alamat,\n  alamat2:[meta.kecamatan,meta.kabupaten_kota,meta.provinsi].filter(Boolean).join(', '),\n  kotaClient:meta.kabupaten_kota}}];"
+      }
+    },
+    {
+      "id": "2eaab82c-2c3e-4ff5-9fc2-a00442db8d7f",
+      "name": "Perbarui Counter Nomor Surat",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "SET_COUNTER_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "tahun": "={{ String($('Siapkan Penawaran Web').first().json.tahun) }}",
+            "nomor_terakhir": "={{ String($('Siapkan Penawaran Web').first().json.nomorUrutBaru) }}"
+          },
+          "matchingColumns": [
+            "tahun"
+          ],
+          "schema": [
+            {
+              "id": "tahun",
+              "displayName": "tahun",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "nomor_terakhir",
+              "displayName": "nomor_terakhir",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "53c6034c-86ae-4c23-aba8-054ec7d08129",
+      "name": "Salin Template RAB",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1320,
+        0
+      ],
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "SET_RAB_TEMPLATE_ID",
+          "mode": "id"
+        },
+        "name": "={{ 'RAB - ' + $('Siapkan Penawaran Web').first().json.namaClient }}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "37572d4d-dc50-45d3-a5f3-fbf3e7b65a16",
+      "name": "Isi Data RAB",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1540,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{  $json.id }}/values:batchUpdate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {valueInputOption:'USER_ENTERED',data:[{range:'Sheet1!A4',values:[['LOKASI : '+$('Siapkan Penawaran Web').first().json.namaClient]]},{range:'Sheet1!G10',values:[[$('Siapkan Penawaran Web').first().json.umk]]},{range:'Sheet1!B10',values:[['Gaji Pokok (UMK '+$('Siapkan Penawaran Web').first().json.kotaClient+' '+$('Siapkan Penawaran Web').first().json.tahun+')']]},{range:'Sheet1!J36',values:[['Semarang, '+$('Siapkan Penawaran Web').first().json.tanggal]]}]} }}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "b05dc9af-95ad-4116-9094-5e02d329e36c",
+      "name": "Pindahkan RAB ke Folder Akun",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1760,
+        0
+      ],
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Salin Template RAB').first().json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Validasi Penawaran Web').first().json.drive_folder_id }}",
+          "mode": "id"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "82fa8bdf-af70-4b4c-9245-ddb997254876",
+      "name": "Salin Template Surat",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1980,
+        0
+      ],
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "SET_DOC_TEMPLATE_ID",
+          "mode": "id"
+        },
+        "name": "={{ 'Surat Pengantar - ' + $('Siapkan Penawaran Web').first().json.namaClient }}",
+        "options": {}
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "8b707a60-6de0-4c0d-b5dc-9cc094aa3fcd",
+      "name": "Isi Surat Pengantar",
+      "type": "n8n-nodes-base.googleDocs",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        0
+      ],
+      "parameters": {
+        "operation": "update",
+        "documentURL": "={{  $json.id }}",
+        "actionsUi": {
+          "actionFields": [
+            {
+              "action": "replaceAll",
+              "text": "{{TANGGAL}}",
+              "replaceText": "={{  $('Siapkan Penawaran Web').first().json.tanggal }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{NOMOR_SURAT}}",
+              "replaceText": "={{  $('Siapkan Penawaran Web').first().json.nomorSurat }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{NAMA_CLIENT}}",
+              "replaceText": "={{  $('Siapkan Penawaran Web').first().json.namaClient }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{ALAMAT_1}}",
+              "replaceText": "={{  $('Siapkan Penawaran Web').first().json.alamat1 }}"
+            },
+            {
+              "action": "replaceAll",
+              "text": "{{ALAMAT_2}}",
+              "replaceText": "={{  $('Siapkan Penawaran Web').first().json.alamat2 }}"
+            }
+          ]
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "74ed607c-6187-4c0b-b45d-c38296cdc38e",
+      "name": "Pindahkan Surat ke Folder Akun",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2420,
+        0
+      ],
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Salin Template Surat').first().json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Validasi Penawaran Web').first().json.drive_folder_id }}",
+          "mode": "id"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "aefb1ec6-a732-4fa7-8ba8-6e494ed3d53e",
+      "name": "Callback Penawaran Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        2640,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://ewicmiekwzmxkkokmpzf.supabase.co/functions/v1/marketing",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-RAY-Secret",
+              "value": "SET_MARKETING_WEBHOOK_SECRET"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {kind:'offer',offer_id:$('Validasi Penawaran Web').first().json.offer_id,nomor_surat:$('Siapkan Penawaran Web').first().json.nomorSurat, rab_file_id:(!$('Isi Data RAB').first().json.error && $('Pindahkan RAB ke Folder Akun').first().json.id) || null, doc_file_id:(!$('Isi Surat Pengantar').first().json.error && $('Pindahkan Surat ke Folder Akun').first().json.id) || null, error:[$('Isi Data RAB').first().json.error?.message,$('Pindahkan RAB ke Folder Akun').first().json.error?.message,$('Isi Surat Pengantar').first().json.error?.message,$('Pindahkan Surat ke Folder Akun').first().json.error?.message].filter(Boolean).join('; ') || null} }}",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Penawaran Web": {
+      "main": [
+        [
+          {
+            "node": "Validasi Penawaran Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validasi Penawaran Web": {
+      "main": [
+        [
+          {
+            "node": "Respons Penawaran Diterima",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respons Penawaran Diterima": {
+      "main": [
+        [
+          {
+            "node": "Ambil Counter Nomor Surat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ambil Counter Nomor Surat": {
+      "main": [
+        [
+          {
+            "node": "Siapkan Penawaran Web",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Siapkan Penawaran Web": {
+      "main": [
+        [
+          {
+            "node": "Perbarui Counter Nomor Surat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perbarui Counter Nomor Surat": {
+      "main": [
+        [
+          {
+            "node": "Salin Template RAB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salin Template RAB": {
+      "main": [
+        [
+          {
+            "node": "Isi Data RAB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Isi Data RAB": {
+      "main": [
+        [
+          {
+            "node": "Pindahkan RAB ke Folder Akun",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pindahkan RAB ke Folder Akun": {
+      "main": [
+        [
+          {
+            "node": "Salin Template Surat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Salin Template Surat": {
+      "main": [
+        [
+          {
+            "node": "Isi Surat Pengantar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Isi Surat Pengantar": {
+      "main": [
+        [
+          {
+            "node": "Pindahkan Surat ke Folder Akun",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pindahkan Surat ke Folder Akun": {
+      "main": [
+        [
+          {
+            "node": "Callback Penawaran Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

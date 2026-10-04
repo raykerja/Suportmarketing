@@ -12,10 +12,14 @@ let currentUser = null;
 let currentMember = null;
 let pollTimer = null;
 let letterPollTimer = null;
+let offerPollTimer = null;
 let visitPollTimer = null;
 let researchCache = [];
 let leadCache = [];
 let letterCache = [];
+let offerCache = [];
+let offerRequestId = null;
+const reviewNames = { pending: 'Menunggu review', approved: 'Disetujui', rejected: 'Tidak dipilih' };
 let visitCache = [];
 let progressVisits = [];
 let progressCache = [];
@@ -37,6 +41,8 @@ function showWorkspace(user) {
   currentUser = user;
   if (!user) {
     currentMember = null;
+    researchCache = []; leadCache = []; letterCache = []; offerCache = []; offerRequestId = null;
+    $('#review-list').textContent = ''; $('#offer-list').textContent = ''; $('#lead-list').textContent = '';
     $('#activation-link').value = ''; $('#activation-panel').hidden = true;
     $('#account-info').textContent = ''; $('#folder-url').value = '';
     $('#member-list').textContent = ''; $('#admin-settings').hidden = true;
@@ -47,10 +53,11 @@ function showWorkspace(user) {
   $('#workspace').hidden = !user || invitePending;
   $('#open-settings').hidden = !user || invitePending;
   $('#logout').hidden = !user || invitePending;
-  if (user && !invitePending) { loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadVisits(); loadProgress(); }
+  if (user && !invitePending) { loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); }
   else {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     if (letterPollTimer) { clearInterval(letterPollTimer); letterPollTimer = null; }
+    if (offerPollTimer) { clearInterval(offerPollTimer); offerPollTimer = null; }
     if (visitPollTimer) { clearInterval(visitPollTimer); visitPollTimer = null; }
   }
 }
@@ -87,6 +94,8 @@ $('#setup-form').addEventListener('submit', async (event) => {
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => {
   document.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('active', b === button));
   document.querySelectorAll('.panel').forEach((p) => { p.hidden = p.id !== button.dataset.tab; });
+  if (button.dataset.tab === 'review') loadLeads();
+  if (button.dataset.tab === 'letters') { loadLeads(); loadOffers(); }
 }));
 
 const visitFields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_janji_kunjungan',
@@ -398,18 +407,86 @@ $('#research-form').addEventListener('submit', async (event) => {
 
 async function loadLeads() {
   if (!client || !currentUser) return;
-  const { data, error } = await client.from('marketing_leads').select('id,nama_target,target_type,kabupaten_kota,provinsi,lead_score,kategori,data').order('imported_at', { ascending: false }).limit(500);
-  if (error) { $('#lead-list').textContent = 'Gagal membaca database: ' + error.message; return; }
-  leadCache = data || []; renderLeads();
+  const { data, error } = await client.from('marketing_leads').select('id,owner_id,nama_target,target_type,kabupaten_kota,provinsi,lead_score,kategori,data,review_status').order('imported_at', { ascending: false }).limit(500);
+  if (error) { $('#lead-list').textContent = 'Gagal membaca database: ' + error.message; $('#review-list').textContent = 'Review belum dapat dibaca: ' + error.message; return; }
+  leadCache = data || []; renderLeads(); renderReview(); renderOfferOptions();
   $('#target-suggestions').innerHTML = leadCache.map((r) => `<option value="${esc(r.nama_target)}"></option>`).join('');
 }
 function renderLeads() {
   const q = $('#lead-query').value.trim().toLocaleLowerCase('id');
   const rows = leadCache.filter((r) => !q || [r.nama_target, r.kabupaten_kota, r.provinsi].some((x) => String(x || '').toLocaleLowerCase('id').includes(q)));
-  $('#lead-list').innerHTML = rows.length ? `<table><thead><tr><th>Target</th><th>Jenis</th><th>Wilayah</th><th>Kontak</th><th>Skor</th><th>Sumber</th></tr></thead><tbody>${rows.map((r) => `<tr><td><strong>${esc(r.nama_target)}</strong><br>${esc(r.data?.bidang || r.data?.jenis)}</td><td>${esc(r.target_type)}</td><td>${esc(r.kabupaten_kota)}, ${esc(r.provinsi)}</td><td>${esc(r.data?.telepon)}<br>${esc(r.data?.email)}</td><td>${esc(r.lead_score)} · ${esc(r.kategori)}</td><td>${r.data?.sumber && /^https?:\/\//i.test(r.data.sumber) ? `<a href="${esc(r.data.sumber)}" target="_blank" rel="noopener noreferrer">Sumber</a>` : '—'}</td></tr>`).join('')}</tbody></table>` : '<p class="hint">Belum ada target yang cocok.</p>';
+  $('#lead-list').innerHTML = rows.length ? `<table><thead><tr><th>Target</th><th>Jenis</th><th>Wilayah</th><th>Kontak</th><th>Skor</th><th>Review</th><th>Sumber</th></tr></thead><tbody>${rows.map((r) => `<tr><td><strong>${esc(r.nama_target)}</strong><br>${esc(r.data?.bidang || r.data?.jenis)}</td><td>${esc(r.target_type)}</td><td>${esc(r.kabupaten_kota)}, ${esc(r.provinsi)}</td><td>${esc(r.data?.telepon)}<br>${esc(r.data?.email)}</td><td>${esc(r.lead_score)} · ${esc(r.kategori)}</td><td>${esc(reviewNames[r.review_status] || 'Menunggu review')}</td><td>${r.data?.sumber && /^https?:\/\//i.test(r.data.sumber) ? `<a href="${esc(r.data.sumber)}" target="_blank" rel="noopener noreferrer">Sumber</a>` : '—'}</td></tr>`).join('')}</tbody></table>` : '<p class="hint">Belum ada target yang cocok.</p>';
 }
 $('#lead-query').addEventListener('input', renderLeads);
 $('#refresh-leads').addEventListener('click', loadLeads);
+
+function renderReview() {
+  const rows = leadCache.filter((row) => row.owner_id === currentUser?.id);
+  const counts = { pending: 0, approved: 0, rejected: 0 };
+  rows.forEach((row) => { counts[row.review_status || 'pending'] += 1; });
+  $('#review-summary').innerHTML = `<span>${counts.pending} menunggu</span><span>${counts.approved} disetujui</span><span>${counts.rejected} tidak dipilih</span>`;
+  $('#review-list').innerHTML = rows.length ? rows.map((row) => {
+    const source = row.data?.sumber;
+    const rup = row.target_type === 'PEMERINTAH' ? row.data : null;
+    const rupUrl = rup?.procurement_sumber || rup?.procurement_link;
+    const rupInfo = rup ? `<div class="rup-evidence"><strong>RUP / SiRUP tahun sebelumnya</strong><small>Status: ${esc(rup.procurement_status_verifikasi || 'Belum terverifikasi')}</small><p>${esc(rup.procurement_paket || 'Paket belum ditemukan')} · TA ${esc(rup.procurement_tahun || '—')}</p><p>Pagu: ${esc(rup.procurement_pagu || 'Belum terverifikasi')} · Satker: ${esc(rup.satker || '—')}</p><p>Kebutuhan: ${esc(rup.procurement_kebutuhan || 'Belum terverifikasi')} · Jumlah personel: ${esc(rup.procurement_personel || rup.procurement_volume || 'Belum terverifikasi')}</p><small>${esc(rup.procurement_bukti_personel || 'Jumlah personel perlu bukti KAK/RKS.')}</small>${rupUrl && /^https:\/\//i.test(rupUrl) ? `<a href="${esc(rupUrl)}" target="_blank" rel="noopener noreferrer">Buka dokumen RUP</a>` : '<small>Dokumen RUP belum tersedia</small>'}</div>` : '';
+    return `<div class="item review-card"><strong>${esc(row.nama_target)}</strong><small>${esc(row.kabupaten_kota)}, ${esc(row.provinsi)} · Skor ${esc(row.lead_score)} · ${esc(row.kategori)}</small><p>${esc(row.data?.alamat || 'Alamat belum ditemukan')}</p><small>Kontak: ${esc(row.data?.telepon || '—')} · ${esc(row.data?.email || '—')}</small><div>${source && /^https?:\/\//i.test(source) ? `<a href="${esc(source)}" target="_blank" rel="noopener noreferrer">Periksa sumber</a>` : '<span class="hint">Sumber belum tersedia</span>'}</div>${rupInfo}<div class="review-actions"><span class="badge">${esc(reviewNames[row.review_status] || reviewNames.pending)}</span><button type="button" data-review="approved" data-lead="${esc(row.id)}">Setujui</button><button type="button" data-review="rejected" data-lead="${esc(row.id)}">Tidak dipilih</button>${row.review_status === 'approved' ? `<button type="button" data-offer-lead="${esc(row.id)}">Buat penawaran</button>` : ''}</div></div>`;
+  }).join('') : '<p class="hint">Belum ada hasil riset milik akun ini.</p>';
+}
+$('#refresh-review').addEventListener('click', loadLeads);
+$('#review-list').addEventListener('click', async (event) => {
+  const offerLead = event.target.closest('[data-offer-lead]')?.dataset.offerLead;
+  if (offerLead) { document.querySelector('[data-tab="letters"]').click(); await loadLeads(); $('#offer-lead').value = offerLead; showOfferTarget(); return; }
+  const button = event.target.closest('[data-review]');
+  if (!button) return;
+  button.disabled = true;
+  status('#review-status', 'Menyimpan hasil review…');
+  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'review_lead', lead_id: button.dataset.lead, review_status: button.dataset.review } });
+  status('#review-status', error || !data?.ok ? data?.error || error?.message || 'Review gagal disimpan' : 'Hasil review tersimpan.', !!error || !data?.ok);
+  button.disabled = false;
+  if (data?.ok) await loadLeads();
+});
+
+function renderOfferOptions() {
+  const select = $('#offer-lead'); const selected = select.value;
+  const rows = leadCache.filter((row) => row.owner_id === currentUser?.id && row.review_status === 'approved');
+  select.innerHTML = '<option value="">Pilih target hasil review</option>' + rows.map((row) => `<option value="${esc(row.id)}">${esc(row.nama_target)} · ${esc(row.kabupaten_kota)}</option>`).join('');
+  if (rows.some((row) => row.id === selected)) select.value = selected;
+  showOfferTarget();
+}
+function showOfferTarget() {
+  const row = leadCache.find((lead) => lead.id === $('#offer-lead').value);
+  $('#offer-target-detail').textContent = row ? `${row.nama_target} · ${row.data?.alamat || 'Alamat belum tersedia'} · ${row.kabupaten_kota || ''}, ${row.provinsi || ''}` : 'Pilih target di menu Review Hasil terlebih dahulu.';
+}
+$('#offer-lead').addEventListener('change', () => { offerRequestId = null; showOfferTarget(); });
+$('#offer-umk').addEventListener('input', () => { offerRequestId = null; });
+$('#offer-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = $('#offer-submit'); button.disabled = true;
+  const leadId = $('#offer-lead').value; const umk = Number($('#offer-umk').value);
+  if (!leadId || !Number.isSafeInteger(umk) || umk < 1) { status('#offer-status', 'Pilih target dan isi UMK yang valid.', true); button.disabled = false; return; }
+  offerRequestId ||= crypto.randomUUID();
+  status('#offer-status', 'Mengirim permintaan dokumen ke n8n…');
+  try {
+    const { data, error } = await client.functions.invoke('marketing', { body: { action: 'generate_offer', lead_id: leadId, umk, request_id: offerRequestId } });
+    if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Generator gagal dimulai');
+    offerRequestId = null;
+    status('#offer-status', `Penawaran ${data.offer_id} diterima. Dokumen akan muncul di daftar setelah selesai.`);
+    await loadOffers();
+  } catch (error) { status('#offer-status', String(error.message || error), true); }
+  finally { button.disabled = false; }
+});
+async function loadOffers() {
+  if (!client || !currentUser) return;
+  const { data, error } = await client.from('marketing_offers').select('id,owner_id,client_name,umk,status,nomor_surat,doc_file_url,rab_file_url,error,created_at,updated_at').order('created_at', { ascending: false }).limit(100);
+  if (error) { $('#offer-list').textContent = 'Dokumen belum dapat dibaca: ' + error.message; return; }
+  offerCache = data || [];
+  const recent = (row) => row.status === 'processing' && Date.now() - new Date(row.updated_at).getTime() < 600000;
+  $('#offer-list').innerHTML = offerCache.length ? offerCache.map((row) => `<div class="item"><strong>${esc(row.client_name)}</strong><small>${esc(date(row.created_at))} · UMK Rp${Number(row.umk).toLocaleString('id-ID')} · ${esc(row.nomor_surat || 'Nomor diproses')}</small><div><span class="badge ${row.status === 'error' ? 'error' : row.status === 'processing' || row.status === 'partial' ? 'processing' : ''}">${esc(row.status.toUpperCase())}</span></div><div class="offer-links">${row.doc_file_url ? `<a href="${esc(row.doc_file_url)}" target="_blank" rel="noopener noreferrer">Google Docs surat pengantar</a>` : ''}${row.rab_file_url ? `<a href="${esc(row.rab_file_url)}" target="_blank" rel="noopener noreferrer">Google Sheets RAB</a>` : ''}</div>${row.error ? `<small class="error">${esc(row.error)}</small>` : row.status === 'processing' && !recent(row) ? '<small class="error">Proses lebih dari 10 menit. Muat ulang atau minta admin memeriksa eksekusi n8n.</small>' : ''}</div>`).join('') : '<p class="hint">Belum ada dokumen penawaran.</p>';
+  if (offerCache.some(recent) && !offerPollTimer) offerPollTimer = setInterval(loadOffers, 5000);
+  if (!offerCache.some(recent) && offerPollTimer) { clearInterval(offerPollTimer); offerPollTimer = null; }
+}
+$('#refresh-offers').addEventListener('click', loadOffers);
 
 function makeDraft() {
   const recipient = $('#recipient').value.trim() || '[Nama penerima]';

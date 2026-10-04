@@ -5,6 +5,7 @@ const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const publishableKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 const webhookUrl = Deno.env.get('MARKETING_N8N_WEBHOOK')!;
 const letterWebhookUrl = Deno.env.get('MARKETING_N8N_LETTER_WEBHOOK')!;
+const offerWebhookUrl = Deno.env.get('MARKETING_N8N_OFFER_WEBHOOK')!;
 const visitWebhookUrl = webhookUrl.replace(/raykerja-target$/, 'raykerja-visit');
 const webhookSecret = Deno.env.get('MARKETING_WEBHOOK_SECRET')!;
 const allowedOrigins = new Set([
@@ -45,6 +46,24 @@ Deno.serve(async (request) => {
 
   if (request.headers.has('x-ray-secret')) {
     if (request.headers.get('x-ray-secret') !== webhookSecret) return response({ error: 'Unauthorized' }, 401, origin);
+    if (data.kind === 'offer') {
+      const offerId = String(data.offer_id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(offerId)) return response({ error: 'offer_id tidak valid' }, 400, origin);
+      const { data: offer } = await admin.from('marketing_offers').select('id').eq('id', offerId).maybeSingle();
+      if (!offer) return response({ error: 'Penawaran tidak ditemukan' }, 404, origin);
+      const validFileId = (value: unknown) => /^[A-Za-z0-9_-]{10,200}$/.test(String(value || ''));
+      const docId = validFileId(data.doc_file_id) ? String(data.doc_file_id) : null;
+      const rabId = validFileId(data.rab_file_id) ? String(data.rab_file_id) : null;
+      const status = docId && rabId ? 'done' : docId || rabId ? 'partial' : 'error';
+      const { error } = await admin.from('marketing_offers').update({
+        status, nomor_surat: String(data.nomor_surat || '').slice(0, 100) || null,
+        doc_file_id: docId, doc_file_url: docId ? `https://docs.google.com/document/d/${docId}/edit` : null,
+        rab_file_id: rabId, rab_file_url: rabId ? `https://docs.google.com/spreadsheets/d/${rabId}/edit` : null,
+        error: status === 'done' ? null : String(data.error || 'Satu atau lebih dokumen gagal dibuat').slice(0, 300),
+        updated_at: new Date().toISOString(),
+      }).eq('id', offerId);
+      return error ? response({ error: 'Database gagal diperbarui' }, 500, origin) : response({ ok: true }, 200, origin);
+    }
     if (data.kind === 'letter') {
       const letterId = String(data.letter_id || '');
       if (!/^[0-9a-f-]{36}$/i.test(letterId)) return response({ error: 'letter_id tidak valid' }, 400, origin);
@@ -272,6 +291,65 @@ Deno.serve(async (request) => {
       return response({ error: 'Surat di Supabase, tetapi proses Drive gagal dimulai: ' + String(e).slice(0, 120) }, 502, origin);
     }
     return response({ ok: true }, 200, origin);
+  }
+  if (data.action === 'review_lead') {
+    const leadId = String(data.lead_id || '');
+    const reviewStatus = String(data.review_status || '');
+    if (!/^[0-9a-f-]{36}$/i.test(leadId) || !['approved', 'rejected'].includes(reviewStatus))
+      return response({ error: 'Target atau keputusan review tidak valid' }, 400, origin);
+    const { data: lead } = await admin.from('marketing_leads').select('id,owner_id').eq('id', leadId).maybeSingle();
+    if (!lead || (lead.owner_id !== authData.user.id && membership.role !== 'admin'))
+      return response({ error: 'Target tidak ditemukan atau bukan milik akun ini' }, 404, origin);
+    const { error } = await admin.from('marketing_leads').update({ review_status: reviewStatus,
+      reviewed_by: authData.user.id, reviewed_at: new Date().toISOString() }).eq('id', leadId);
+    return error ? response({ error: 'Review target gagal disimpan' }, 500, origin)
+      : response({ ok: true, lead_id: leadId, review_status: reviewStatus }, 200, origin);
+  }
+  if (data.action === 'generate_offer') {
+    if (!membership.drive_folder_id) return response({ error: 'Atur folder Google Drive di Pengaturan sebelum membuat penawaran' }, 400, origin);
+    const leadId = String(data.lead_id || '');
+    const requestId = String(data.request_id || '');
+    const umk = Number(data.umk);
+    if (!/^[0-9a-f-]{36}$/i.test(leadId) || !/^[0-9a-f-]{36}$/i.test(requestId) ||
+        !Number.isSafeInteger(umk) || umk < 1 || umk > 1000000000)
+      return response({ error: 'Target, ID permintaan, atau nilai UMK tidak valid' }, 400, origin);
+    const { data: lead } = await admin.from('marketing_leads')
+      .select('id,owner_id,nama_target,kabupaten_kota,provinsi,data,review_status')
+      .eq('id', leadId).eq('owner_id', authData.user.id).maybeSingle();
+    if (!lead) return response({ error: 'Target tidak ditemukan atau bukan milik akun ini' }, 404, origin);
+    if (lead.review_status !== 'approved') return response({ error: 'Target harus disetujui di menu Review sebelum dibuatkan penawaran' }, 409, origin);
+    const { data: created, error: insertError } = await admin.from('marketing_offers').insert({
+      request_id: requestId, owner_id: authData.user.id, lead_id: leadId, umk,
+      client_name: lead.nama_target, drive_folder_id: membership.drive_folder_id,
+    }).select('id').single();
+    if (insertError) {
+      if (insertError.code === '23505') {
+        const { data: existing } = await admin.from('marketing_offers').select('id,status')
+          .eq('request_id', requestId).eq('owner_id', authData.user.id).maybeSingle();
+        return existing?.status === 'error' ? response({ error: 'Permintaan sebelumnya gagal. Periksa status dokumen sebelum membuat permintaan baru', offer_id: existing.id }, 409, origin)
+          : existing ? response({ ok: true, offer_id: existing.id, status: existing.status }, 200, origin)
+          : response({ error: 'Permintaan ganda gagal diperiksa' }, 409, origin);
+      }
+      return response({ error: 'Permintaan penawaran gagal dicatat' }, 500, origin);
+    }
+    try {
+      const ack = await callWorkflow(offerWebhookUrl, {
+        offer_id: created.id, lead_id: leadId, drive_folder_id: membership.drive_folder_id,
+        nama_target: lead.nama_target, alamat: String(lead.data?.alamat || '').slice(0, 500),
+        kecamatan: String(lead.data?.kecamatan || '').slice(0, 100),
+        kabupaten_kota: lead.kabupaten_kota || '', provinsi: lead.provinsi || '', umk,
+      });
+      if (String(ack.offer_id || '') !== created.id) throw new Error('ID penawaran dari n8n berbeda');
+    } catch (e) {
+      const { data: latest } = await admin.from('marketing_offers').select('status')
+        .eq('id', created.id).maybeSingle();
+      if (latest?.status === 'done' || latest?.status === 'partial')
+        return response({ ok: true, offer_id: created.id, status: latest.status }, 200, origin);
+      await admin.from('marketing_offers').update({ status: 'error',
+        error: `Proses n8n gagal dimulai: ${String(e).slice(0, 160)}`, updated_at: new Date().toISOString() }).eq('id', created.id);
+      return response({ error: 'Penawaran dicatat, tetapi generator gagal dimulai', offer_id: created.id }, 502, origin);
+    }
+    return response({ ok: true, offer_id: created.id, status: 'processing' }, 200, origin);
   }
   if (data.action !== 'research') return response({ error: 'Aksi tidak dikenal' }, 400, origin);
   if (!membership.drive_folder_id) return response({ error: 'Atur folder Google Drive di Pengaturan sebelum mencari target' }, 400, origin);

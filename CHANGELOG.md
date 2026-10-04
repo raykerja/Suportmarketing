@@ -87,3 +87,12 @@ CHANGED: Pengaturan dikeluarkan dari tab menu utama; tombol Keluar tidak lagi be
 FIXED: Header HP 320 px tetap muat; data akun dan panel admin dibersihkan saat keluar, dan kegagalan sign out ditampilkan.
 REMOVED: Tidak ada fungsi Auth atau Pengaturan yang dihapus.
 NOTES: Perubahan lokal pada HTML, CSS, dan visibilitas tombol; Supabase, n8n, serta data tidak diubah.
+
+VERSION: 0.6.0 (draft webhook penawaran web dan perbaikan RUP)
+DATE: 2026-10-04
+
+ADDED: Menu Review Hasil; generator Google Docs surat pengantar dan Google Sheets RAB dari target yang disetujui; tabel `marketing_offers`; workflow n8n web portabel; informasi paket RUP, pagu, kebutuhan, dan bukti jumlah personel pada review pemerintah.
+CHANGED: Draft workflow riset mengganti tool SiRUP kosong dengan pencarian dokumen RUP/SiRUP resmi yang diterbitkan instansi; tahun anggaran rujukan adalah tahun sebelum riset. Generator RAB web memakai tahun dinamis dan payload JSON aman untuk nama target bertanda kutip.
+FIXED: Perpindahan dari Review Hasil ke penawaran menunggu opsi target selesai dimuat.
+REMOVED: Tidak ada fitur production yang dihapus.
+NOTES: Seluruh perubahan masih lokal. Migration, workflow n8n aktif, Edge Function, dan GitHub Pages belum diubah. Jalur dokumen RUP resmi perlu uji sumber dan end-to-end production setelah persetujuan.
