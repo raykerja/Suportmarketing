@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123b37">
+  <title>Marketing | PT Ray Mitra Perkasa</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="config.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <header><div class="brand"><span class="mark">R</span><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="logout" hidden>Keluar</button></header>
+  <main>
+    <section id="login-panel" class="card login"><p class="eyebrow">AKSES TIM MARKETING</p><h1>Masuk ke Marketing</h1><p>Gunakan akun yang telah didaftarkan oleh admin.</p>
+      <form id="login-form"><label>Email<input id="email" type="email" autocomplete="username" required></label><label>Kata sandi<input id="password" type="password" autocomplete="current-password" required></label><button class="primary">Masuk</button></form><p id="login-status" role="status"></p>
+    </section>
+    <section id="setup-panel" class="card login" hidden><p class="eyebrow">AKTIVASI AKUN</p><h1>Buat kata sandi</h1><p>Undangan diterima. Buat kata sandi untuk masuk berikutnya.</p><form id="setup-form"><label>Kata sandi baru<input id="new-password" type="password" minlength="12" autocomplete="new-password" required></label><button class="primary">Simpan kata sandi</button></form><p id="setup-status" role="status"></p></section>
+    <section id="workspace" hidden>
+      <div class="hero"><div><p class="eyebrow">WORKSPACE MARKETING</p><h1>Target pasar & penawaran</h1><p>Riset calon klien, pantau hasil, dan siapkan surat bisnis dalam satu tempat.</p></div></div>
+      <nav class="tabs" aria-label="Menu Marketing"><button data-tab="research" class="active">Cari Target Market</button><button data-tab="leads">Database Target</button><button data-tab="letters">Surat & Penawaran</button></nav>
+      <section id="research" class="panel">
+        <div class="columns"><div class="card"><h2>Riset target baru</h2><p class="hint">AI dan verifikasi internet dijalankan oleh workflow n8n. Proses dapat memerlukan beberapa menit.</p>
+          <form id="research-form"><label>Jenis target<select id="target-type"><option value="SWASTA">Perusahaan swasta</option><option value="PEMERINTAH">Instansi pemerintah</option></select></label>
+            <label>Kecamatan<input id="kecamatan" maxlength="100" required placeholder="Contoh: Mijen"></label>
+            <label>Kabupaten/Kota<input id="kabupaten" maxlength="100" required placeholder="Contoh: Kota Semarang"></label>
+            <label>Provinsi<input id="provinsi" maxlength="100" required placeholder="Contoh: Jawa Tengah"></label>
+            <label id="bidang-wrap">Bidang usaha<input id="bidang" maxlength="150" required placeholder="Contoh: HOTEL"></label>
+            <label>Jumlah target<input id="jumlah" type="number" min="1" max="10" value="5" required></label><button class="primary" id="research-submit">Cari target</button></form>
+          <p id="research-status" role="status"></p></div>
+          <div class="card"><div class="section-head"><h2>Riset terbaru</h2><button id="refresh-research" type="button">Muat ulang</button></div><div id="research-list" class="list"></div></div></div>
+        <div class="card result" id="research-result" hidden></div>
+      </section>
+      <section id="leads" class="panel" hidden><div class="card"><div class="section-head"><div><h2>Database target</h2><p class="hint">Data historis dan hasil riset baru yang tersimpan di Supabase.</p></div><button id="refresh-leads">Muat ulang</button></div><label class="search">Cari nama atau wilayah<input id="lead-query" type="search" placeholder="Ketik nama perusahaan, instansi, atau kota"></label><div id="lead-list" class="table-wrap"></div></div></section>
+      <section id="letters" class="panel" hidden><div class="columns"><div class="card"><h2>Surat & penawaran</h2><p class="hint">Buat draft awal, sunting isinya, lalu simpan di database.</p>
+        <form id="letter-form"><label>Ditujukan kepada<input id="recipient" maxlength="180" required placeholder="Yth. HR Manager PT Contoh"></label><label>Perihal<input id="subject" maxlength="180" required placeholder="Penawaran Jasa Cleaning Service"></label><label>Layanan<select id="service"><option>Security</option><option>Cleaning Service</option><option>Pramubakti</option><option>Produksi</option><option>Driver</option><option>Tenaga Operasional</option></select></label><label>Isi surat<textarea id="letter-body" rows="16" required placeholder="Buat draft lalu sesuaikan dengan kebutuhan calon klien."></textarea></label><div class="actions"><button id="make-draft" type="button">Buat draft</button><button class="primary" type="submit">Simpan surat</button><button id="print-letter" type="button">Cetak / PDF</button></div></form><p id="letter-status" role="status"></p></div><div class="card"><h2>Draft tersimpan</h2><div id="letter-list" class="list"></div></div></div></section>
+    </section>
+  </main>
+  <article id="print-area" hidden></article>
+  <footer>© PT Ray Mitra Perkasa · Setia dalam Bermitra, Profesional dalam Bekerja, Memberikan Pekerjaan Nyata</footer>
+</body>
+</html>

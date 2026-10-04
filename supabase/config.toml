@@ -1,0 +1,4 @@
+project_id = "ewicmiekwzmxkkokmpzf"
+
+[functions.marketing]
+verify_jwt = false
