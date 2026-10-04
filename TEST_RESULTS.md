@@ -52,6 +52,7 @@
 | --- | --- | --- | --- | --- |
 | Struktur Sheet | Header 30 kolom terbaca; ID dan email tersedia | Tab `DataMarketing` gid 1003463896; AE/AF ditambahkan dan diverifikasi | PASS | Baris historis tetap |
 | Database & foto | RLS aktif dan bucket privat | `marketing_visits` RLS aktif; bucket `marketing-visit-photos` tidak publik | PASS | 0 laporan uji tersisa |
+| Izin tabel kunjungan | Browser hanya boleh membaca tabel; tulis melalui Edge Function | `authenticated`: SELECT true, INSERT false, UPDATE false; `anon` SELECT false | PASS | Izin tulis bawaan Supabase dicabut setelah audit |
 | Tanpa login | Simpan/sinkron ditolak | Kedua aksi HTTP 401 | PASS | JWT pengguna nyata belum diuji |
 | Kunjungan tanpa foto | Webhook → Sheet → callback | 1 baris berisi data & ID; status Supabase `synced`; retry memperbarui baris yang sama | PASS | Data uji dibersihkan |
 | Kunjungan dengan foto | Foto Supabase → Drive akun → Sheet → callback | Foto PNG berada di folder Yasir, URL sama di Sheet dan Supabase; status `synced` | PASS | Jalur webhook; foto uji Drive perlu diperiksa lagi saat cleanup |

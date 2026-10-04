@@ -33,6 +33,6 @@ DATE: 2026-10-04
 
 ADDED: Form kunjungan ramah HP berdasarkan 30 kolom tab `DataMarketing`, lokasi opsional, unggah foto privat ke Supabase Storage, salinan foto ke Drive akun, status dan pengulangan sinkronisasi Sheet, daftar laporan untuk pemantauan admin.
 CHANGED: Navigasi menempatkan Kunjungan sebagai menu pertama. Google Sheet mendapat kolom AE `ID LAPORAN` dan AF `EMAIL MARKETING`; header dibekukan. Edge Function dan n8n mendukung append/update berdasarkan ID laporan.
-FIXED: Koreksi mapping ekspresi n8n dan callback ketika Google Sheets tidak mengembalikan nomor baris.
+FIXED: Koreksi mapping ekspresi n8n dan callback ketika Google Sheets tidak mengembalikan nomor baris. Izin INSERT/UPDATE bawaan `authenticated` pada tabel kunjungan dicabut; penulisan hanya melalui Edge Function.
 REMOVED: Tidak ada fitur lama yang dihapus.
 NOTES: Dua jalur webhook diuji dengan laporan sementara, termasuk foto ke folder Drive Yasir; data Sheet dan Supabase uji dibersihkan. HTTPS GitHub Pages sudah aktif; uji tombol setelah login masih memerlukan aktivasi akun Yasir.

@@ -22,6 +22,7 @@ create policy "marketing visits team read" on public.marketing_visits for select
   using (exists (select 1 from public.marketing_members where user_id=auth.uid() and active)
     and (owner_id=auth.uid() or public.marketing_is_admin()));
 revoke all on public.marketing_visits from anon;
+revoke all on public.marketing_visits from authenticated;
 grant select on public.marketing_visits to authenticated;
 
 insert into storage.buckets (id,name,public,file_size_limit,allowed_mime_types)
