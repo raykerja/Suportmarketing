@@ -16,6 +16,9 @@ let researchCache = [];
 let leadCache = [];
 let letterCache = [];
 let visitCache = [];
+let progressVisits = [];
+let progressCache = [];
+let progressEvents = [];
 let editingVisitId = null;
 let editingLetterId = null;
 
@@ -36,7 +39,7 @@ function showWorkspace(user) {
   $('#setup-panel').hidden = !user || !invitePending;
   $('#workspace').hidden = !user || invitePending;
   $('#logout').hidden = !user || invitePending;
-  if (user && !invitePending) { loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadVisits(); }
+  if (user && !invitePending) { loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadVisits(); loadProgress(); }
   else {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     if (letterPollTimer) { clearInterval(letterPollTimer); letterPollTimer = null; }
@@ -142,7 +145,9 @@ $('#get-location').addEventListener('click', () => {
 });
 async function syncVisit(id) {
   const { data, error } = await client.functions.invoke('marketing', { body: { action: 'sync_visit', visit_id: id } });
-  status('#visit-status', error || !data?.ok ? 'Laporan tersimpan di Supabase, tetapi belum masuk Sheet: ' + (data?.error || error?.message || 'Gagal memulai sinkronisasi') : 'Laporan tersimpan. Sinkronisasi Sheet sedang diproses.', !!error || !data?.ok);
+  const failed = !!error || !data?.ok;
+  status('#visit-status', failed ? 'Laporan tersimpan di Supabase, tetapi belum masuk Sheet: ' + (data?.error || error?.message || 'Gagal memulai sinkronisasi') : 'Laporan tersimpan. Sinkronisasi Sheet sedang diproses.', failed);
+  return !failed;
 }
 $('#visit-form').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -167,11 +172,97 @@ $('#visit-form').addEventListener('submit', async (event) => {
     $('#visit-photo').value = '';
     await syncVisit(data.visit_id);
     await loadVisits();
+    await loadProgress();
     if (!editingVisitId) resetVisitForm();
   } catch (e) { status('#visit-status', String(e.message || e), true); }
   finally { button.disabled = false; }
 });
 resetVisitForm();
+
+const stageNames = { kunjungan: 'Kunjungan', proposal: 'Proposal', penawaran: 'Penawaran', follow_up: 'Follow up', deal: 'Deal', gagal: 'Gagal' };
+function progressState(visit) {
+  const row = progressCache.find((p) => p.visit_id === visit.id);
+  return row || { stage: 'kunjungan', next_follow_up: visit.data?.tanggal_follow_up || null,
+    last_note: visit.data?.catatan || '', last_activity_date: visit.data?.tanggal_realisasi_kunjungan || '' };
+}
+function renderProgress() {
+  const today = localToday();
+  const open = progressVisits.map((visit) => ({ visit, progress: progressState(visit) }))
+    .filter(({ progress }) => !['deal','gagal'].includes(progress.stage));
+  const due = open.filter(({ progress }) => progress.next_follow_up && progress.next_follow_up <= today)
+    .sort((a, b) => a.progress.next_follow_up.localeCompare(b.progress.next_follow_up));
+  const upcoming = open.filter(({ progress }) => progress.next_follow_up && progress.next_follow_up > today).length;
+  const banner = $('#visit-reminder-banner');
+  banner.hidden = !due.length;
+  banner.textContent = due.length ? `${due.length} target perlu follow up hari ini atau sudah terlambat. Buka pengingat →` : '';
+  $('#progress-summary').innerHTML = `<div><strong>${due.filter((x) => x.progress.next_follow_up < today).length}</strong><small>Terlambat</small></div><div><strong>${due.filter((x) => x.progress.next_follow_up === today).length}</strong><small>Hari ini</small></div><div><strong>${upcoming}</strong><small>Akan datang</small></div><div><strong>${open.filter((x) => !x.progress.next_follow_up).length}</strong><small>Belum dijadwalkan</small></div>`;
+  $('#progress-due').innerHTML = due.length ? `<h3>Perlu ditindaklanjuti</h3>${due.map(({ visit, progress }) => `<div class="due-item"><div><strong>${esc(visit.data?.nama_perusahaan)}</strong><small>${esc(progress.next_follow_up)} · ${esc(stageNames[progress.stage])} · ${esc(visit.data?.nama_marketing)}</small></div>${visit.owner_id === currentUser.id ? `<button type="button" data-progress-open="${esc(visit.id)}">Catat progres</button>` : ''}</div>`).join('')}` : '<p class="hint">Tidak ada follow up yang jatuh tempo hari ini atau terlambat.</p>';
+  const selected = $('#progress-visit').value;
+  const own = progressVisits.filter((visit) => visit.owner_id === currentUser.id);
+  $('#progress-visit').innerHTML = '<option value="">Pilih target</option>' + own.map((visit) => `<option value="${esc(visit.id)}">${esc(visit.data?.nama_perusahaan)} · ${esc(visit.data?.tanggal_realisasi_kunjungan)}</option>`).join('');
+  if (own.some((visit) => visit.id === selected)) $('#progress-visit').value = selected;
+  renderProgressTarget();
+}
+function renderProgressTarget() {
+  const id = $('#progress-visit').value;
+  const visit = progressVisits.find((row) => row.id === id);
+  const current = visit && progressState(visit);
+  $('#progress-current').textContent = current ? `Tahap saat ini: ${stageNames[current.stage] || current.stage} · Follow up: ${current.next_follow_up || 'belum dijadwalkan'}` : '';
+  $('#progress-steps').innerHTML = current ? ['kunjungan','proposal','penawaran','follow_up','deal','gagal']
+    .map((stage) => `<span class="${current.stage === stage ? 'current' : ''}">${esc(stageNames[stage])}</span>`).join('') : '';
+  const events = progressEvents.filter((row) => row.visit_id === id);
+  $('#progress-history').innerHTML = !id ? '<p class="hint">Pilih target untuk melihat riwayatnya.</p>' : events.length ? events.map((row) => `<div class="item timeline-item"><strong>${esc(stageNames[row.stage])}</strong><small>${esc(row.activity_date)} · ${esc(row.next_follow_up ? 'Follow up: ' + row.next_follow_up : 'Tidak ada jadwal')}</small><p>${esc(row.note)}</p>${row.attachment_url ? `<a href="${esc(row.attachment_url)}" target="_blank" rel="noopener noreferrer">Buka file Drive</a>` : ''}</div>`).join('') : '<p class="hint">Belum ada perkembangan setelah kunjungan.</p>';
+}
+async function loadProgress() {
+  if (!client || !currentUser) return;
+  const results = await Promise.all([
+    client.from('marketing_visits').select('id,owner_id,data,created_at').order('created_at', { ascending: false }).limit(500),
+    client.from('marketing_progress').select('*').limit(500),
+    client.from('marketing_progress_events').select('*').order('created_at', { ascending: false }).limit(1000),
+  ]);
+  const failed = results.find((row) => row.error);
+  if (failed) { $('#progress-due').textContent = 'Progres belum dapat dibaca: ' + failed.error.message; return; }
+  progressVisits = results[0].data || []; progressCache = results[1].data || []; progressEvents = results[2].data || [];
+  renderProgress();
+}
+$('#refresh-progress').addEventListener('click', loadProgress);
+$('#visit-reminder-banner').addEventListener('click', () => document.querySelector('[data-tab="progress"]').click());
+$('#progress-visit').addEventListener('change', renderProgressTarget);
+$('#progress-letter').addEventListener('change', () => {
+  const letter = letterCache.find((row) => row.id === $('#progress-letter').value);
+  if (letter?.drive_file_url) $('#progress-attachment').value = letter.drive_file_url;
+});
+$('#progress-due').addEventListener('click', (event) => {
+  const id = event.target.closest('[data-progress-open]')?.dataset.progressOpen;
+  if (id) { $('#progress-visit').value = id; renderProgressTarget(); $('#progress-form').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+});
+$('#progress-stage').addEventListener('change', () => {
+  const closed = ['deal','gagal'].includes($('#progress-stage').value);
+  $('#progress-next-wrap').hidden = closed; $('#progress-next').required = !closed;
+  if (closed) $('#progress-next').value = '';
+});
+$('#progress-date').value = localToday();
+$('#progress-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = $('#save-progress'); button.disabled = true;
+  status('#progress-status', 'Menyimpan perkembangan…');
+  try {
+    const body = { action: 'record_progress', visit_id: $('#progress-visit').value, stage: $('#progress-stage').value,
+      activity_date: $('#progress-date').value, note: $('#progress-note').value.trim(),
+      next_follow_up: $('#progress-next').value, attachment_url: $('#progress-attachment').value.trim() };
+    const { data, error } = await client.functions.invoke('marketing', { body });
+    if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Gagal menyimpan perkembangan');
+    const visitId = body.visit_id;
+    const syncStarted = await syncVisit(visitId);
+    const syncMessage = $('#visit-status').textContent;
+    await Promise.all([loadProgress(), loadVisits()]);
+    $('#progress-visit').value = visitId; renderProgressTarget();
+    $('#progress-note').value = ''; $('#progress-attachment').value = '';
+    $('#progress-letter').value = '';
+    status('#progress-status', `Perkembangan tersimpan. ${syncMessage}`, !syncStarted);
+  } catch (error) { status('#progress-status', String(error.message || error), true); }
+  finally { button.disabled = false; }
+});
 
 $('#target-type').addEventListener('change', () => {
   const swasta = $('#target-type').value === 'SWASTA';
@@ -244,6 +335,10 @@ async function loadLetters() {
   const { data, error } = await client.from('marketing_letters').select('*').order('updated_at', { ascending: false }).limit(100);
   if (error) { $('#letter-list').textContent = 'Gagal membaca surat: ' + error.message; return; }
   letterCache = data || [];
+  const selectedProgressLetter = $('#progress-letter').value;
+  $('#progress-letter').innerHTML = '<option value="">Pilih surat tersimpan</option>' + letterCache.filter((r) => r.drive_file_url)
+    .map((r) => `<option value="${esc(r.id)}">${esc(r.subject)} · ${esc(r.recipient)}</option>`).join('');
+  if (letterCache.some((r) => r.id === selectedProgressLetter && r.drive_file_url)) $('#progress-letter').value = selectedProgressLetter;
   $('#letter-list').innerHTML = letterCache.length ? letterCache.map((r) => `<div class="item"><strong>${esc(r.subject)}</strong><small>${esc(r.recipient)} · ${esc(date(r.updated_at))}</small><div>Drive: ${esc(r.drive_status || 'pending')} ${r.drive_file_url ? `<a href="${esc(r.drive_file_url)}" target="_blank" rel="noopener noreferrer">Buka file</a>` : ''}</div>${r.drive_error ? `<small class="error">${esc(r.drive_error)}</small>` : ''}<button type="button" data-letter="${esc(r.id)}">Buka</button></div>`).join('') : '<p class="hint">Belum ada draft tersimpan.</p>';
   if (letterCache.some((r) => r.drive_status === 'pending') && !letterPollTimer) letterPollTimer = setInterval(loadLetters, 5000);
   if (!letterCache.some((r) => r.drive_status === 'pending') && letterPollTimer) { clearInterval(letterPollTimer); letterPollTimer = null; }

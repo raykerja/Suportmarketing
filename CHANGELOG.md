@@ -36,3 +36,12 @@ CHANGED: Navigasi menempatkan Kunjungan sebagai menu pertama. Google Sheet menda
 FIXED: Koreksi mapping ekspresi n8n dan callback ketika Google Sheets tidak mengembalikan nomor baris. Izin INSERT/UPDATE bawaan `authenticated` pada tabel kunjungan dicabut; penulisan hanya melalui Edge Function.
 REMOVED: Tidak ada fitur lama yang dihapus.
 NOTES: Dua jalur webhook diuji dengan laporan sementara, termasuk foto ke folder Drive Yasir; data Sheet dan Supabase uji dibersihkan. HTTPS GitHub Pages sudah aktif; uji tombol dari browser masih memerlukan sesi login pengguna.
+
+VERSION: 0.4.0 (draft progres dan pengingat)
+DATE: 2026-10-04
+
+ADDED: Menu progres per target dengan tahap proposal, penawaran, follow up berulang, deal/gagal; timeline aktivitas; daftar follow up jatuh tempo; pilihan surat yang sudah tersimpan di Drive; dua tabel Supabase dan fungsi transaksi.
+CHANGED: Draft workflow kunjungan menambah empat kolom ringkasan progres di Sheet tanpa mengubah kolom A–AF. Edge Function menambah aksi `record_progress` dan memakai webhook kunjungan untuk menyinkronkan keadaan terbaru.
+FIXED: Status sinkronisasi gagal pada formulir progres ditampilkan sebagai pesan error, walau riwayat sudah tersimpan.
+REMOVED: Tidak ada.
+NOTES: Perubahan masih lokal. Migration, header Sheet, n8n, Edge Function, dan GitHub production belum diubah. Pengingat saat ini berada di halaman; kanal kirim otomatis belum dipilih/diotorisasi.

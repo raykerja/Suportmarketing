@@ -59,3 +59,16 @@
 | Tampilan HP | Tanpa scroll mendatar, input dan tombol nyaman disentuh | Chrome 390×844 dan 320×640; lebar dokumen 320 pada viewport 320; tombol simpan terlihat | PASS | Pratinjau lokal tanpa login |
 | Tombol simpan dari akun Yasir | Supabase + Sheet + foto Drive dari browser | Belum diuji | NOT TESTED | Auth mencatat email terkonfirmasi dan login sebelumnya; browser pengujian tidak memiliki sesi login |
 | HTTPS domain | Login & lokasi browser melalui HTTPS | Sertifikat GitHub Pages approved, HTTPS enforced, GET 200; HTTP mengarah ke HTTPS | PASS | Custom domain dipasang ulang sesuai panduan GitHub |
+
+## Verifikasi draft progres 0.4.0 — 2026-10-04
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Contoh Apps Script | Alur lapangan dipahami | Kunjungan Baru, Follow Up, Info Penting; field dan respons diperiksa di browser | PASS | Tidak mengirim formulir contoh |
+| Syntax frontend/Python | Tidak ada error parse | `node --check app.js`, `py_compile` exit 0 | PASS | Uji lokal |
+| Selector form | Semua ID statis tersedia | 75 selector; satu ID `print-research` dibuat dinamis oleh fungsi lama | PASS | Tidak ada ID statis hilang |
+| Draft workflow | Empat kolom baru, kunci baris sama | 36 mapping kolom; `ID LAPORAN` tetap matching column; 9 node | PASS | Draft privat belum diaktifkan |
+| Tampilan HP | Tidak ada lebar halaman melebihi viewport | Pratinjau 390/320 px: lebar dokumen 390/320 px | PASS | Data contoh statis, belum login nyata |
+| RLS & fungsi transaksi | Staf hanya menulis progres target sendiri | Skema dan Edge diperiksa secara statis | PARTIAL | Belum diterapkan/diuji dengan dua akun |
+| Progres → Supabase → Sheet | Riwayat dan baris Sheet terbaru sama | Belum dijalankan | NOT TESTED | Memerlukan izin migration, n8n, Edge, Sheet, dan push |
+| Pengingat otomatis email/WhatsApp | Pesan terkirim sesuai jadwal | Belum disiapkan | NOT TESTED | Kanal belum dipilih; n8n tidak memiliki Gmail/SMTP credential |

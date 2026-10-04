@@ -172,7 +172,13 @@ Deno.serve(async (request) => {
         .eq('id', id).eq('owner_id', authData.user.id).maybeSingle();
       if (!previous) return response({ error: 'Laporan tidak ditemukan' }, 404, origin);
       visit.tanggal_input = String(previous.data?.tanggal_input || visit.tanggal_input);
-      const { data: updated, error } = await admin.from('marketing_visits').update({ data: visit,
+      const { data: progress } = await admin.from('marketing_progress').select('stage,next_follow_up').eq('visit_id', id).maybeSingle();
+      if (progress) {
+        visit.tanggal_follow_up = progress.next_follow_up || '';
+        if (progress.stage === 'deal') visit.respon = 'Baik';
+        if (progress.stage === 'gagal') visit.respon = 'Menolak';
+      }
+      const { data: updated, error } = await admin.from('marketing_visits').update({ data: { ...previous.data, ...visit },
         sheet_status: 'pending', sheet_error: null, updated_at: new Date().toISOString() })
         .eq('id', id).eq('owner_id', authData.user.id).select('id').maybeSingle();
       return error ? response({ error: 'Laporan gagal diperbarui' }, 500, origin)
@@ -184,6 +190,32 @@ Deno.serve(async (request) => {
       .select('id').single();
     return error ? response({ error: 'Laporan gagal disimpan' }, 500, origin)
       : response({ ok: true, visit_id: created.id }, 200, origin);
+  }
+  if (data.action === 'record_progress') {
+    const visitId = String(data.visit_id || '');
+    const stage = String(data.stage || '');
+    const activityDate = String(data.activity_date || '');
+    const nextFollowUp = String(data.next_follow_up || '');
+    const note = String(data.note || '').trim();
+    const attachmentUrl = String(data.attachment_url || '').trim();
+    const validDate = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+      !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
+    if (!/^[0-9a-f-]{36}$/i.test(visitId) || !['kunjungan','proposal','penawaran','follow_up','deal','gagal'].includes(stage) ||
+      !validDate(activityDate) || (nextFollowUp && !validDate(nextFollowUp)) || !note || note.length > 3000 ||
+      (attachmentUrl && (!/^https:\/\/drive\.google\.com\//.test(attachmentUrl) || attachmentUrl.length > 500)) ||
+      (!['deal','gagal'].includes(stage) && !nextFollowUp)) {
+      return response({ error: 'Isi tahap, tanggal kegiatan, catatan, dan jadwal follow up yang valid' }, 400, origin);
+    }
+    const { data: visit } = await admin.from('marketing_visits').select('id').eq('id', visitId)
+      .eq('owner_id', authData.user.id).maybeSingle();
+    if (!visit) return response({ error: 'Laporan tidak ditemukan atau bukan milik akun ini' }, 404, origin);
+    const { data: eventId, error } = await admin.rpc('marketing_record_progress', {
+      p_visit_id: visitId, p_owner_id: authData.user.id, p_stage: stage, p_activity_date: activityDate,
+      p_note: note, p_next_follow_up: ['deal','gagal'].includes(stage) ? null : nextFollowUp,
+      p_attachment_url: attachmentUrl || null,
+    });
+    return error ? response({ error: 'Progres gagal disimpan: ' + error.message.slice(0, 150) }, 500, origin)
+      : response({ ok: true, event_id: eventId, visit_id: visitId }, 200, origin);
   }
   if (data.action === 'attach_visit_photo') {
     const id = String(data.visit_id || '');

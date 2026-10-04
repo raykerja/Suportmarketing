@@ -19,8 +19,9 @@
     <section id="setup-panel" class="card login" hidden><p class="eyebrow">AKTIVASI AKUN</p><h1>Buat kata sandi</h1><p>Undangan diterima. Buat kata sandi untuk masuk berikutnya.</p><form id="setup-form"><label>Kata sandi baru<input id="new-password" type="password" minlength="12" autocomplete="new-password" required></label><button class="primary">Simpan kata sandi</button></form><p id="setup-status" role="status"></p></section>
     <section id="workspace" hidden>
       <div class="hero"><div><p class="eyebrow">WORKSPACE MARKETING</p><h1>Target pasar & kunjungan</h1><p>Riset calon klien, catat kunjungan lapangan, pantau tindak lanjut, dan siapkan surat bisnis.</p></div></div>
-      <nav class="tabs" aria-label="Menu Marketing"><button data-tab="visits" class="active">Kunjungan</button><button data-tab="research">Cari Target Market</button><button data-tab="leads">Database Target</button><button data-tab="letters">Surat & Penawaran</button><button data-tab="settings">Pengaturan</button></nav>
+      <nav class="tabs" aria-label="Menu Marketing"><button data-tab="visits" class="active">Kunjungan</button><button data-tab="progress">Progres & Pengingat</button><button data-tab="research">Cari Target Market</button><button data-tab="leads">Database Target</button><button data-tab="letters">Surat & Penawaran</button><button data-tab="settings">Pengaturan</button></nav>
       <section id="visits" class="panel">
+        <button id="visit-reminder-banner" class="reminder-banner" type="button" hidden></button>
         <div class="visit-layout">
           <div class="card"><div class="section-head"><div><p class="eyebrow">LAPORAN LAPANGAN</p><h2 id="visit-form-title">Catat kunjungan</h2></div><button id="new-visit" type="button" hidden>Entri baru</button></div><p class="hint">Isi data utama saat di lokasi. Detail tambahan dapat dilengkapi kemudian.</p>
             <form id="visit-form">
@@ -55,6 +56,23 @@
           </div>
           <div class="card"><div class="section-head"><h2>Laporan terbaru</h2><button id="refresh-visits" type="button">Muat ulang</button></div><div id="visit-list" class="list"></div></div>
         </div>
+      </section>
+      <section id="progress" class="panel" hidden>
+        <div class="card"><div class="section-head"><div><p class="eyebrow">TINDAK LANJUT</p><h2>Progres target</h2><p class="hint">Buka target dari daftar jatuh tempo atau pilih kunjungan untuk mencatat langkah berikutnya.</p></div><button id="refresh-progress" type="button">Muat ulang</button></div>
+          <div id="progress-summary" class="progress-summary"></div><div id="progress-due" class="progress-due"></div>
+        </div>
+        <div class="columns"><div class="card"><h2>Catat perkembangan</h2><form id="progress-form">
+          <label>Target dari kunjungan<select id="progress-visit" required><option value="">Pilih target</option></select></label>
+          <div id="progress-current" class="hint"></div>
+          <div id="progress-steps" class="progress-steps" aria-label="Tahapan target"></div>
+          <label>Tahap terbaru<select id="progress-stage" required><option value="">Pilih tahap</option><option value="kunjungan">Kunjungan / pembahasan</option><option value="proposal">Proposal disampaikan</option><option value="penawaran">Penawaran disampaikan</option><option value="follow_up">Follow up</option><option value="deal">Deal</option><option value="gagal">Gagal / ditolak</option></select></label>
+          <label>Tanggal kegiatan<input id="progress-date" type="date" required></label>
+          <label>Hasil, kendala, atau alasan keputusan<textarea id="progress-note" rows="4" maxlength="3000" required placeholder="Catat siapa yang dihubungi, respons, dan langkah berikutnya"></textarea></label>
+          <label id="progress-next-wrap">Jadwal follow up berikutnya <span class="required">*</span><input id="progress-next" type="date"></label>
+          <label>Surat yang dibuat di halaman ini <small>Opsional; salinannya sudah masuk folder akun.</small><select id="progress-letter"><option value="">Pilih surat tersimpan</option></select></label>
+          <label>Link file proposal/penawaran di Drive <small>Opsional; gunakan file dari folder akun ini.</small><input id="progress-attachment" type="url" maxlength="500" placeholder="https://drive.google.com/file/d/..."></label>
+          <button id="save-progress" class="primary" type="submit">Simpan perkembangan</button><p id="progress-status" role="status"></p>
+        </form></div><div class="card"><h2>Riwayat target</h2><div id="progress-history" class="list"><p class="hint">Pilih target untuk melihat riwayatnya.</p></div></div></div>
       </section>
       <section id="research" class="panel" hidden>
         <div class="columns"><div class="card"><h2>Riset target baru</h2><p class="hint">AI dan verifikasi internet dijalankan oleh workflow n8n. Proses dapat memerlukan beberapa menit.</p>

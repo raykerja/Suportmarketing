@@ -66,9 +66,10 @@ const fields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','a
   'catatan','titik_lokasi_laporan','koordinat_target','tanggal_follow_up_aktual',
   'catatan_hasil_follow_up','nama_marketing','plotting_area','informasi_penting',
   'tenaga_kerja_saat_ini','bagian_kerja_outsourcing','jumlah_calon_tenaga_kerja',
-  'petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing'];
+  'petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing',
+  'tahap_terkini','tanggal_aktivitas_terakhir','catatan_progres_terakhir','link_file_progres'];
 const dates = new Set(['tanggal_input','tanggal_janji_kunjungan','tanggal_realisasi_kunjungan',
-  'tanggal_follow_up','tanggal_follow_up_aktual','tanggal_menghubungi']);
+  'tanggal_follow_up','tanggal_follow_up_aktual','tanggal_menghubungi','tanggal_aktivitas_terakhir']);
 const sheet = {};
 for (const key of fields) sheet[key] = key === 'foto_kunjungan' ? photoUrl : dates.has(key) ? date(v[key]) : safe(v[key]);
 return [{json:{visit_id:base.visit_id, photo_drive_file_id:photoId,
@@ -87,7 +88,8 @@ headers = ['AREA','  NAMA PERUSAHAAN','KATEGORI','NOMOR KONTAK PERUSAHAAN','ALAM
     'TITIK LOKASI LAPORAN','KOORDINAT TARGET','TANGGAL FOLLOW UP AKTUAL','CATATAN HASIL FOLLOW UP',
     ' NAMA MARKETING','PLOTTING AREA','INFORMASI PENTING','TENAGA KERJA SAAT INI',
     'BAGIAN KERJA OUTSOURCING','JUMLAH CALON TENAGA KERJA','PETUGAS TELEMARKETING',
-    'STATUS TELEMARKETING','TANGGAL MENGHUBUNGI','CATATAN TELEMARKETING','ID LAPORAN','EMAIL MARKETING']
+    'STATUS TELEMARKETING','TANGGAL MENGHUBUNGI','CATATAN TELEMARKETING','ID LAPORAN','EMAIL MARKETING',
+    'TAHAP TERKINI','TANGGAL AKTIVITAS TERAKHIR','CATATAN PROGRES TERAKHIR','LINK FILE PROGRES']
 keys = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_input',
     'tanggal_janji_kunjungan','jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2','nomor_kontak_pic',
     'foto_kunjungan','tanggal_realisasi_kunjungan','respon','tanggal_follow_up','catatan',
@@ -96,7 +98,11 @@ keys = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','
     'bagian_kerja_outsourcing','jumlah_calon_tenaga_kerja','petugas_telemarketing',
     'status_telemarketing','tanggal_menghubungi','catatan_telemarketing']
 mapping = {header: '={{ $json.sheet.' + key + ' }}' for header, key in zip(headers, keys)}
-mapping.update({'ID LAPORAN': '={{ $json.visit_id }}', 'EMAIL MARKETING': '={{ $json.email }}'})
+mapping.update({'ID LAPORAN': '={{ $json.visit_id }}', 'EMAIL MARKETING': '={{ $json.email }}',
+    'TAHAP TERKINI': '={{ $json.sheet.tahap_terkini }}',
+    'TANGGAL AKTIVITAS TERAKHIR': '={{ $json.sheet.tanggal_aktivitas_terakhir }}',
+    'CATATAN PROGRES TERAKHIR': '={{ $json.sheet.catatan_progres_terakhir }}',
+    'LINK FILE PROGRES': '={{ $json.sheet.link_file_progres }}'})
 schema = [{'id': h, 'displayName': h, 'required': False, 'defaultMatch': False, 'display': True,
            'type': 'string', 'canBeUsedToMatch': True} for h in headers]
 sheets = node('Sinkron DataMarketing', 'n8n-nodes-base.googleSheets', 4.7, 1540, 0, {

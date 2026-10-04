@@ -10,9 +10,11 @@ Portal Marketing PT Ray Mitra Perkasa untuk `marketing.raykerja.cloud`. Source h
 | `config.js` | URL dan publishable key Supabase untuk browser |
 | `supabase/migrations/20261004_marketing.sql` | Tabel, indeks, status Drive, RLS per akun |
 | `supabase/migrations/20261004_marketing_visits.sql` | Tabel kunjungan, RLS, bucket foto privat |
+| `supabase/migrations/20261004_marketing_progress.sql` | Tahap dan riwayat progres, pengingat, RLS, fungsi transaksi |
 | `supabase/functions/marketing/index.ts` | Undangan akun, pengaturan folder, pemicu dua webhook, callback |
 | `scripts/prepare_n8n.py`, `scripts/prepare_letter_n8n.py` | Draft privat dua workflow n8n |
 | `scripts/prepare_visit_n8n.py` | Draft privat webhook foto Drive dan sinkronisasi Google Sheet |
+| `scripts/prepare_progress_update.py` | Draft perubahan dua node workflow Sheet yang sudah aktif |
 | `scripts/configure_auth.py`, `scripts/invite_admin.py`, `scripts/add_member.py` | Konfigurasi Auth dan admin pertama |
 | `scripts/import_sheet.py`, `scripts/import_legacy_letter.py` | Impor data historis |
 
@@ -25,6 +27,10 @@ Portal Marketing PT Ray Mitra Perkasa untuk `marketing.raykerja.cloud`. Source h
 - Staf hanya melihat riset, target, dan surat miliknya. Admin dapat melihat semua riset dan target serta membuat akun staf dan mengatur folder mereka. Karena proyek belum memiliki SMTP khusus, halaman admin menampilkan link aktivasi satu kali untuk disalin dan dikirim secara privat kepada staf. Staf dapat mengubah link foldernya sendiri di menu **Pengaturan**. Folder riset dibekukan pada saat permintaan dibuat sehingga pergantian folder kemudian tidak mengalihkan hasil riset yang sedang berjalan.
 - Kunjungan: staf memilih target hasil riset atau mengetik target baru, mengisi data inti di HP, lalu menyimpan. Supabase menjadi database utama `marketing_visits`; n8n melakukan **append or update** ke tab `DataMarketing` pada Sheet `MARKETING RAYMP 2026` dengan `ID LAPORAN` sebagai kunci. Kolom AE/AF berisi ID dan email akun. Perubahan laporan memperbarui baris yang sama. Jika sinkronisasi gagal, laporan tetap di Supabase dan staf dapat menekan **Coba sinkron lagi**. Admin melihat laporan dan status semua staf, sedangkan hanya pemilik dapat mengubahnya.
 - Foto kunjungan opsional diambil dari kamera/galeri HP, diunggah ke bucket Supabase privat (`marketing-visit-photos`), lalu disalin oleh n8n ke folder Drive akun. Tautan Drive masuk kolom `FOTO KUNJUNGAN`. Tombol **Ambil lokasi HP** memerlukan izin lokasi dari perangkat dan koneksi HTTPS; koordinat dapat diisi manual.
+- Progres target dimulai dari laporan kunjungan yang sudah ada. Setiap aktivitas dicatat sebagai `kunjungan`, `proposal`, `penawaran`, `follow_up`, `deal`, atau `gagal`. Riwayat lengkap berada di `marketing_progress_events`, tahap dan jadwal terbaru di `marketing_progress`. Tahap terbuka wajib punya tanggal follow up berikutnya. Tahap `deal` dan `gagal` menutup pengingat. Admin dapat memantau semua target, staf hanya mengubah miliknya.
+- Menu **Progres & Pengingat** menampilkan jumlah terlambat, jatuh tempo hari ini, akan datang, dan belum dijadwalkan. Laporan lama dengan `TANGGAL FOLLOW UP` juga muncul tanpa migrasi data ulang. Pengingat ini muncul saat halaman dibuka atau tombol **Muat ulang** ditekan; pengiriman email/WhatsApp belum dikonfigurasi.
+- Progres tersimpan melalui Edge Function lalu pembaruan Sheet memakai webhook kunjungan yang ada. Tab `DataMarketing` membutuhkan empat kolom baru AG–AJ: `TAHAP TERKINI`, `TANGGAL AKTIVITAS TERAKHIR`, `CATATAN PROGRES TERAKHIR`, `LINK FILE PROGRES`. Kolom O `TANGGAL FOLLOW UP`, S `TANGGAL FOLLOW UP AKTUAL`, T `CATATAN HASIL FOLLOW UP`, dan N `RESPON` tetap dipakai. Riwayat setiap aktivitas tersimpan di Supabase; Sheet berisi keadaan terbaru per target.
+- File proposal/penawaran dapat dipilih dari surat yang dibuat portal dan disalin ke folder Drive akun, atau ditautkan memakai URL Google Drive. Pencatatan link belum memverifikasi kepemilikan file maupun apakah file berada di folder akun; staf harus memilih file dari folder akunnya.
 - Link folder harus berbentuk `https://drive.google.com/drive/folders/ID`. Folder harus memberikan akses **Editor** ke akun Google yang terhubung dengan credential Google Drive n8n. Aplikasi belum memeriksa izin folder secara langsung; kegagalan akan terlihat pada status Drive.
 - Sumber historis: Google Sheet `Data hasil Marketing`, 57 baris/38 kolom per 4 Oktober 2026, dan satu percakapan surat pada RAY AI. Ekspor lokal hanya di `private/`.
 
@@ -50,3 +56,14 @@ DNS subdomain mengikuti [panduan GitHub Pages](https://docs.github.com/en/pages/
 - Akun Drive n8n harus diberi izin Editor pada setiap folder pengguna. Jika file gagal dibuat, cek permission folder, masa berlaku OAuth, dan eksekusi n8n. Untuk riset, cek status `partial`; untuk surat, cek `drive_status=error`.
 - Jika webhook gagal, cek eksekusi workflow, secret, callback HTTP, dan log Edge Function. Respons webhook awal hanya tanda proses diterima.
 - Rollback: nonaktifkan dua workflow Raykerja, kembalikan CNAME `marketing` jika ada nilai sebelumnya, dan rollback source GitHub. Data Supabase tidak dihapus otomatis. Portal RAY AI lama tetap independen.
+
+## Penerapan progres 0.4.0 (menunggu persetujuan produksi)
+
+1. Backup skema dan workflow `m12aJ6zFGhfgCjqP`; catat versi Edge Function dan commit GitHub saat ini.
+2. Jalankan migration `20261004_marketing_progress.sql`. Periksa kedua tabel, fungsi, RLS, dan izin tulis hanya untuk service role.
+3. Tambahkan header AG–AJ di baris 1 tab `DataMarketing` secara berurutan sesuai daftar di atas. Kolom A–AF dan baris data lama tidak perlu diubah.
+4. Jalankan `python3 scripts/prepare_visit_n8n.py` lalu `python3 scripts/prepare_progress_update.py`. Tinjau draft privat, kemudian perbarui hanya node `Susun Baris Sheet` dan `Sinkron DataMarketing` pada workflow aktif; pertahankan ID, webhook, credential, dan node lainnya.
+5. Bundle lalu deploy Edge Function `marketing`; cek aksi `record_progress` menolak tanpa JWT. Push source GitHub untuk memperbarui Pages. Periksa HTTPS.
+6. Uji menggunakan satu kunjungan uji milik Yasir: proposal → penawaran → dua follow up → deal atau gagal. Verifikasi timeline Supabase, baris Sheet yang sama, file Drive, dan ringkasan pengingat. Bersihkan hanya data uji yang disetujui.
+
+Rollback aplikasi: kembalikan commit GitHub, versi Edge Function, dan dua node n8n dari backup. Biarkan tabel progres dan kolom Sheet tambahan sebagai data historis; jangan hapus otomatis. Jika sinkronisasi Sheet gagal, progres tetap tersimpan di Supabase dan status kunjungan dapat dicoba ulang.
