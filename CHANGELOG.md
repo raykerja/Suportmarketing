@@ -45,3 +45,12 @@ CHANGED: Draft workflow kunjungan menambah empat kolom ringkasan progres di Shee
 FIXED: Status sinkronisasi gagal pada formulir progres ditampilkan sebagai pesan error, walau riwayat sudah tersimpan.
 REMOVED: Tidak ada.
 NOTES: Perubahan masih lokal. Migration, header Sheet, n8n, Edge Function, dan GitHub production belum diubah. Pengingat saat ini berada di halaman; kanal kirim otomatis belum dipilih/diotorisasi.
+
+VERSION: 0.4.1 (pratinjau halaman)
+DATE: 2026-10-04
+
+ADDED: Mode simulasi progres dengan target dan timeline contoh di halaman Marketing; label pratinjau menjelaskan bahwa data tidak tersimpan.
+CHANGED: `config.js` menetapkan `progressEnabled: false`, sehingga halaman tidak memanggil tabel progres yang belum diterapkan. Form progres dapat dicoba di browser dan kembali ke contoh awal setelah reload.
+FIXED: Menu pratinjau dapat dinilai tanpa perubahan Supabase, Sheet, workflow n8n, atau Edge Function produksi.
+REMOVED: Tidak ada.
+NOTES: Sesuai arahan terbaru, hanya halaman GitHub Pages yang dipublikasikan pada tahap ini; backend progres tetap menunggu penilaian.

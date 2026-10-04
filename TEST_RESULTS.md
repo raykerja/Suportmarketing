@@ -72,3 +72,14 @@
 | RLS & fungsi transaksi | Staf hanya menulis progres target sendiri | Skema dan Edge diperiksa secara statis | PARTIAL | Belum diterapkan/diuji dengan dua akun |
 | Progres → Supabase → Sheet | Riwayat dan baris Sheet terbaru sama | Belum dijalankan | NOT TESTED | Memerlukan izin migration, n8n, Edge, Sheet, dan push |
 | Pengingat otomatis email/WhatsApp | Pesan terkirim sesuai jadwal | Belum disiapkan | NOT TESTED | Kanal belum dipilih; n8n tidak memiliki Gmail/SMTP credential |
+
+## Pratinjau halaman 0.4.1 — 2026-10-04
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Mode pratinjau tanpa tabel progres | Halaman tidak meminta tabel yang belum ada | Mock browser membuka menu dan menampilkan target contoh tanpa error tabel | PASS | `progressEnabled: false` |
+| Simulasi Deal | Pengingat target ditutup | Jumlah jatuh tempo menjadi 0, timeline mendapat Deal | PASS | Hanya memori browser |
+| Simulasi Follow up | Jadwal baru terlihat | Follow up 2026-10-05 muncul, jumlah akan datang menjadi 1 | PASS | Hanya memori browser |
+| Reload | Data simulasi hilang | Timeline kembali ke Penawaran contoh dan jatuh tempo hari ini | PASS | Tidak ada write backend |
+| Tampilan HP | Tidak melebar | Viewport dan dokumen sama sama 390 px | PASS | Browser mock login |
+| Publikasi GitHub Pages | Pratinjau dapat diakses pada domain marketing | Belum dilakukan saat penulisan | NOT TESTED | Verifikasi setelah push |

@@ -1,6 +1,7 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
 const cfg = window.RAY_CONFIG || {};
+const progressPreviewMode = cfg.progressEnabled !== true;
 let invitePending = /(?:^|[&#])type=(?:invite|recovery)(?:&|$)/.test(location.hash);
 const $ = (s) => document.querySelector(s);
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -180,6 +181,30 @@ $('#visit-form').addEventListener('submit', async (event) => {
 resetVisitForm();
 
 const stageNames = { kunjungan: 'Kunjungan', proposal: 'Proposal', penawaran: 'Penawaran', follow_up: 'Follow up', deal: 'Deal', gagal: 'Gagal' };
+function previewDate(days) {
+  const value = new Date(localToday() + 'T00:00:00Z');
+  value.setUTCDate(value.getUTCDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+function loadProgressPreview() {
+  const visitId = 'preview-target';
+  progressVisits = [{ id: visitId, owner_id: currentUser.id, data: {
+    nama_perusahaan: 'CONTOH · PT Contoh Industri', nama_marketing: 'Data contoh',
+    tanggal_realisasi_kunjungan: previewDate(-7), catatan: 'Pertemuan awal dengan HR Manager.' } }];
+  progressCache = [{ visit_id: visitId, stage: 'penawaran', next_follow_up: localToday(),
+    last_note: 'Penawaran telah disampaikan.', last_activity_date: previewDate(-2) }];
+  progressEvents = [
+    { id: 'sample-3', visit_id: visitId, stage: 'penawaran', activity_date: previewDate(-2),
+      note: 'Penawaran disampaikan kepada HR Manager.', next_follow_up: localToday() },
+    { id: 'sample-2', visit_id: visitId, stage: 'proposal', activity_date: previewDate(-4),
+      note: 'Proposal dikirim setelah pembahasan kebutuhan.', next_follow_up: previewDate(-2) },
+    { id: 'sample-1', visit_id: visitId, stage: 'kunjungan', activity_date: previewDate(-7),
+      note: 'Pertemuan awal dan pengumpulan kebutuhan tenaga kerja.', next_follow_up: previewDate(-4) },
+  ];
+  $('#progress-preview-note').hidden = false;
+  $('#save-progress').textContent = 'Coba langkah (simulasi)';
+  renderProgress();
+}
 function progressState(visit) {
   const row = progressCache.find((p) => p.visit_id === visit.id);
   return row || { stage: 'kunjungan', next_follow_up: visit.data?.tanggal_follow_up || null,
@@ -193,7 +218,7 @@ function renderProgress() {
     .sort((a, b) => a.progress.next_follow_up.localeCompare(b.progress.next_follow_up));
   const upcoming = open.filter(({ progress }) => progress.next_follow_up && progress.next_follow_up > today).length;
   const banner = $('#visit-reminder-banner');
-  banner.hidden = !due.length;
+  banner.hidden = progressPreviewMode || !due.length;
   banner.textContent = due.length ? `${due.length} target perlu follow up hari ini atau sudah terlambat. Buka pengingat →` : '';
   $('#progress-summary').innerHTML = `<div><strong>${due.filter((x) => x.progress.next_follow_up < today).length}</strong><small>Terlambat</small></div><div><strong>${due.filter((x) => x.progress.next_follow_up === today).length}</strong><small>Hari ini</small></div><div><strong>${upcoming}</strong><small>Akan datang</small></div><div><strong>${open.filter((x) => !x.progress.next_follow_up).length}</strong><small>Belum dijadwalkan</small></div>`;
   $('#progress-due').innerHTML = due.length ? `<h3>Perlu ditindaklanjuti</h3>${due.map(({ visit, progress }) => `<div class="due-item"><div><strong>${esc(visit.data?.nama_perusahaan)}</strong><small>${esc(progress.next_follow_up)} · ${esc(stageNames[progress.stage])} · ${esc(visit.data?.nama_marketing)}</small></div>${visit.owner_id === currentUser.id ? `<button type="button" data-progress-open="${esc(visit.id)}">Catat progres</button>` : ''}</div>`).join('')}` : '<p class="hint">Tidak ada follow up yang jatuh tempo hari ini atau terlambat.</p>';
@@ -201,6 +226,7 @@ function renderProgress() {
   const own = progressVisits.filter((visit) => visit.owner_id === currentUser.id);
   $('#progress-visit').innerHTML = '<option value="">Pilih target</option>' + own.map((visit) => `<option value="${esc(visit.id)}">${esc(visit.data?.nama_perusahaan)} · ${esc(visit.data?.tanggal_realisasi_kunjungan)}</option>`).join('');
   if (own.some((visit) => visit.id === selected)) $('#progress-visit').value = selected;
+  else if (progressPreviewMode && own.length) $('#progress-visit').value = own[0].id;
   renderProgressTarget();
 }
 function renderProgressTarget() {
@@ -215,6 +241,7 @@ function renderProgressTarget() {
 }
 async function loadProgress() {
   if (!client || !currentUser) return;
+  if (progressPreviewMode) { loadProgressPreview(); return; }
   const results = await Promise.all([
     client.from('marketing_visits').select('id,owner_id,data,created_at').order('created_at', { ascending: false }).limit(500),
     client.from('marketing_progress').select('*').limit(500),
@@ -245,6 +272,21 @@ $('#progress-date').value = localToday();
 $('#progress-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = $('#save-progress'); button.disabled = true;
+  if (progressPreviewMode) {
+    const visitId = $('#progress-visit').value;
+    const stage = $('#progress-stage').value;
+    const nextFollowUp = ['deal','gagal'].includes(stage) ? null : $('#progress-next').value;
+    const row = { id: crypto.randomUUID(), visit_id: visitId, stage, activity_date: $('#progress-date').value,
+      note: $('#progress-note').value.trim(), next_follow_up: nextFollowUp,
+      attachment_url: $('#progress-attachment').value.trim() || null };
+    progressEvents.unshift(row);
+    progressCache = [{ visit_id: visitId, stage, next_follow_up: nextFollowUp,
+      last_note: row.note, last_activity_date: row.activity_date }];
+    renderProgress();
+    status('#progress-status', 'Simulasi berhasil. Perubahan ini hanya terlihat di browser dan hilang saat halaman dimuat ulang.');
+    button.disabled = false;
+    return;
+  }
   status('#progress-status', 'Menyimpan perkembangan…');
   try {
     const body = { action: 'record_progress', visit_id: $('#progress-visit').value, stage: $('#progress-stage').value,

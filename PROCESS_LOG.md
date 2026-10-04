@@ -72,3 +72,7 @@ Email akun Auth pertama telah ditentukan: `yasir@raykerja.cloud`. Butuh persetuj
 6. Pemeriksaan lokal: syntax JS/Python, kesesuaian selector, pemetaan 36 kolom n8n, dan pratinjau 390/320 px tanpa scroll horizontal. Belum ada uji write end-to-end karena penerapan production memerlukan persetujuan khusus menurut kebijakan RMP.
 
 Catatan keputusan: belum ada credential Gmail/SMTP di n8n saat pemeriksaan. Pengingat di halaman dapat berjalan tanpa kanal tambahan; email/WhatsApp memerlukan pilihan kanal dan konfigurasi terpisah. File link Drive dari staf belum dapat diverifikasi berada dalam folder akun tanpa izin Drive API tambahan.
+
+## Arahan pratinjau halaman — 2026-10-04
+
+Pengguna meminta halaman dulu untuk dinilai. Mode `progressEnabled: false` menampilkan data contoh yang dapat disimulasikan tanpa menulis ke backend. Uji browser dengan mock login: tahap Deal menutup pengingat; Follow up membuat jadwal baru; reload mengembalikan contoh awal. Form kunjungan dan menu lama tetap terpisah. Tahap ini hanya memerlukan publikasi GitHub Pages; migration dan n8n draft tidak dieksekusi.
