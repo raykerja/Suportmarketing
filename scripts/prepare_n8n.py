@@ -4,6 +4,7 @@ import copy
 import json
 import re
 import urllib.request
+import uuid
 from pathlib import Path
 
 HOME = Path.home()
@@ -41,7 +42,7 @@ for node in nodes:
             old_code,
         )
         assert count == 1, 'Kontrak research_id berubah; hentikan migrasi.'
-        params['jsCode'] = new_code
+        params['jsCode'] = new_code.replace('research_id, tanggal', "research_id, tanggal, drive_folder_id: String(b.drive_folder_id || '')")
     if node['name'] == 'Susun Baris Target (RAY AI)':
         old_code = params['jsCode']
         assert 'if (!targets.length) { return []; }' in old_code, 'Jalur kosong berubah; hentikan migrasi.'
@@ -54,6 +55,8 @@ for node in nodes:
                                             'const rows = $input.all().map(i => i.json).filter(r => !r._no_target);')
     if node['name'] in {'Respond Target ke RAY AI', 'Respond Timeout Target ke RAY AI'}:
         params['url'] = callback_url
+    if node['name'] == 'Respond Target ke RAY AI':
+        params['jsonBody'] = "={{ { ...$('Susun Hasil untuk RAY AI').first().json, drive_status: $json.id ? 'done' : 'error', drive_file_id: $json.id || null, drive_error: $json.error?.message || ($json.id ? null : 'Unggah Google Drive tidak menghasilkan file ID') } }}"
 
 connections = {}
 for name, spec in source['connections'].items():
@@ -73,6 +76,24 @@ workflow = {
     'connections': connections,
     'settings': source.get('settings') or {},
 }
+result_node = next(n for n in nodes if n['name'] == 'Susun Hasil untuk RAY AI')
+drive_node = {
+    'id': str(uuid.uuid4()), 'name': 'Simpan Riset ke Drive Akun', 'type': 'n8n-nodes-base.googleDrive',
+    'typeVersion': 3, 'position': [-808, 124], 'onError': 'continueRegularOutput',
+    'parameters': {
+        'operation': 'createFromText',
+        'content': '={{ JSON.stringify($(\'Susun Hasil untuk RAY AI\').first().json, null, 2) }}',
+        'name': "={{ 'Riset_Target_' + $json.research_id + '.json' }}",
+        'driveId': {'__rl': True, 'value': 'My Drive', 'mode': 'list', 'cachedResultName': 'My Drive'},
+        'folderId': {'__rl': True, 'value': "={{ $('Siapkan Data Target (RAY AI)').first().json.drive_folder_id }}", 'mode': 'id'},
+        'options': {},
+    },
+    'credentials': {'googleDriveOAuth2Api': {'id': 'EBfmTwYW9UqW19Ma', 'name': 'Google Drive account'}},
+}
+nodes.append(drive_node)
+next(n for n in nodes if n['name'] == 'Respond Target ke RAY AI')['position'] = [-588, 124]
+connections['Susun Hasil untuk RAY AI']['main'][0][0]['node'] = drive_node['name']
+connections[drive_node['name']] = {'main': [[{'node': 'Respond Target ke RAY AI', 'type': 'main', 'index': 0}]]}
 private = Path(__file__).resolve().parents[1] / 'private'
 private.mkdir(exist_ok=True)
 output = private / 'raykerja-n8n-draft.json'

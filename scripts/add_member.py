@@ -23,5 +23,5 @@ def query(sql):
 users = query("select id from auth.users where email = 'yasir@raykerja.cloud';")
 assert len(users) == 1, 'Akun Auth belum tersedia atau tidak unik.'
 user_id = users[0]['id']
-query(f"insert into public.marketing_members (user_id) values ('{user_id}'::uuid) on conflict (user_id) do nothing;")
+query(f"insert into public.marketing_members (user_id,email,display_name,role) values ('{user_id}'::uuid, 'yasir@raykerja.cloud', 'Yasir Arafat', 'admin') on conflict (user_id) do update set role='admin';")
 print('Keanggotaan diproses. Verifikasi akses RLS sebelum membuka situs.')

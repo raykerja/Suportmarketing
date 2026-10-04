@@ -28,7 +28,7 @@ with urllib.request.urlopen(key_request, timeout=20) as result:
     keys = json.load(result)
 service_key = next(item['api_key'] for item in keys if item.get('name') == 'service_role')
 endpoint = (f'https://{ref}.supabase.co/auth/v1/invite?redirect_to='
-            + urllib.parse.quote('https://raykerja.cloud', safe=''))
+            + urllib.parse.quote('https://marketing.raykerja.cloud', safe=''))
 request = urllib.request.Request(endpoint, data=json.dumps({'email': email}).encode(), method='POST',
                                  headers={'apikey': service_key, 'Authorization': 'Bearer ' + service_key,
                                           'Content-Type': 'application/json'})

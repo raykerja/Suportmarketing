@@ -9,6 +9,7 @@ const client = cfg.supabaseUrl && cfg.supabasePublishableKey
   ? createClient(cfg.supabaseUrl, cfg.supabasePublishableKey) : null;
 let currentUser = null;
 let pollTimer = null;
+let letterPollTimer = null;
 let researchCache = [];
 let leadCache = [];
 let letterCache = [];
@@ -30,8 +31,11 @@ function showWorkspace(user) {
   $('#setup-panel').hidden = !user || !invitePending;
   $('#workspace').hidden = !user || invitePending;
   $('#logout').hidden = !user || invitePending;
-  if (user && !invitePending) { loadResearches(); loadLeads(); loadLetters(); }
-  else if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  if (user && !invitePending) { loadSettings(); loadResearches(); loadLeads(); loadLetters(); }
+  else {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+    if (letterPollTimer) { clearInterval(letterPollTimer); letterPollTimer = null; }
+  }
 }
 if (!client) status('#login-status', 'Konfigurasi Supabase belum tersedia. Hubungi admin.', true);
 else {
@@ -87,7 +91,7 @@ $('#research-list').addEventListener('click', (event) => {
   const result = $('#research-result'); result.hidden = false;
   const targets = Array.isArray(row.targets) ? row.targets : [];
   const rows = targets.map((t) => `<tr><td><strong>${esc(t.nama_target)}</strong><br>${esc(t.jenis || t.bidang)}</td><td>${esc(t.alamat)}<br>${esc(t.telepon)}<br>${esc(t.email)}</td><td>${esc(t.hrd || t.kepala_dinas || t.direktur || 'Belum ditemukan')}</td><td>${esc(t.lead_score)} · ${esc(t.kategori)}</td><td>${t.sumber && /^https?:\/\//i.test(t.sumber) ? `<a href="${esc(t.sumber)}" target="_blank" rel="noopener noreferrer">Sumber</a>` : '—'}</td></tr>`).join('');
-  result.innerHTML = `<div class="section-head"><h2>Hasil ${esc(row.research_id)}</h2><button id="print-research">Cetak / PDF</button></div><p>${esc(row.target_type)} · ${esc(row.kecamatan)}, ${esc(row.kabupaten_kota)}, ${esc(row.provinsi)} · ${Number(row.jumlah_ditemukan) || 0} target</p>${row.error ? `<p style="color:#b73729">${esc(row.error)}</p>` : ''}${rows ? `<div class="table-wrap"><table><thead><tr><th>Target</th><th>Kontak</th><th>Pengambil keputusan</th><th>Skor</th><th>Referensi</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="hint">Hasil belum tersedia.</p>'}`;
+  result.innerHTML = `<div class="section-head"><h2>Hasil ${esc(row.research_id)}</h2><button id="print-research">Cetak / PDF</button></div><p>${esc(row.target_type)} · ${esc(row.kecamatan)}, ${esc(row.kabupaten_kota)}, ${esc(row.provinsi)} · ${Number(row.jumlah_ditemukan) || 0} target</p>${row.drive_file_url ? `<p><a href="${esc(row.drive_file_url)}" target="_blank" rel="noopener noreferrer">Buka salinan di Google Drive</a></p>` : row.drive_error ? `<p class="error">Hasil sudah masuk Supabase, tetapi salinan Drive gagal: ${esc(row.drive_error)}</p>` : ''}${row.error ? `<p class="error">${esc(row.error)}</p>` : ''}${rows ? `<div class="table-wrap"><table><thead><tr><th>Target</th><th>Kontak</th><th>Pengambil keputusan</th><th>Skor</th><th>Referensi</th></tr></thead><tbody>${rows}</tbody></table></div>` : '<p class="hint">Hasil belum tersedia.</p>'}`;
   $('#print-research').addEventListener('click', () => printDocument(`<h1>Laporan Riset Target Market</h1><p>PT Ray Mitra Perkasa · ${esc(row.research_id)} · ${esc(row.kecamatan)}, ${esc(row.kabupaten_kota)}, ${esc(row.provinsi)}</p><table><thead><tr><th>Target</th><th>Kontak</th><th>Pengambil keputusan</th><th>Skor</th><th>Referensi</th></tr></thead><tbody>${rows}</tbody></table>`));
   result.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
@@ -134,7 +138,9 @@ async function loadLetters() {
   const { data, error } = await client.from('marketing_letters').select('*').order('updated_at', { ascending: false }).limit(100);
   if (error) { $('#letter-list').textContent = 'Gagal membaca surat: ' + error.message; return; }
   letterCache = data || [];
-  $('#letter-list').innerHTML = letterCache.length ? letterCache.map((r) => `<div class="item"><strong>${esc(r.subject)}</strong><small>${esc(r.recipient)} · ${esc(date(r.updated_at))}</small><button type="button" data-letter="${esc(r.id)}">Buka</button></div>`).join('') : '<p class="hint">Belum ada draft tersimpan.</p>';
+  $('#letter-list').innerHTML = letterCache.length ? letterCache.map((r) => `<div class="item"><strong>${esc(r.subject)}</strong><small>${esc(r.recipient)} · ${esc(date(r.updated_at))}</small><div>Drive: ${esc(r.drive_status || 'pending')} ${r.drive_file_url ? `<a href="${esc(r.drive_file_url)}" target="_blank" rel="noopener noreferrer">Buka file</a>` : ''}</div>${r.drive_error ? `<small class="error">${esc(r.drive_error)}</small>` : ''}<button type="button" data-letter="${esc(r.id)}">Buka</button></div>`).join('') : '<p class="hint">Belum ada draft tersimpan.</p>';
+  if (letterCache.some((r) => r.drive_status === 'pending') && !letterPollTimer) letterPollTimer = setInterval(loadLetters, 5000);
+  if (!letterCache.some((r) => r.drive_status === 'pending') && letterPollTimer) { clearInterval(letterPollTimer); letterPollTimer = null; }
 }
 $('#letter-list').addEventListener('click', (event) => {
   const row = letterCache.find((r) => r.id === event.target.closest('[data-letter]')?.dataset.letter);
@@ -149,5 +155,41 @@ $('#letter-form').addEventListener('submit', async (event) => {
   const query = editingLetterId ? client.from('marketing_letters').update(row).eq('id', editingLetterId) : client.from('marketing_letters').insert(row);
   const { data, error } = await query.select('id').single();
   if (error) { status('#letter-status', 'Gagal menyimpan: ' + error.message, true); return; }
-  editingLetterId = data.id; status('#letter-status', 'Draft tersimpan di Supabase.'); await loadLetters();
+  editingLetterId = data.id;
+  const { data: saved, error: driveError } = await client.functions.invoke('marketing', { body: { action: 'save_letter', letter_id: data.id } });
+  status('#letter-status', driveError || !saved?.ok ? 'Draft tersimpan di Supabase, tetapi salinan Drive belum berhasil: ' + (saved?.error || driveError?.message || 'Kesalahan tidak diketahui') : 'Draft tersimpan di Supabase. Salinan Drive sedang diproses.', !!driveError || !saved?.ok);
+  await loadLetters();
+});
+
+async function loadSettings() {
+  if (!client || !currentUser) return;
+  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'settings' } });
+  if (error || !data?.ok) { status('#folder-status', data?.error || error?.message || 'Pengaturan gagal dibaca', true); return; }
+  $('#account-info').textContent = `${data.self.display_name || data.self.email} · ${data.self.role === 'admin' ? 'Admin' : 'Staf'}`;
+  $('#folder-url').value = data.self.drive_folder_url || '';
+  $('#admin-settings').hidden = data.self.role !== 'admin';
+  $('#member-list').innerHTML = (data.members || []).map((m) => `<div class="item"><strong>${esc(m.display_name || m.email)}</strong><small>${esc(m.email)} · ${esc(m.role)} · ${m.active ? 'aktif' : 'nonaktif'}</small><form class="member-folder-form" data-user-id="${esc(m.user_id)}"><label>Folder Drive<input type="url" value="${esc(m.drive_folder_url || '')}" required></label><button type="submit">Simpan folder</button></form></div>`).join('');
+}
+$('#folder-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'set_folder', drive_folder_url: $('#folder-url').value.trim() } });
+  status('#folder-status', error || !data?.ok ? data?.error || error?.message || 'Gagal menyimpan folder' : 'Folder akun tersimpan.', !!error || !data?.ok);
+  if (data?.ok) loadSettings();
+});
+$('#invite-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  status('#invite-status', 'Mengirim undangan…');
+  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'invite_member', email: $('#invite-email').value.trim(),
+    display_name: $('#invite-name').value.trim(), drive_folder_url: $('#invite-folder').value.trim() } });
+  status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Undangan gagal' : `Undangan diminta untuk ${data.email}.`, !!error || !data?.ok);
+  if (data?.ok) { $('#invite-form').reset(); loadSettings(); }
+});
+$('#member-list').addEventListener('submit', async (event) => {
+  const form = event.target.closest('.member-folder-form');
+  if (!form) return;
+  event.preventDefault();
+  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'set_folder', user_id: form.dataset.userId,
+    drive_folder_url: form.querySelector('input').value.trim() } });
+  status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Folder gagal disimpan' : 'Folder staf tersimpan.', !!error || !data?.ok);
+  if (data?.ok) loadSettings();
 });
