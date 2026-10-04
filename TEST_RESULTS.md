@@ -41,3 +41,6 @@
 | DNS subdomain | CNAME ke GitHub Pages, apex tetap | CNAME dari dua nameserver otoritatif; apex 2.57.91.91 | PASS | HTTPS masih menunggu |
 | HTTPS GitHub Pages | Sertifikat valid dan enforced | Sertifikat belum terbit pada pemeriksaan awal | PARTIAL | Perlu pemeriksaan ulang |
 | Riset dan surat ke folder Drive | File tersimpan ke folder tiap akun | Belum ada folder akun pertama | NOT TESTED | Pengaturan dan izin folder diperlukan |
+| Webhook surat → callback → Drive | File surat di folder akun dan status done | File TXT ditemukan di folder yang diberikan; `drive_status=done` | PASS | Dipicu langsung melalui webhook, bukan tombol UI |
+| Webhook riset → callback → Supabase → Drive | Status done, lead dan file tersimpan | 1 target, 1 lead, file JSON ditemukan di folder yang diberikan | PASS | Dipicu langsung melalui webhook, bukan tombol UI |
+| Tombol halaman setelah login | Riset dan surat dari browser | Akun undangan belum diaktivasi pengguna | NOT TESTED | Memerlukan login pertama |

@@ -41,3 +41,7 @@ Email akun Auth pertama telah ditentukan: `yasir@raykerja.cloud`. Butuh persetuj
 6. CNAME Hostinger `marketing` ke `raykerja.github.io` dibuat, TTL 300. Nameserver otoritatif dan dua resolver publik mengembalikan CNAME yang sama. Record apex tetap `2.57.91.91`.
 7. Auth Site URL diset ke subdomain dan signup publik ditutup. Undangan Yasir dibuat; satu anggota admin dan satu surat historis terverifikasi. RLS sebagai admin mengembalikan 57 target historis, sedangkan identitas yang bukan anggota mengembalikan 0.
 8. HTTPS GitHub Pages masih menunggu sertifikat saat pemeriksaan awal. Folder Drive Yasir belum ditetapkan, sehingga uji file Drive end-to-end belum dapat dinyatakan PASS.
+9. Pengguna memberi URL folder Yasir. Folder ID ditetapkan pada `marketing_members` admin.
+10. Uji surat historis melalui webhook surat menghasilkan callback `drive_status=done` dan file TXT ditemukan langsung di folder tujuan.
+11. Uji satu riset swasta (hotel, Mijen, Kota Semarang, satu target) melalui webhook riset menghasilkan `status=done`, satu baris lead, dan file JSON ditemukan langsung di folder tujuan. Uji tombol dari browser belum dilakukan karena akun undangan belum diaktivasi pengguna.
+12. GitHub Pages masih menunggu penerbitan sertifikat HTTPS; menurut dokumentasi GitHub proses ini dapat memerlukan hingga satu jam setelah domain dikonfigurasi.
