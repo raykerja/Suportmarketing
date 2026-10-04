@@ -21,3 +21,9 @@ CHANGED: Domain menjadi `marketing.raykerja.cloud`; DNS apex tetap. Salinan rise
 FIXED: Hasil riset tanpa target tetap masuk callback; status `partial` jika data Supabase berhasil tetapi Drive gagal.
 REMOVED: Tidak ada.
 NOTES: Semua perubahan masih lokal dan belum diuji end-to-end di produksi.
+
+VERSION: 0.2.1 (aktivasi akun tanpa SMTP)
+DATE: 2026-10-04
+
+CHANGED: Admin membuat link aktivasi staf di halaman dan membagikannya secara privat. Supabase default SMTP tidak dipakai untuk undangan staf berikutnya.
+NOTES: SMTP khusus belum dikonfigurasi; pengiriman link masih dilakukan oleh admin.

@@ -116,13 +116,14 @@ Deno.serve(async (request) => {
     const email = String(data.email || '').trim().toLowerCase();
     const destination = folder(data.drive_folder_url);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || !destination) return response({ error: 'Email atau folder Drive tidak valid' }, 400, origin);
-    const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo: 'https://marketing.raykerja.cloud' });
-    if (inviteError || !invited.user) return response({ error: 'Undangan gagal: ' + (inviteError?.message || 'Unknown') }, 502, origin);
+    const { data: invited, error: inviteError } = await admin.auth.admin.generateLink({ type: 'invite', email,
+      options: { redirectTo: 'https://marketing.raykerja.cloud' } });
+    if (inviteError || !invited.user || !invited.properties?.action_link) return response({ error: 'Link aktivasi gagal dibuat: ' + (inviteError?.message || 'Unknown') }, 502, origin);
     const { error } = await admin.from('marketing_members').upsert({ user_id: invited.user.id, email,
       display_name: String(data.display_name || '').trim().slice(0, 100), role: 'staff', active: true,
       drive_folder_id: destination.id, drive_folder_url: destination.url, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
-    return error ? response({ error: 'Undangan terkirim tetapi akses gagal dicatat; periksa akun sebelum mengundang ulang' }, 500, origin)
-      : response({ ok: true, email }, 200, origin);
+    return error ? response({ error: 'Akun dibuat tetapi akses gagal dicatat; periksa akun sebelum membuat ulang link' }, 500, origin)
+      : response({ ok: true, email, activation_link: invited.properties.action_link }, 200, origin);
   }
   if (data.action === 'save_letter') {
     if (!membership.drive_folder_id) return response({ error: 'Atur folder Google Drive di Pengaturan sebelum menyimpan surat' }, 400, origin);

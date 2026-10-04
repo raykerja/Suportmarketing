@@ -27,6 +27,7 @@ function printDocument(html) {
 }
 function showWorkspace(user) {
   currentUser = user;
+  if (!user) { $('#activation-link').value = ''; $('#activation-panel').hidden = true; }
   $('#login-panel').hidden = !!user;
   $('#setup-panel').hidden = !user || !invitePending;
   $('#workspace').hidden = !user || invitePending;
@@ -178,11 +179,16 @@ $('#folder-form').addEventListener('submit', async (event) => {
 });
 $('#invite-form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  status('#invite-status', 'Mengirim undangan…');
+  $('#activation-link').value = ''; $('#activation-panel').hidden = true;
+  status('#invite-status', 'Membuat akun dan link aktivasi…');
   const { data, error } = await client.functions.invoke('marketing', { body: { action: 'invite_member', email: $('#invite-email').value.trim(),
     display_name: $('#invite-name').value.trim(), drive_folder_url: $('#invite-folder').value.trim() } });
-  status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Undangan gagal' : `Undangan diminta untuk ${data.email}.`, !!error || !data?.ok);
-  if (data?.ok) { $('#invite-form').reset(); loadSettings(); }
+  status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Akun gagal dibuat' : `Akun ${data.email} dibuat. Salin link aktivasi berikut dan kirim hanya kepada pemilik email.`, !!error || !data?.ok);
+  if (data?.ok) { $('#activation-link').value = data.activation_link || ''; $('#activation-panel').hidden = !data.activation_link; $('#invite-form').reset(); loadSettings(); }
+});
+$('#copy-activation').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText($('#activation-link').value); status('#invite-status', 'Link aktivasi disalin. Kirim hanya kepada pemilik akun.'); }
+  catch { status('#invite-status', 'Gagal menyalin otomatis. Pilih dan salin link secara manual.', true); }
 });
 $('#member-list').addEventListener('submit', async (event) => {
   const form = event.target.closest('.member-folder-form');

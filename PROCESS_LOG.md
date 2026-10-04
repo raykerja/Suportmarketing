@@ -45,3 +45,8 @@ Email akun Auth pertama telah ditentukan: `yasir@raykerja.cloud`. Butuh persetuj
 10. Uji surat historis melalui webhook surat menghasilkan callback `drive_status=done` dan file TXT ditemukan langsung di folder tujuan.
 11. Uji satu riset swasta (hotel, Mijen, Kota Semarang, satu target) melalui webhook riset menghasilkan `status=done`, satu baris lead, dan file JSON ditemukan langsung di folder tujuan. Uji tombol dari browser belum dilakukan karena akun undangan belum diaktivasi pengguna.
 12. GitHub Pages masih menunggu penerbitan sertifikat HTTPS; menurut dokumentasi GitHub proses ini dapat memerlukan hingga satu jam setelah domain dikonfigurasi.
+
+## Penyesuaian aktivasi akun 2026-10-04
+
+- Pemeriksaan Auth menunjukkan `smtp_host` kosong. Dokumentasi resmi Supabase membatasi email bawaan ke anggota tim proyek dan dua email per jam; ini akan menghambat pembuatan beberapa akun staf.
+- Edge Function diubah memakai `auth.admin.generateLink(type=invite)` dan menampilkan link aktivasi satu kali kepada admin, tanpa menyimpan token di database. Admin mengirim link secara privat kepada pemilik akun. Email otomatis membutuhkan SMTP khusus di masa berikutnya.
