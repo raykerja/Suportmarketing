@@ -18,9 +18,45 @@
     </section>
     <section id="setup-panel" class="card login" hidden><p class="eyebrow">AKTIVASI AKUN</p><h1>Buat kata sandi</h1><p>Undangan diterima. Buat kata sandi untuk masuk berikutnya.</p><form id="setup-form"><label>Kata sandi baru<input id="new-password" type="password" minlength="12" autocomplete="new-password" required></label><button class="primary">Simpan kata sandi</button></form><p id="setup-status" role="status"></p></section>
     <section id="workspace" hidden>
-      <div class="hero"><div><p class="eyebrow">WORKSPACE MARKETING</p><h1>Target pasar & penawaran</h1><p>Riset calon klien, pantau hasil, dan siapkan surat bisnis dalam satu tempat.</p></div></div>
-      <nav class="tabs" aria-label="Menu Marketing"><button data-tab="research" class="active">Cari Target Market</button><button data-tab="leads">Database Target</button><button data-tab="letters">Surat & Penawaran</button><button data-tab="settings">Pengaturan</button></nav>
-      <section id="research" class="panel">
+      <div class="hero"><div><p class="eyebrow">WORKSPACE MARKETING</p><h1>Target pasar & kunjungan</h1><p>Riset calon klien, catat kunjungan lapangan, pantau tindak lanjut, dan siapkan surat bisnis.</p></div></div>
+      <nav class="tabs" aria-label="Menu Marketing"><button data-tab="visits" class="active">Kunjungan</button><button data-tab="research">Cari Target Market</button><button data-tab="leads">Database Target</button><button data-tab="letters">Surat & Penawaran</button><button data-tab="settings">Pengaturan</button></nav>
+      <section id="visits" class="panel">
+        <div class="visit-layout">
+          <div class="card"><div class="section-head"><div><p class="eyebrow">LAPORAN LAPANGAN</p><h2 id="visit-form-title">Catat kunjungan</h2></div><button id="new-visit" type="button" hidden>Entri baru</button></div><p class="hint">Isi data utama saat di lokasi. Detail tambahan dapat dilengkapi kemudian.</p>
+            <form id="visit-form">
+              <fieldset><legend>1. Target yang dikunjungi</legend>
+                <label>Nama perusahaan / instansi <span class="required">*</span><input id="visit-company" name="nama_perusahaan" list="target-suggestions" maxlength="180" autocomplete="organization" required placeholder="Ketik nama target"></label><datalist id="target-suggestions"></datalist>
+                <div class="form-grid"><label>Area<input name="area" maxlength="100" placeholder="Contoh: Semarang"></label><label>Kategori<input name="kategori" maxlength="100" placeholder="Contoh: Hotel, Pabrik, Dinas"></label></div>
+                <label>Alamat<input name="alamat" maxlength="500" autocomplete="street-address" placeholder="Alamat target"></label>
+                <div class="form-grid"><label>Telepon perusahaan<input name="nomor_kontak_perusahaan" type="tel" inputmode="tel" maxlength="50"></label><label>Plotting area<input name="plotting_area" maxlength="150"></label></div>
+              </fieldset>
+              <fieldset><legend>2. Kunjungan & orang yang ditemui</legend>
+                <div class="form-grid"><label>Tanggal realisasi kunjungan <span class="required">*</span><input name="tanggal_realisasi_kunjungan" type="date" required></label><label>Tanggal janji kunjungan<input name="tanggal_janji_kunjungan" type="date"></label></div>
+                <div class="form-grid"><label>Jabatan PIC<input name="jabatan_pic" maxlength="100" placeholder="HRD / Purchasing"></label><label>Nama PIC 1<input name="nama_pejabat_pic_1" maxlength="150"></label></div>
+                <div class="form-grid"><label>Nama PIC 2<input name="nama_pejabat_pic_2" maxlength="150"></label><label>Nomor PIC<input name="nomor_kontak_pic" type="tel" inputmode="tel" maxlength="50"></label></div>
+                <label>Foto kunjungan <small>Opsional, foto langsung dari kamera HP</small><input id="visit-photo" type="file" accept="image/*" capture="environment"></label><p id="photo-note" class="hint"></p>
+                <div class="form-grid"><label>Titik lokasi laporan<input name="titik_lokasi_laporan" maxlength="300" placeholder="Patokan / tautan peta"></label><label>Koordinat target<input id="visit-coordinates" name="koordinat_target" maxlength="100" placeholder="-6.9, 110.4"></label></div><button id="get-location" type="button">Ambil lokasi HP</button><p id="location-status" class="hint" role="status"></p>
+              </fieldset>
+              <fieldset><legend>3. Hasil & langkah berikutnya</legend>
+                <label>Respons target <span class="required">*</span><select name="respon" required><option value="">Pilih respons</option><option>Baik</option><option>Perlu tindak lanjut</option><option>Menolak</option><option>Belum bertemu PIC</option><option>Lainnya</option></select></label>
+                <label>Catatan kunjungan <span class="required">*</span><textarea name="catatan" rows="4" maxlength="3000" required placeholder="Apa yang dibahas, kebutuhan target, dan keputusan sementara"></textarea></label>
+                <label>Tanggal rencana follow up<input name="tanggal_follow_up" type="date"></label>
+                <label>Informasi penting<textarea name="informasi_penting" rows="3" maxlength="2000" placeholder="Contoh: vendor saat ini, masa kontrak, peluang"></textarea></label>
+              </fieldset>
+              <details class="more-fields"><summary>Lengkapi data tenaga kerja, follow up & telemarketing</summary><div class="more-inner">
+                <div class="form-grid"><label>Tenaga kerja saat ini<input name="tenaga_kerja_saat_ini" maxlength="200"></label><label>Bagian kerja outsourcing<input name="bagian_kerja_outsourcing" maxlength="200"></label></div>
+                <label>Jumlah calon tenaga kerja<input name="jumlah_calon_tenaga_kerja" type="number" min="0" max="100000" inputmode="numeric"></label>
+                <label>Tanggal follow up aktual<input name="tanggal_follow_up_aktual" type="date"></label><label>Catatan hasil follow up<textarea name="catatan_hasil_follow_up" rows="3" maxlength="2000"></textarea></label>
+                <div class="form-grid"><label>Petugas telemarketing<input name="petugas_telemarketing" maxlength="100"></label><label>Status telemarketing<input name="status_telemarketing" maxlength="100"></label></div>
+                <label>Tanggal menghubungi<input name="tanggal_menghubungi" type="date"></label><label>Catatan telemarketing<textarea name="catatan_telemarketing" rows="3" maxlength="2000"></textarea></label>
+              </div></details>
+              <div class="save-bar"><button class="primary" id="save-visit" type="submit">Simpan laporan kunjungan</button></div><p id="visit-status" role="status"></p>
+            </form>
+          </div>
+          <div class="card"><div class="section-head"><h2>Laporan terbaru</h2><button id="refresh-visits" type="button">Muat ulang</button></div><div id="visit-list" class="list"></div></div>
+        </div>
+      </section>
+      <section id="research" class="panel" hidden>
         <div class="columns"><div class="card"><h2>Riset target baru</h2><p class="hint">AI dan verifikasi internet dijalankan oleh workflow n8n. Proses dapat memerlukan beberapa menit.</p>
           <form id="research-form"><label>Jenis target<select id="target-type"><option value="SWASTA">Perusahaan swasta</option><option value="PEMERINTAH">Instansi pemerintah</option></select></label>
             <label>Kecamatan<input id="kecamatan" maxlength="100" required placeholder="Contoh: Mijen"></label>

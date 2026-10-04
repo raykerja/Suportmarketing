@@ -8,11 +8,15 @@ const date = (v) => v ? new Date(v).toLocaleString('id-ID', { dateStyle: 'medium
 const client = cfg.supabaseUrl && cfg.supabasePublishableKey
   ? createClient(cfg.supabaseUrl, cfg.supabasePublishableKey) : null;
 let currentUser = null;
+let currentMember = null;
 let pollTimer = null;
 let letterPollTimer = null;
+let visitPollTimer = null;
 let researchCache = [];
 let leadCache = [];
 let letterCache = [];
+let visitCache = [];
+let editingVisitId = null;
 let editingLetterId = null;
 
 function status(id, message, error = false) {
@@ -32,10 +36,11 @@ function showWorkspace(user) {
   $('#setup-panel').hidden = !user || !invitePending;
   $('#workspace').hidden = !user || invitePending;
   $('#logout').hidden = !user || invitePending;
-  if (user && !invitePending) { loadSettings(); loadResearches(); loadLeads(); loadLetters(); }
+  if (user && !invitePending) { loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadVisits(); }
   else {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     if (letterPollTimer) { clearInterval(letterPollTimer); letterPollTimer = null; }
+    if (visitPollTimer) { clearInterval(visitPollTimer); visitPollTimer = null; }
   }
 }
 if (!client) status('#login-status', 'Konfigurasi Supabase belum tersedia. Hubungi admin.', true);
@@ -68,6 +73,105 @@ document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListe
   document.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('active', b === button));
   document.querySelectorAll('.panel').forEach((p) => { p.hidden = p.id !== button.dataset.tab; });
 }));
+
+const visitFields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_janji_kunjungan',
+  'jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2','nomor_kontak_pic','tanggal_realisasi_kunjungan',
+  'respon','tanggal_follow_up','catatan','titik_lokasi_laporan','koordinat_target','tanggal_follow_up_aktual',
+  'catatan_hasil_follow_up','plotting_area','informasi_penting','tenaga_kerja_saat_ini','bagian_kerja_outsourcing',
+  'jumlah_calon_tenaga_kerja','petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing'];
+function localToday() {
+  const now = new Date(); return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0,10);
+}
+function visitPayload() {
+  const form = $('#visit-form'); const result = {};
+  for (const name of visitFields) result[name] = String(form.elements[name]?.value || '').trim();
+  result.tanggal_input = localToday();
+  result.nama_marketing = currentMember?.display_name || currentMember?.email || currentUser?.email || '';
+  return result;
+}
+function resetVisitForm() {
+  $('#visit-form').reset(); editingVisitId = null;
+  $('#visit-form-title').textContent = 'Catat kunjungan'; $('#new-visit').hidden = true;
+  $('#visit-form').elements.tanggal_realisasi_kunjungan.value = localToday();
+  $('#photo-note').textContent = ''; status('#visit-status', '');
+}
+function fillVisitForm(row) {
+  editingVisitId = row.id; $('#visit-form-title').textContent = 'Lengkapi kunjungan'; $('#new-visit').hidden = false;
+  for (const name of visitFields) if ($('#visit-form').elements[name]) $('#visit-form').elements[name].value = row.data?.[name] || '';
+  $('#visit-photo').value = '';
+  $('#photo-note').textContent = row.photo_drive_url ? 'Foto tersimpan di Drive. Pilih foto baru hanya jika ingin menggantinya.' : row.photo_path ? 'Foto tersimpan; sinkronisasi Drive sedang diproses.' : '';
+  document.querySelector('[data-tab="visits"]').click();
+  $('#visit-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+async function loadVisits() {
+  if (!client || !currentUser) return;
+  const { data, error } = await client.from('marketing_visits').select('*').order('created_at', { ascending: false }).limit(100);
+  if (error) { $('#visit-list').textContent = 'Laporan belum dapat dibaca: ' + error.message; return; }
+  visitCache = data || [];
+  $('#visit-list').innerHTML = visitCache.length ? visitCache.map((v) => `<div class="item"><strong>${esc(v.data?.nama_perusahaan)}</strong><small>${esc(v.data?.tanggal_realisasi_kunjungan)} · ${esc(v.data?.nama_marketing || '')}</small><div>${esc(v.data?.respon || '—')} · <span class="badge ${v.sheet_status === 'error' ? 'error' : v.sheet_status === 'synced' ? '' : 'processing'}">${v.sheet_status === 'synced' ? 'Masuk Sheet' : v.sheet_status === 'error' ? 'Sinkronisasi gagal' : 'Menunggu Sheet'}</span></div><small>Follow up: ${esc(v.data?.tanggal_follow_up || 'belum ditetapkan')}</small><p>${esc(v.data?.catatan || '')}</p>${v.sheet_error ? `<small class="error">${esc(v.sheet_error)}</small>` : ''}${v.photo_drive_url ? `<div><a href="${esc(v.photo_drive_url)}" target="_blank" rel="noopener noreferrer">Lihat foto</a></div>` : ''}${v.owner_id === currentUser.id ? `<div class="item-actions"><button type="button" data-open-visit="${esc(v.id)}">Buka / ubah</button>${v.sheet_status === 'error' || v.sheet_status === 'pending' ? `<button type="button" data-retry-visit="${esc(v.id)}">Coba sinkron lagi</button>` : ''}</div>` : ''}</div>`).join('') : '<p class="hint">Belum ada laporan kunjungan.</p>';
+  const recentProcessing = visitCache.some((v) => v.sheet_status === 'processing' && Date.now() - new Date(v.updated_at).getTime() < 180000);
+  if (recentProcessing && !visitPollTimer) visitPollTimer = setInterval(loadVisits, 5000);
+  if (!recentProcessing && visitPollTimer) { clearInterval(visitPollTimer); visitPollTimer = null; }
+}
+$('#refresh-visits').addEventListener('click', loadVisits);
+$('#new-visit').addEventListener('click', resetVisitForm);
+$('#visit-list').addEventListener('click', async (event) => {
+  const open = event.target.closest('[data-open-visit]')?.dataset.openVisit;
+  const retry = event.target.closest('[data-retry-visit]')?.dataset.retryVisit;
+  if (open) { const row = visitCache.find((v) => v.id === open); if (row) fillVisitForm(row); }
+  if (retry) { status('#visit-status', 'Mencoba sinkronisasi…'); await syncVisit(retry); await loadVisits(); }
+});
+$('#visit-company').addEventListener('change', () => {
+  const name = $('#visit-company').value.trim().toLocaleLowerCase('id');
+  const lead = leadCache.find((r) => r.nama_target?.toLocaleLowerCase('id') === name);
+  if (!lead) return;
+  const form = $('#visit-form');
+  if (!form.elements.alamat.value) form.elements.alamat.value = lead.data?.alamat || '';
+  if (!form.elements.nomor_kontak_perusahaan.value) form.elements.nomor_kontak_perusahaan.value = lead.data?.telepon || '';
+  if (!form.elements.kategori.value) form.elements.kategori.value = lead.data?.bidang || lead.data?.jenis || '';
+  if (!form.elements.area.value) form.elements.area.value = lead.kabupaten_kota || '';
+});
+$('#get-location').addEventListener('click', () => {
+  if (!navigator.geolocation) { $('#location-status').textContent = 'Lokasi tidak tersedia di perangkat ini.'; return; }
+  $('#location-status').textContent = 'Meminta izin lokasi…';
+  navigator.geolocation.getCurrentPosition(({ coords }) => {
+    $('#visit-coordinates').value = `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
+    $('#location-status').textContent = `Lokasi terisi (akurasi sekitar ${Math.round(coords.accuracy)} m).`;
+  }, () => { $('#location-status').textContent = 'Lokasi tidak dapat diambil. Isi koordinat secara manual bila diperlukan.'; },
+  { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
+});
+async function syncVisit(id) {
+  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'sync_visit', visit_id: id } });
+  status('#visit-status', error || !data?.ok ? 'Laporan tersimpan di Supabase, tetapi belum masuk Sheet: ' + (data?.error || error?.message || 'Gagal memulai sinkronisasi') : 'Laporan tersimpan. Sinkronisasi Sheet sedang diproses.', !!error || !data?.ok);
+}
+$('#visit-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!client || !currentUser) return;
+  const button = $('#save-visit'); button.disabled = true;
+  status('#visit-status', 'Menyimpan laporan…');
+  try {
+    const payload = visitPayload();
+    const { data, error } = await client.functions.invoke('marketing', { body: { action: 'save_visit', visit_id: editingVisitId, visit: payload } });
+    if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Gagal menyimpan laporan');
+    editingVisitId = data.visit_id;
+    const photo = $('#visit-photo').files?.[0];
+    if (photo) {
+      if (photo.size > 10 * 1024 * 1024) throw new Error('Laporan tersimpan, tetapi foto lebih dari 10 MB. Pilih foto yang lebih kecil.');
+      const ext = (photo.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${currentUser.id}/${data.visit_id}/${crypto.randomUUID()}.${ext}`;
+      const upload = await client.storage.from('marketing-visit-photos').upload(path, photo, { contentType: photo.type || 'image/jpeg' });
+      if (upload.error) throw new Error('Laporan tersimpan, tetapi foto gagal diunggah: ' + upload.error.message);
+      const linked = await client.functions.invoke('marketing', { body: { action: 'attach_visit_photo', visit_id: data.visit_id, photo_path: path } });
+      if (linked.error || !linked.data?.ok) throw new Error('Laporan tersimpan, tetapi foto gagal ditautkan: ' + (linked.data?.error || linked.error?.message));
+    }
+    $('#visit-photo').value = '';
+    await syncVisit(data.visit_id);
+    await loadVisits();
+    if (!editingVisitId) resetVisitForm();
+  } catch (e) { status('#visit-status', String(e.message || e), true); }
+  finally { button.disabled = false; }
+});
+resetVisitForm();
 
 $('#target-type').addEventListener('change', () => {
   const swasta = $('#target-type').value === 'SWASTA';
@@ -116,6 +220,7 @@ async function loadLeads() {
   const { data, error } = await client.from('marketing_leads').select('id,nama_target,target_type,kabupaten_kota,provinsi,lead_score,kategori,data').order('imported_at', { ascending: false }).limit(500);
   if (error) { $('#lead-list').textContent = 'Gagal membaca database: ' + error.message; return; }
   leadCache = data || []; renderLeads();
+  $('#target-suggestions').innerHTML = leadCache.map((r) => `<option value="${esc(r.nama_target)}"></option>`).join('');
 }
 function renderLeads() {
   const q = $('#lead-query').value.trim().toLocaleLowerCase('id');
@@ -166,6 +271,7 @@ async function loadSettings() {
   if (!client || !currentUser) return;
   const { data, error } = await client.functions.invoke('marketing', { body: { action: 'settings' } });
   if (error || !data?.ok) { status('#folder-status', data?.error || error?.message || 'Pengaturan gagal dibaca', true); return; }
+  currentMember = data.self;
   $('#account-info').textContent = `${data.self.display_name || data.self.email} · ${data.self.role === 'admin' ? 'Admin' : 'Staf'}`;
   $('#folder-url').value = data.self.drive_folder_url || '';
   $('#admin-settings').hidden = data.self.role !== 'admin';

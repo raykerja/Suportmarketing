@@ -5,6 +5,7 @@ const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const publishableKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 const webhookUrl = Deno.env.get('MARKETING_N8N_WEBHOOK')!;
 const letterWebhookUrl = Deno.env.get('MARKETING_N8N_LETTER_WEBHOOK')!;
+const visitWebhookUrl = webhookUrl.replace(/raykerja-target$/, 'raykerja-visit');
 const webhookSecret = Deno.env.get('MARKETING_WEBHOOK_SECRET')!;
 const allowedOrigins = new Set([
   'https://marketing.raykerja.cloud',
@@ -54,6 +55,22 @@ Deno.serve(async (request) => {
       const { error } = await admin.from('marketing_letters').update({ drive_status: saved ? 'done' : 'error',
         drive_file_id: fileId, drive_file_url: fileId ? `https://drive.google.com/file/d/${fileId}/view` : null,
         drive_error: saved ? null : String(data.drive_error || 'Gagal menyimpan ke Drive').slice(0, 300) }).eq('id', letterId);
+      return error ? response({ error: 'Database gagal diperbarui' }, 500, origin) : response({ ok: true }, 200, origin);
+    }
+    if (data.kind === 'visit') {
+      const visitId = String(data.visit_id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(visitId)) return response({ error: 'visit_id tidak valid' }, 400, origin);
+      const { data: visit } = await admin.from('marketing_visits').select('id').eq('id', visitId).maybeSingle();
+      if (!visit) return response({ error: 'Laporan tidak ditemukan' }, 404, origin);
+      const synced = data.ok === true;
+      const sheetRow = data.sheet_row == null ? null : Number(data.sheet_row);
+      const photoId = /^[A-Za-z0-9_-]{10,200}$/.test(String(data.photo_drive_file_id || '')) ? String(data.photo_drive_file_id) : null;
+      const { error } = await admin.from('marketing_visits').update({ sheet_status: synced ? 'synced' : 'error',
+        sheet_row: synced && sheetRow !== null && Number.isInteger(sheetRow) && sheetRow >= 2 ? sheetRow : null,
+        sheet_error: synced ? null : String(data.error || 'Sinkronisasi Sheet gagal').slice(0, 300),
+        photo_drive_file_id: photoId,
+        photo_drive_url: photoId ? `https://drive.google.com/file/d/${photoId}/view` : null,
+        updated_at: new Date().toISOString() }).eq('id', visitId);
       return error ? response({ error: 'Database gagal diperbarui' }, 500, origin) : response({ ok: true }, 200, origin);
     }
     const id = String(data.research_id || '');
@@ -128,6 +145,83 @@ Deno.serve(async (request) => {
       drive_folder_id: destination.id, drive_folder_url: destination.url, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
     return error ? response({ error: 'Akun dibuat tetapi akses gagal dicatat; periksa akun sebelum membuat ulang link' }, 500, origin)
       : response({ ok: true, email, activation_link: invited.properties.action_link }, 200, origin);
+  }
+  if (data.action === 'save_visit') {
+    const fields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_input',
+      'tanggal_janji_kunjungan','jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2','nomor_kontak_pic',
+      'tanggal_realisasi_kunjungan','respon','tanggal_follow_up','catatan','titik_lokasi_laporan',
+      'koordinat_target','tanggal_follow_up_aktual','catatan_hasil_follow_up','nama_marketing','plotting_area',
+      'informasi_penting','tenaga_kerja_saat_ini','bagian_kerja_outsourcing','jumlah_calon_tenaga_kerja',
+      'petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing'];
+    const incoming = data.visit && typeof data.visit === 'object' && !Array.isArray(data.visit)
+      ? data.visit as Record<string, unknown> : {};
+    const visit: Record<string, string> = {};
+    for (const key of fields) visit[key] = String(incoming[key] ?? '').trim().slice(0, key === 'catatan' ? 3000 : 2000);
+    visit.nama_marketing = membership.display_name || membership.email;
+    if (!visit.nama_perusahaan || visit.nama_perusahaan.length > 180 || !visit.respon || !visit.catatan ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(visit.tanggal_realisasi_kunjungan) ||
+      !['tanggal_input','tanggal_janji_kunjungan','tanggal_follow_up','tanggal_follow_up_aktual','tanggal_menghubungi']
+        .every((key) => !visit[key] || /^\d{4}-\d{2}-\d{2}$/.test(visit[key])) ||
+      (visit.jumlah_calon_tenaga_kerja && (!/^\d+$/.test(visit.jumlah_calon_tenaga_kerja) || Number(visit.jumlah_calon_tenaga_kerja) > 100000))) {
+      return response({ error: 'Nama target, tanggal, respons, catatan, atau jumlah tenaga kerja tidak valid' }, 400, origin);
+    }
+    const id = String(data.visit_id || '');
+    if (id) {
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return response({ error: 'visit_id tidak valid' }, 400, origin);
+      const { data: previous } = await admin.from('marketing_visits').select('data')
+        .eq('id', id).eq('owner_id', authData.user.id).maybeSingle();
+      if (!previous) return response({ error: 'Laporan tidak ditemukan' }, 404, origin);
+      visit.tanggal_input = String(previous.data?.tanggal_input || visit.tanggal_input);
+      const { data: updated, error } = await admin.from('marketing_visits').update({ data: visit,
+        sheet_status: 'pending', sheet_error: null, updated_at: new Date().toISOString() })
+        .eq('id', id).eq('owner_id', authData.user.id).select('id').maybeSingle();
+      return error ? response({ error: 'Laporan gagal diperbarui' }, 500, origin)
+        : updated ? response({ ok: true, visit_id: id }, 200, origin) : response({ error: 'Laporan tidak ditemukan' }, 404, origin);
+    }
+    visit.tanggal_input = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric',
+      month: '2-digit', day: '2-digit' }).format(new Date());
+    const { data: created, error } = await admin.from('marketing_visits').insert({ owner_id: authData.user.id, data: visit })
+      .select('id').single();
+    return error ? response({ error: 'Laporan gagal disimpan' }, 500, origin)
+      : response({ ok: true, visit_id: created.id }, 200, origin);
+  }
+  if (data.action === 'attach_visit_photo') {
+    const id = String(data.visit_id || '');
+    const path = String(data.photo_path || '');
+    if (!/^[0-9a-f-]{36}$/i.test(id) || !new RegExp(`^${authData.user.id}/${id}/[0-9a-f-]{36}\\.(?:jpe?g|png|webp|heic|heif)$`, 'i').test(path))
+      return response({ error: 'Foto atau laporan tidak valid' }, 400, origin);
+    const { data: object } = await admin.storage.from('marketing-visit-photos').info(path);
+    if (!object) return response({ error: 'Foto belum terunggah' }, 404, origin);
+    const { data: updated, error } = await admin.from('marketing_visits').update({ photo_path: path,
+      photo_drive_file_id: null, photo_drive_url: null, sheet_status: 'pending', updated_at: new Date().toISOString() })
+      .eq('id', id).eq('owner_id', authData.user.id).select('id').maybeSingle();
+    return error ? response({ error: 'Foto gagal ditautkan' }, 500, origin)
+      : updated ? response({ ok: true }, 200, origin) : response({ error: 'Laporan tidak ditemukan' }, 404, origin);
+  }
+  if (data.action === 'sync_visit') {
+    const id = String(data.visit_id || '');
+    if (!/^[0-9a-f-]{36}$/i.test(id)) return response({ error: 'visit_id tidak valid' }, 400, origin);
+    const { data: visit } = await admin.from('marketing_visits').select('*').eq('id', id).eq('owner_id', authData.user.id).maybeSingle();
+    if (!visit) return response({ error: 'Laporan tidak ditemukan' }, 404, origin);
+    if (visit.photo_path && !membership.drive_folder_id) return response({ error: 'Atur folder Drive di Pengaturan sebelum menyinkronkan foto' }, 400, origin);
+    let photoUrl: string | null = null;
+    if (visit.photo_path && !visit.photo_drive_file_id) {
+      const { data: signed, error } = await admin.storage.from('marketing-visit-photos').createSignedUrl(visit.photo_path, 600);
+      if (error || !signed?.signedUrl) return response({ error: 'Foto belum dapat dibaca' }, 500, origin);
+      photoUrl = signed.signedUrl;
+    }
+    await admin.from('marketing_visits').update({ sheet_status: 'processing', sheet_error: null,
+      updated_at: new Date().toISOString() }).eq('id', id);
+    try {
+      const ack = await callWorkflow(visitWebhookUrl, { visit_id: id, visit: visit.data,
+        sheet_row: visit.sheet_row, email: membership.email, drive_folder_id: membership.drive_folder_id,
+        photo_url: photoUrl, photo_drive_file_id: visit.photo_drive_file_id });
+      if (String(ack.visit_id || '') !== id) throw new Error('ID laporan dari n8n berbeda');
+    } catch (e) {
+      await admin.from('marketing_visits').update({ sheet_status: 'error', sheet_error: String(e).slice(0, 300) }).eq('id', id);
+      return response({ error: 'Sinkronisasi gagal dimulai: ' + String(e).slice(0, 120) }, 502, origin);
+    }
+    return response({ ok: true, visit_id: id }, 200, origin);
   }
   if (data.action === 'save_letter') {
     if (!membership.drive_folder_id) return response({ error: 'Atur folder Google Drive di Pengaturan sebelum menyimpan surat' }, 400, origin);

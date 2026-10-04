@@ -45,3 +45,16 @@
 | Webhook riset → callback → Supabase → Drive | Status done, lead dan file tersimpan | 1 target, 1 lead, file JSON ditemukan di folder yang diberikan | PASS | Dipicu langsung melalui webhook, bukan tombol UI |
 | Tombol halaman setelah login | Riset dan surat dari browser | Akun undangan belum diaktivasi pengguna | NOT TESTED | Memerlukan login pertama |
 | Pembuatan link aktivasi staf tanpa SMTP | Admin menerima link dan akun staf tercatat | Kode disiapkan, belum diuji dengan akun staf sesungguhnya | NOT TESTED | Uji saat akun pertama staf dibuat; link jangan dicatat di log |
+
+## Verifikasi kunjungan 0.3.0 — 2026-10-04
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Struktur Sheet | Header 30 kolom terbaca; ID dan email tersedia | Tab `DataMarketing` gid 1003463896; AE/AF ditambahkan dan diverifikasi | PASS | Baris historis tetap |
+| Database & foto | RLS aktif dan bucket privat | `marketing_visits` RLS aktif; bucket `marketing-visit-photos` tidak publik | PASS | 0 laporan uji tersisa |
+| Tanpa login | Simpan/sinkron ditolak | Kedua aksi HTTP 401 | PASS | JWT pengguna nyata belum diuji |
+| Kunjungan tanpa foto | Webhook → Sheet → callback | 1 baris berisi data & ID; status Supabase `synced`; retry memperbarui baris yang sama | PASS | Data uji dibersihkan |
+| Kunjungan dengan foto | Foto Supabase → Drive akun → Sheet → callback | Foto PNG berada di folder Yasir, URL sama di Sheet dan Supabase; status `synced` | PASS | Jalur webhook; foto uji Drive perlu diperiksa lagi saat cleanup |
+| Tampilan HP | Tanpa scroll mendatar, input dan tombol nyaman disentuh | Chrome 390×844 dan 320×640; lebar dokumen 320 pada viewport 320; tombol simpan terlihat | PASS | Pratinjau lokal tanpa login |
+| Tombol simpan dari akun Yasir | Supabase + Sheet + foto Drive dari browser | Belum diuji | NOT TESTED | Perlu aktivasi login dan sertifikat HTTPS valid |
+| HTTPS domain | Login & lokasi browser melalui HTTPS | Sertifikat GitHub Pages belum terbit pada pemeriksaan terakhir | PARTIAL | DNS GitHub health valid; lanjut diagnosis sertifikat |
