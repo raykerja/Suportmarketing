@@ -93,8 +93,8 @@ headers = ['AREA','  NAMA PERUSAHAAN','KATEGORI','NOMOR KONTAK PERUSAHAAN','ALAM
     ' NAMA MARKETING','PLOTTING AREA','INFORMASI PENTING','TENAGA KERJA SAAT INI',
     'BAGIAN KERJA OUTSOURCING','JUMLAH CALON TENAGA KERJA','PETUGAS TELEMARKETING',
     'STATUS TELEMARKETING','TANGGAL MENGHUBUNGI','CATATAN TELEMARKETING','ID LAPORAN','EMAIL MARKETING',
-    'TAHAP TERKINI','TANGGAL AKTIVITAS TERAKHIR','CATATAN PROGRES TERAKHIR','LINK FILE PROGRES',
-    'TAHAP PENGISIAN','WAKTU REALISASI','STATUS MARKETING']
+    'TAHAP PENGISIAN','WAKTU REALISASI','STATUS MARKETING',
+    'TAHAP TERKINI','TANGGAL AKTIVITAS TERAKHIR','CATATAN PROGRES TERAKHIR','LINK FILE PROGRES']
 keys = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_input',
     'tanggal_janji_kunjungan','jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2','nomor_kontak_pic',
     'foto_kunjungan','tanggal_realisasi_kunjungan','respon','tanggal_follow_up','catatan',

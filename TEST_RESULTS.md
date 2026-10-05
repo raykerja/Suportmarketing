@@ -9,7 +9,8 @@
 | Workflow n8n | Dua node berubah, workflow tetap aktif | Readback cocok dengan payload; 9 node, 35 mapping | PASS | Production |
 | Edge Function | Source baru aktif, tanpa login ditolak | Download ulang identik; HTTP 401 tanpa login | PASS | Production |
 | Simpan tahap 1, foto, Sheet, tahap 2 | Record sama dan sinkron | Belum dijalankan dengan akun login | NOT TESTED | Hindari membuat data calon klien fiktif |
-| UI HP 320/390 px | Kolom tidak overflow | Belum diuji di browser dengan akun login | NOT TESTED | Verifikasi setelah deployment |
+| Halaman live | Aset dan dua tombol tahap tersedia | GitHub Pages sukses pada `5d19c18`; HTML/JS/CSS di domain identik; arsip hidden; tidak ada error console | PASS | Tampilan setelah login belum diuji |
+| UI HP 320/390 px | Kolom tidak overflow | Belum diuji di browser dengan akun login | NOT TESTED | Perlu sesi login sah |
 
 # TEST_RESULTS
 
