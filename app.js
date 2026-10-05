@@ -19,6 +19,7 @@ let leadCache = [];
 let letterCache = [];
 let offerCache = [];
 let offerRequestId = null;
+let manualOfferRequestId = null;
 const reviewNames = { pending: 'Menunggu review', approved: 'Disetujui', rejected: 'Tidak dipilih' };
 let visitCache = [];
 let progressVisits = [];
@@ -41,7 +42,7 @@ function showWorkspace(user) {
   currentUser = user;
   if (!user) {
     currentMember = null;
-    researchCache = []; leadCache = []; letterCache = []; offerCache = []; offerRequestId = null;
+    researchCache = []; leadCache = []; letterCache = []; offerCache = []; offerRequestId = null; manualOfferRequestId = null;
     $('#review-list').textContent = ''; $('#offer-list').textContent = ''; $('#lead-list').textContent = '';
     $('#activation-link').value = ''; $('#activation-panel').hidden = true;
     $('#account-info').textContent = ''; $('#folder-url').value = '';
@@ -506,6 +507,51 @@ async function loadOffers() {
   if (!offerCache.some(recent) && offerPollTimer) { clearInterval(offerPollTimer); offerPollTimer = null; }
 }
 $('#refresh-offers').addEventListener('click', loadOffers);
+
+$('#manual-offer-date').value = localToday();
+$('#open-manual-offer').addEventListener('click', () => {
+  $('#manual-offer-layout').open = true;
+  $('#manual-offer-layout').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  $('#manual-offer-name').focus({ preventScroll: true });
+});
+$('#manual-offer-form').addEventListener('input', () => { manualOfferRequestId = null; });
+$('#manual-offer-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!client || !currentUser) return;
+  const form = event.currentTarget;
+  if (!form.reportValidity()) return;
+  const counts = ['security', 'cleaning', 'pramubakti', 'driver']
+    .map((name) => Number($(`#manual-offer-${name}`).value));
+  const umk = Number($('#manual-offer-umk').value);
+  if (!Number.isSafeInteger(umk) || umk < 1 || umk > 1000000000 ||
+      counts.some((count) => !Number.isSafeInteger(count) || count < 0 || count > 5000) ||
+      counts.every((count) => count === 0)) {
+    status('#manual-offer-status', 'Periksa UMK dan isi minimal satu personel pada RAB.', true);
+    return;
+  }
+  const button = $('#manual-offer-submit');
+  button.disabled = true;
+  manualOfferRequestId ||= crypto.randomUUID();
+  status('#manual-offer-status', 'Mengirim penawaran manual ke n8n…');
+  try {
+    const { data, error } = await client.functions.invoke('marketing', { body: {
+      action: 'generate_offer_manual', request_id: manualOfferRequestId,
+      tanggal_surat: $('#manual-offer-date').value,
+      ditujukan_kepada: $('#manual-offer-recipient').value.trim(),
+      nama_target: $('#manual-offer-name').value.trim(),
+      alamat: $('#manual-offer-address').value.trim(),
+      kecamatan: $('#manual-offer-district').value.trim(),
+      kabupaten_kota: $('#manual-offer-city').value.trim(),
+      provinsi: $('#manual-offer-province').value.trim(), umk,
+      jumlah_personel: { security: counts[0], cleaning: counts[1], pramubakti: counts[2], driver: counts[3] },
+    } });
+    if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Generator manual gagal dimulai');
+    manualOfferRequestId = null;
+    status('#manual-offer-status', `Penawaran ${data.offer_id} diterima. Google Docs dan RAB akan muncul di daftar setelah selesai.`);
+    await loadOffers();
+  } catch (error) { status('#manual-offer-status', String(error.message || error), true); }
+  finally { button.disabled = false; }
+});
 
 function makeDraft() {
   const recipient = $('#recipient').value.trim() || '[Nama penerima]';

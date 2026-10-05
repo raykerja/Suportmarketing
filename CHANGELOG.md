@@ -1,5 +1,14 @@
 # CHANGELOG
 
+VERSION: 0.6.4 (draft penawaran manual)
+DATE: 2026-10-05
+
+ADDED: Form penawaran manual dengan tanggal, penerima, nama/alamat instansi, wilayah, UMK, dan jumlah Security, Cleaning Service, Pramubakti, Driver; migration `20261005_manual_offers.sql` untuk menyimpan isian tanpa lead riset; jalur n8n yang mengisi Google Docs dan baris jumlah personel RAB.
+CHANGED: Draft surat teks lama tetap bisa dibuka di bawah form manual; workflow penawaran standar dari target review tetap memakai alur sebelumnya.
+FIXED: Draft callback penawaran menyerialisasi body JSON saat cabang error agar status tidak tertahan di `processing`.
+REMOVED: Tidak ada.
+NOTES: Perubahan ini baru lokal. Belum ada migration/deploy Edge Function, perubahan workflow n8n aktif, atau push GitHub untuk versi ini. Jumlah personel masuk baris 9 RAB; harga template tetap per orang per bulan dan tidak otomatis menjadi total kontrak.
+
 VERSION: 0.6.3 (template penawaran aktif dan teruji)
 DATE: 2026-10-05
 

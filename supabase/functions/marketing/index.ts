@@ -305,6 +305,61 @@ Deno.serve(async (request) => {
     return error ? response({ error: 'Review target gagal disimpan' }, 500, origin)
       : response({ ok: true, lead_id: leadId, review_status: reviewStatus }, 200, origin);
   }
+  if (data.action === 'generate_offer_manual') {
+    if (!membership.drive_folder_id) return response({ error: 'Atur folder Google Drive di Pengaturan sebelum membuat penawaran' }, 400, origin);
+    const requestId = String(data.request_id || '');
+    const tanggal = String(data.tanggal_surat || '');
+    const dateValue = /^\d{4}-\d{2}-\d{2}$/.test(tanggal) ? new Date(`${tanggal}T00:00:00Z`) : new Date(NaN);
+    const recipient = String(data.ditujukan_kepada || '').trim().replace(/^Yth\.?\s*/i, '').slice(0, 180);
+    const clientName = String(data.nama_target || '').trim().slice(0, 180);
+    const alamat = String(data.alamat || '').trim().slice(0, 500);
+    const kecamatan = String(data.kecamatan || '').trim().slice(0, 100);
+    const kota = String(data.kabupaten_kota || '').trim().slice(0, 100);
+    const provinsi = String(data.provinsi || '').trim().slice(0, 100);
+    const umk = Number(data.umk);
+    const rawCounts = data.jumlah_personel && typeof data.jumlah_personel === 'object' ? data.jumlah_personel as Record<string, unknown> : {};
+    const counts = ['security', 'cleaning', 'pramubakti', 'driver'].map((name) => Number(rawCounts[name]));
+    if (!/^[0-9a-f-]{36}$/i.test(requestId) || !Number.isFinite(dateValue.getTime()) ||
+        dateValue.toISOString().slice(0, 10) !== tanggal || !recipient || !clientName || !alamat || !kota || !provinsi ||
+        !Number.isSafeInteger(umk) || umk < 1 || umk > 1000000000 ||
+        counts.some((count) => !Number.isSafeInteger(count) || count < 0 || count > 5000) ||
+        counts.every((count) => count === 0))
+      return response({ error: 'Lengkapi tanggal, penerima, alamat, UMK, dan jumlah personel RAB dengan benar' }, 400, origin);
+    const manualInput = { tanggal_surat: tanggal, ditujukan_kepada: recipient, nama_target: clientName,
+      alamat, kecamatan, kabupaten_kota: kota, provinsi, jumlah_personel: {
+        security: counts[0], cleaning: counts[1], pramubakti: counts[2], driver: counts[3],
+      } };
+    const { data: created, error: insertError } = await admin.from('marketing_offers').insert({
+      request_id: requestId, owner_id: authData.user.id, lead_id: null, manual_input: manualInput,
+      umk, client_name: clientName, drive_folder_id: membership.drive_folder_id,
+    }).select('id').single();
+    if (insertError) {
+      if (insertError.code === '23505') {
+        const { data: existing } = await admin.from('marketing_offers').select('id,status')
+          .eq('request_id', requestId).eq('owner_id', authData.user.id).maybeSingle();
+        return existing?.status === 'error' ? response({ error: 'Permintaan sebelumnya gagal. Periksa status sebelum membuat ulang', offer_id: existing.id }, 409, origin)
+          : existing ? response({ ok: true, offer_id: existing.id, status: existing.status }, 200, origin)
+          : response({ error: 'Permintaan ganda gagal diperiksa' }, 409, origin);
+      }
+      return response({ error: 'Permintaan penawaran manual gagal dicatat' }, 500, origin);
+    }
+    try {
+      const ack = await callWorkflow(offerWebhookUrl, {
+        offer_id: created.id, mode: 'manual', drive_folder_id: membership.drive_folder_id,
+        ...manualInput, umk,
+      });
+      if (String(ack.offer_id || '') !== created.id) throw new Error('ID penawaran dari n8n berbeda');
+    } catch (e) {
+      const { data: latest } = await admin.from('marketing_offers').select('status')
+        .eq('id', created.id).maybeSingle();
+      if (latest?.status === 'done' || latest?.status === 'partial')
+        return response({ ok: true, offer_id: created.id, status: latest.status }, 200, origin);
+      await admin.from('marketing_offers').update({ status: 'error',
+        error: `Proses n8n gagal dimulai: ${String(e).slice(0, 160)}`, updated_at: new Date().toISOString() }).eq('id', created.id);
+      return response({ error: 'Penawaran dicatat, tetapi generator gagal dimulai', offer_id: created.id }, 502, origin);
+    }
+    return response({ ok: true, offer_id: created.id, status: 'processing' }, 200, origin);
+  }
   if (data.action === 'generate_offer') {
     if (!membership.drive_folder_id) return response({ error: 'Atur folder Google Drive di Pengaturan sebelum membuat penawaran' }, 400, origin);
     const leadId = String(data.lead_id || '');

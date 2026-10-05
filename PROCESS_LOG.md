@@ -1,5 +1,13 @@
 # PROCESS_LOG
 
+## 2026-10-05 — Draft generator penawaran manual
+
+- Form pada tangkapan layar masih merupakan arsip surat teks. Jalur Google Docs/RAB aktif hanya menerima target yang sudah disetujui; tabel penawaran mensyaratkan `lead_id`. Perubahan lokal menambahkan form manual di menu yang sama dan mempertahankan arsip lama.
+- Migration membuat `lead_id` opsional untuk penawaran manual dan menyimpan `manual_input` JSONB untuk audit. Edge Function memvalidasi tanggal, penerima, nama/alamat instansi, kota/provinsi, UMK, empat jumlah personel, kepemilikan folder akun, dan request ID unik.
+- Draft workflow n8n menerima mode manual pada webhook yang sama, memakai template Docs/RAB aktif, mengganti penerima `Yth. Pimpinan`, tanggal surat, UMK, serta `I9:L9` pada RAB. Jalur target review tetap mengisi jumlah default template.
+- Draft callback menggunakan serialisasi JSON eksplisit agar objek error node menjadi body yang valid. Ini baru diuji sebagai ekspresi JavaScript lokal; perilaku n8n saat node gagal belum diuji end-to-end.
+- Uji lokal: parser TypeScript/esbuild, `node --check`, JSON workflow, simulasi DOM form dan menu, validasi tanggal tidak sah, mode target lama, jumlah personel RAB, dan body callback lulus. Browser login nyata, Supabase, Google Drive, dan n8n production belum berubah untuk fitur manual.
+
 ## 2026-10-05 — Uji ulang template setelah izin diperbarui
 
 - Metadata Google Drive menunjukkan dua template QA kini dapat dibuka lewat link. Backup workflow aktif disimpan lokal sebelum dua ID template diubah kembali.

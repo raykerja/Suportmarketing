@@ -19,6 +19,7 @@ Portal Marketing PT Ray Mitra Perkasa untuk `marketing.raykerja.cloud`. Source h
 | `supabase/migrations/20261004_marketing_visits.sql` | Tabel kunjungan, RLS, bucket foto privat |
 | `supabase/migrations/20261004_marketing_progress.sql` | Tahap dan riwayat progres, pengingat, RLS, fungsi transaksi |
 | `supabase/migrations/20261004_marketing_offers.sql` | Review target dan riwayat dokumen penawaran per akun (draft) |
+| `supabase/migrations/20261005_manual_offers.sql` | Draft dukungan penawaran manual tanpa lead riset; belum diterapkan production |
 | `supabase/functions/marketing/index.ts` | Undangan akun, pengaturan folder, pemicu dua webhook, callback |
 | `scripts/prepare_n8n.py`, `scripts/prepare_letter_n8n.py` | Draft privat dua workflow n8n |
 | `scripts/prepare_visit_n8n.py` | Draft privat webhook foto Drive dan sinkronisasi Google Sheet |

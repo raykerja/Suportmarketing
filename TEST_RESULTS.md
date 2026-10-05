@@ -1,5 +1,16 @@
 # TEST_RESULTS
 
+## Draft 0.6.4 — 2026-10-05
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Form manual | Nama, alamat, penerima, tanggal, UMK, empat jumlah terkirim ke Edge | Simulasi DOM menghasilkan payload sesuai input; tombol membuka formulir; ID HTML unik | PASS | Lokal, tanpa login production |
+| Validasi n8n | Tanggal tak sah dan jumlah kosong ditolak; mode target lama tetap bekerja | Uji JS menolak 31 Februari; mode manual dan target lulus | PASS | Belum dieksekusi dalam n8n |
+| RAB jumlah personel | I9:L9 terisi 4 jumlah tanpa mengubah rumus | Ekspresi payload lokal mengisi 2,3,0,1; mode target lama tidak menulis I9:L9 | PASS | Harga tetap per orang/bulan, bukan total kontrak |
+| Callback error | JSON valid saat node sebelumnya gagal | Ekspresi lokal menghasilkan JSON valid dengan pesan error | PARTIAL | Perlu uji gagal terkendali di n8n |
+| Edge Function dan migration | Kode valid serta skema mendukung lead kosong | esbuild mem-parsing Edge Function; migration dan RLS direview | PARTIAL | Belum diterapkan di Supabase production |
+| End-to-end manual | Docs/RAB di folder akun; Supabase `done` | Belum dijalankan | NOT TESTED | Menunggu penerapan migration, Edge, n8n, dan halaman |
+
 ## Uji ulang 0.6.3 — 2026-10-05
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |

@@ -35,6 +35,12 @@ form label, .client-filters label { width: 100%; }
 #pipeline-menu.active { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
 .legacy-letter-layout summary { cursor: pointer; color: var(--ray-blue); font-weight: 700; padding: 12px 0; }
 .legacy-letter-layout .columns { margin-top: 8px; }
+.manual-offer-card { margin: 8px 0 16px; }
+.manual-offer-card .hint { margin-bottom: 16px; }
+.manual-rab-counts { border: 1px solid var(--ray-line); border-radius: 12px; padding: 14px; min-width: 0; }
+.manual-rab-counts legend { font-weight: 800; padding: 0 6px; }
+.manual-rab-counts small { display: block; margin-top: 10px; color: var(--ray-muted); }
+#open-manual-offer { width: 100%; margin-top: 12px; }
 input:focus, select:focus, textarea:focus { outline-color: #7ca9e3; }
 button { border-color: #bdcce0; color: var(--ray-blue); }
 .primary { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
