@@ -46,14 +46,17 @@ function showWorkspace(user) {
     $('#activation-link').value = ''; $('#activation-panel').hidden = true;
     $('#account-info').textContent = ''; $('#folder-url').value = '';
     $('#member-list').textContent = ''; $('#admin-settings').hidden = true;
-    document.querySelector('[data-tab="visits"]').click();
+    activateTab('visits', false);
   }
   $('#login-panel').hidden = !!user;
   $('#setup-panel').hidden = !user || !invitePending;
   $('#workspace').hidden = !user || invitePending;
   $('#open-settings').hidden = !user || invitePending;
   $('#logout').hidden = !user || invitePending;
-  if (user && !invitePending) { loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); }
+  if (user && !invitePending) {
+    activateTab(history.state?.marketingTab || 'visits', false);
+    loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress();
+  }
   else {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
     if (letterPollTimer) { clearInterval(letterPollTimer); letterPollTimer = null; }
@@ -91,12 +94,28 @@ $('#setup-form').addEventListener('submit', async (event) => {
   showWorkspace(currentUser);
 });
 
-document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => {
-  document.querySelectorAll('[data-tab]').forEach((b) => b.classList.toggle('active', b === button));
-  document.querySelectorAll('.panel').forEach((p) => { p.hidden = p.id !== button.dataset.tab; });
-  if (button.dataset.tab === 'review') loadLeads();
-  if (button.dataset.tab === 'letters') { loadLeads(); loadOffers(); }
-}));
+const pipelineTabs = new Set(['research', 'review', 'letters']);
+function activateTab(tab, record = true) {
+  if (!$('#' + tab)?.classList.contains('panel')) tab = 'visits';
+  const current = document.querySelector('.panel:not([hidden])')?.id;
+  if (record && current !== tab) {
+    if (!history.state?.marketingTab) history.replaceState({ ...history.state, marketingTab: current || 'visits' }, '');
+    history.pushState({ ...history.state, marketingTab: tab }, '');
+  }
+  document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
+  const inPipeline = pipelineTabs.has(tab);
+  $('#pipeline-tabs').hidden = !inPipeline;
+  $('#pipeline-menu').classList.toggle('active', inPipeline);
+  $('#pipeline-menu').setAttribute('aria-expanded', String(inPipeline));
+  document.querySelectorAll('.panel').forEach((panel) => { panel.hidden = panel.id !== tab; });
+  if (tab === 'review') loadLeads();
+  if (tab === 'letters') { loadLeads(); loadOffers(); }
+}
+document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
+$('#pipeline-menu').addEventListener('click', () => activateTab('research'));
+window.addEventListener('popstate', (event) => {
+  if (currentUser && !invitePending) activateTab(event.state?.marketingTab || 'visits', false);
+});
 
 const visitFields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_janji_kunjungan',
   'jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2','nomor_kontak_pic','tanggal_realisasi_kunjungan',

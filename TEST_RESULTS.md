@@ -1,5 +1,16 @@
 # TEST_RESULTS
 
+## Draft 0.6.1 — 2026-10-05
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Syntax dan struktur halaman | JS valid, ID unik, semua panel punya tombol menu | `node --check app.js`, `git diff --check`, parser HTML lulus; 119 ID unik | PASS | Belum diuji di browser karena browser otomatis tidak tersedia |
+| Surat QA | Penerima panjang tetap sejajar, tidak menabrak isi | PDF hasil ekspor: halaman pertama rapi; placeholder tetap ada; total empat halaman | PASS | Salinan QA, bukan template aktif |
+| RAB QA | Nama badan usaha lengkap, tanggal di atas tanda tangan, rumus utuh | Drawing XML setelah impor ulang mengandung `PT. RAY MITRA`; `J36` berisi placeholder tanggal dan rata kanan; rumus PPN 12% I34:L34 serta total I35:L35 tetap | PARTIAL | Visual Google Sheets native belum dapat dilihat melalui browser; salinan QA belum diuji lewat n8n |
+| Alur Back dan HP | Back menuju panel sebelumnya; select selebar input | Implementasi lokal dan CSS diperiksa secara statis | PARTIAL | Uji interaksi 320/390 px serta login nyata masih diperlukan |
+| Generator production: konfigurasi | Dua template QA ditunjuk oleh n8n tanpa mengubah alur lain | Readback workflow aktif: 13 node; hanya dua ID template berubah; koneksi dan pengaturan sama dengan backup | PASS | Persetujuan mengganti template diterima 2026-10-05 |
+| Generator production: hasil file | Google Docs dan RAB baru selesai di folder akun | Belum ada eksekusi generator baru | NOT TESTED | Perlu satu uji terkontrol yang menambah file Drive dan record penawaran |
+
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
 | --- | --- | --- | --- | --- |
 | Syntax JavaScript browser | Tidak ada syntax error | `node --check app.js` exit 0 | PASS | Belum uji browser login |

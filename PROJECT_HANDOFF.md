@@ -19,7 +19,8 @@ Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform
 
 - **Kunjungan** memakai Supabase dan sinkron ke `DataMarketing`. Formulir HP terdiri dari tiga langkah.
 - **Riset target** dan **Surat & Penawaran** memakai Supabase, n8n, dan folder Drive per akun.
-- **Review hasil riset → dokumen penawaran web**: migration, workflow n8n, secret, dan Edge Function sudah aktif. Uji webhook langsung menghasilkan Docs/RAB di folder Yasir; tombol browser setelah login menunggu verifikasi saat halaman dipublikasikan.
+- **Navigasi target** mengelompokkan Cari Target, Review Hasil, dan Buat Penawaran dalam satu menu. Draft surat teks lama tetap ada dalam bagian lipat. Tombol Back browser memakai riwayat panel.
+- **Review hasil riset → dokumen penawaran web**: migration, workflow n8n, secret, dan Edge Function sudah aktif. Pada 2026-10-05 dua ID template n8n diganti ke salinan QA Docs/RAB yang lebih rapi; readback konfigurasi lulus, tetapi generator belum dijalankan lagi setelah pergantian. Uji webhook lama pernah menghasilkan Docs/RAB di folder Yasir; tombol browser setelah login masih menunggu verifikasi.
 - **Progres & Pengingat** masih pratinjau di browser karena `progressEnabled: false`. Migration `20261004_marketing_progress.sql` dan revisi workflow hanya draft; jangan menganggapnya sudah terpasang.
 - **Klien Aktif & Penawaran Ulang** masih pratinjau dengan data fiktif di `clients-preview.js`. Belum ada tabel klien, penawaran ulang, atau data kontrak nyata yang tersambung.
 - Admin pertama: `yasir@raykerja.cloud`. Akun staf dan foldernya dikelola melalui menu Pengaturan.

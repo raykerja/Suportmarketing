@@ -1,5 +1,16 @@
 # PROCESS_LOG
 
+## 2026-10-05 — Tata letak surat, RAB, dan menu target
+
+- Membaca source frontend, workflow penawaran portabel, template Google Docs/Sheets asli, dan hasil tangkapan layar. Template Docs memakai tab serta spasi panjang pada alamat penerima; itu menyebabkan nama instansi panjang bergeser. Blok tersebut diganti pada salinan QA menjadi paragraf biasa yang membungkus teks secara konsisten.
+- Menemukan `T. RAY MITRA` dalam Drawing XML hasil ekspor RAB. Nilai itu memang kurang huruf `P`; bukan kesalahan pada sel. Salinan RAB diperbaiki melalui ekspor XLSX, perubahan satu text run drawing, dan impor ulang sebagai Google Sheets native.
+- Percobaan menulis tanggal ke `L36` tidak bertahan karena `J36:L36` merupakan merged range; sel jangkar adalah `J36`. Salinan QA menulis placeholder tanggal pada `J36` dan mengatur rata kanan. Workflow aktif tetap menulis `J36`, sehingga tidak perlu mengubah ekspresinya.
+- Ekspor ulang salinan RAB membuktikan drawing berbunyi `PT. RAY MITRA`, dua gambar tetap ada, merged range `J36:L36` dan rumus PPN 12% tetap. Google Docs QA diekspor ke PDF empat halaman; halaman pertama diperiksa dan blok penerima tidak bertabrakan dengan isi surat.
+- Frontend lokal menampilkan submenu tiga tahap, melipat alur surat teks lama, menyamakan lebar select dan input, serta menaruh pilihan menu pada browser history agar Back menuju menu sebelumnya.
+- Browser otomatis tidak tersedia dan kontrol Safari ditolak; visual HP serta RAB native belum bisa diperiksa langsung. Pada tahap persiapan ini belum ada push, perubahan n8n aktif, atau deployment production.
+- Setelah persetujuan pengguna untuk mengganti template, workflow aktif `R7kXoTLBk8X0d4cy` dicadangkan ke `private/backup-offer-live-before-template-switch-20261005.json`. Dua ID pada node `Salin Template Surat` dan `Salin Template RAB` diganti dengan salinan QA. Readback n8n membuktikan workflow tetap aktif, 13 node dan semua field `name`, `nodes`, `connections`, `settings` identik dengan backup setelah memperhitungkan tepat dua ID tersebut.
+- Tidak ada eksekusi generator baru, data Supabase baru, atau file hasil penawaran baru dalam uji ini. Hak akses credential Google n8n ke dua template baru belum dibuktikan melalui eksekusi end-to-end.
+
 ## 2026-10-04
 
 1. Menemukan source portal lokal di `salad-setup/chat-ui`. Menu Marketing memuat `Surat & Penawaran` serta `Cari Target Market`.
