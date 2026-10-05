@@ -6,7 +6,7 @@
 | --- | --- | --- | --- | --- |
 | Jalur standar favicon sebelum perbaikan | Browser menemukan `/favicon.ico` | HTTP 404 | FAIL | Penyebab ikon “R” bawaan pada tangkapan layar |
 | Aset favicon baru | ICO berisi ukuran 16–256 px dan PNG persegi valid | Pemeriksaan format dan dimensi lokal lulus | PASS | Logo RAY asli digunakan |
-| Produksi favicon | HTML live menunjuk ICO dan `/favicon.ico` HTTP 200 | Menunggu build GitHub Pages | NOT TESTED | Diverifikasi setelah push |
+| Produksi favicon | HTML live menunjuk ICO dan `/favicon.ico` HTTP 200 | HTML live menunjuk ICO; `/favicon.ico` HTTP 200 (`image/vnd.microsoft.icon`) dan PNG persegi HTTP 200 | PASS | Tampilan visual pada tab lama tetap dipengaruhi cache browser |
 
 ## Uji 0.6.5 — 2026-10-05
 
