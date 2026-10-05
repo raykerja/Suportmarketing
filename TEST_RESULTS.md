@@ -8,8 +8,9 @@
 | Validasi n8n | Tanggal tak sah dan jumlah kosong ditolak; mode target lama tetap bekerja | Uji JS menolak 31 Februari; mode manual dan target lulus | PASS | Belum dieksekusi dalam n8n |
 | RAB jumlah personel | I9:L9 terisi 4 jumlah tanpa mengubah rumus | Ekspresi payload lokal mengisi 2,3,0,1; mode target lama tidak menulis I9:L9 | PASS | Harga tetap per orang/bulan, bukan total kontrak |
 | Callback error | JSON valid saat node sebelumnya gagal | Ekspresi lokal menghasilkan JSON valid dengan pesan error | PARTIAL | Perlu uji gagal terkendali di n8n |
-| Edge Function dan migration | Kode valid serta skema mendukung lead kosong | esbuild mem-parsing Edge Function; migration dan RLS direview | PARTIAL | Belum diterapkan di Supabase production |
-| End-to-end manual | Docs/RAB di folder akun; Supabase `done` | Belum dijalankan | NOT TESTED | Menunggu penerapan migration, Edge, n8n, dan halaman |
+| Edge Function dan migration | Kode valid serta skema mendukung lead kosong | esbuild lulus; migration live menampilkan `lead_id` nullable dan `manual_input`; Edge Function versi 8 aktif | PASS | Aksi browser dengan login nyata belum diuji |
+| End-to-end manual | Docs/RAB di folder akun; Supabase `done` | Webhook internal → n8n → Docs/RAB di folder Yasir → offer `done`; nama, penerima, tanggal, UMK, jumlah 2/3/0/1, dan rumus PPN cocok | PASS | Uji melalui webhook langsung; bukan klik form dengan login nyata |
+| Favicon tab | Browser memuat lambang RAY | Link favicon PNG ditambah pada HTML; verifikasi HTTPS menunggu push | PARTIAL | Cache ikon browser mungkin perlu refresh |
 
 ## Uji ulang 0.6.3 — 2026-10-05
 

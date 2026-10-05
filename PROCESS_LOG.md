@@ -6,7 +6,10 @@
 - Migration membuat `lead_id` opsional untuk penawaran manual dan menyimpan `manual_input` JSONB untuk audit. Edge Function memvalidasi tanggal, penerima, nama/alamat instansi, kota/provinsi, UMK, empat jumlah personel, kepemilikan folder akun, dan request ID unik.
 - Draft workflow n8n menerima mode manual pada webhook yang sama, memakai template Docs/RAB aktif, mengganti penerima `Yth. Pimpinan`, tanggal surat, UMK, serta `I9:L9` pada RAB. Jalur target review tetap mengisi jumlah default template.
 - Draft callback menggunakan serialisasi JSON eksplisit agar objek error node menjadi body yang valid. Ini baru diuji sebagai ekspresi JavaScript lokal; perilaku n8n saat node gagal belum diuji end-to-end.
-- Uji lokal: parser TypeScript/esbuild, `node --check`, JSON workflow, simulasi DOM form dan menu, validasi tanggal tidak sah, mode target lama, jumlah personel RAB, dan body callback lulus. Browser login nyata, Supabase, Google Drive, dan n8n production belum berubah untuk fitur manual.
+- Uji lokal: parser TypeScript/esbuild, `node --check`, JSON workflow, simulasi DOM form dan menu, validasi tanggal tidak sah, mode target lama, jumlah personel RAB, dan body callback lulus.
+- Setelah izin rilis diterima, backup workflow dan skema tersimpan lokal di `private/`. Migration Supabase berhasil (`lead_id` nullable, `manual_input` JSONB), empat node n8n cocok pada readback, Edge Function `marketing` menjadi versi 8 dengan `verify_jwt=false`, dan frontend commit `cc04206` terbit di GitHub Pages.
+- Uji manual internal memakai input tanggal 5 Oktober 2026, penerima Kepala Bagian Pengadaan, UMK 3.701.709, jumlah personel 2/3/0/1. Webhook diterima; Supabase offer `8c0687d8-50b2-4104-b0fb-a81abd60abf8` berstatus `done`, nomor `13/202/RAYMP/X/2026`. Docs dan RAB ditemukan di folder Yasir. Isi surat dan sel A4, B10, G10, I9:L9, I34:L35, J36 cocok. Jalur callback gagal belum dieksekusi terkendali.
+- Sesuai tangkapan layar pemilik, favicon RAY ditambahkan lewat asset PNG logo yang sudah ada; verifikasi deployment dicatat setelah push berikutnya.
 
 ## 2026-10-05 — Uji ulang template setelah izin diperbarui
 
