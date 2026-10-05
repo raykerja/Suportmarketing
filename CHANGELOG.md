@@ -1,4 +1,4 @@
-## Versi draft 0.6.5 — 2026-10-05
+## Versi 0.6.8 — 2026-10-05
 
 ADDED: Form kunjungan dua tahap, pemilihan kunjungan tersimpan, beberapa bagian kerja dengan jumlah, waktu kunjungan dari server, status marketing.
 CHANGED: Arsip surat teks lama disembunyikan; field telemarketing dan catatan follow up keluar dari form kunjungan.
