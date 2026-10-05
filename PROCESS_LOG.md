@@ -1,3 +1,12 @@
+## Draft form kunjungan dua tahap — 2026-10-05
+
+- Inspeksi source production, struktur JSONB `marketing_visits`, bucket foto privat, sinkronisasi Sheet/Drive, dan form tiga langkah.
+- Penyebab tahap 1 sebelumnya tidak bisa tersimpan: validasi `save_visit` selalu mewajibkan respons dan catatan yang baru dapat diisi kemudian.
+- Form lokal dipecah dua tahap. Backend menerima `visit_stage=initial`, menetapkan waktu dari server, dan mempertahankan record/ID saat detail dilengkapi.
+- Field telemarketing/follow up historis tetap dalam JSONB; UI arsip surat teks disembunyikan tanpa menghapus data.
+- Peta Sheet saat ini memakai 30 kolom lama: daftar bagian kerja diringkas ke kolom yang sudah ada. Draft workflow telah menyiapkan kolom AG–AI untuk tahap, waktu, dan status marketing. Header AG–AI kini aktif di Sheet; dua node pemetaan workflow kunjungan aktif sudah diperbarui, lalu dibaca ulang.
+- Edge Function production telah dideploy; source hasil download sama dengan source lokal dan permintaan tanpa login ditolak HTTP 401. Push GitHub dilakukan dalam rilis ini; uji end-to-end dengan akun login masih diperlukan.
+
 # PROCESS_LOG
 
 ## 2026-10-05 — Draft generator penawaran manual

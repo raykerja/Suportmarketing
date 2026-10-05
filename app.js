@@ -26,6 +26,7 @@ let progressVisits = [];
 let progressCache = [];
 let progressEvents = [];
 let editingVisitId = null;
+let activeVisitStep = '1';
 let editingLetterId = null;
 
 function status(id, message, error = false) {
@@ -122,18 +123,26 @@ const visitFields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaa
   'jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2','nomor_kontak_pic','tanggal_realisasi_kunjungan',
   'respon','tanggal_follow_up','catatan','titik_lokasi_laporan','koordinat_target','tanggal_follow_up_aktual',
   'catatan_hasil_follow_up','plotting_area','informasi_penting','tenaga_kerja_saat_ini','bagian_kerja_outsourcing',
-  'jumlah_calon_tenaga_kerja','petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing'];
+  'jumlah_calon_tenaga_kerja','petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing','status_marketing','waktu_realisasi_kunjungan'];
 function localToday() {
   const now = new Date(); return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0,10);
 }
 function visitPayload() {
   const form = $('#visit-form'); const result = {};
   for (const name of visitFields) result[name] = String(form.elements[name]?.value || '').trim();
+  const services = Array.from(document.querySelectorAll('.visit-service')).map((row) => ({
+    bagian: row.querySelector('[data-service-name]').value.trim(), jumlah: row.querySelector('[data-service-count]').value.trim(),
+  })).filter((row) => row.bagian || row.jumlah);
+  result.layanan_outsourcing = services;
+  result.bagian_kerja_outsourcing = services.map((row) => `${row.bagian} (${row.jumlah} orang)`).join(', ');
+  result.jumlah_calon_tenaga_kerja = String(services.reduce((sum, row) => sum + Number(row.jumlah || 0), 0));
+  result.visit_stage = activeVisitStep === '1' ? 'initial' : 'complete';
   result.tanggal_input = localToday();
   result.nama_marketing = currentMember?.display_name || currentMember?.email || currentUser?.email || '';
   return result;
 }
 function openVisitStep(step) {
+  activeVisitStep = String(step);
   document.querySelectorAll('[data-visit-step]').forEach((button) => {
     const active = button.dataset.visitStep === String(step);
     button.classList.toggle('active', active);
@@ -142,26 +151,49 @@ function openVisitStep(step) {
   document.querySelectorAll('[data-visit-step-panel]').forEach((panel) => {
     panel.hidden = panel.dataset.visitStepPanel !== String(step);
   });
+  $('#save-visit').textContent = step === '1' ? 'Simpan tahap 1' : 'Simpan detail kunjungan';
+  if (step === '2') renderSavedVisits();
 }
 $('#visit-step-nav').addEventListener('click', (event) => {
   const step = event.target.closest('[data-visit-step]')?.dataset.visitStep;
   if (step) openVisitStep(step);
 });
-$('#visit-form').addEventListener('click', (event) => {
-  const step = event.target.closest('[data-visit-next]')?.dataset.visitNext;
-  if (step) { openVisitStep(step); $('#visit-step-nav').scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+function addVisitService(bagian = '', jumlah = '') {
+  const row = document.createElement('div'); row.className = 'visit-service';
+  row.innerHTML = `<label>Bagian kerja<input data-service-name maxlength="100" placeholder="Security / Cleaning Service" value="${esc(bagian)}"></label><label>Jumlah orang<input data-service-count type="number" min="1" max="100000" step="1" inputmode="numeric" value="${esc(jumlah)}"></label><button type="button" data-remove-service aria-label="Hapus bagian kerja">Hapus</button>`;
+  $('#visit-services').appendChild(row);
+}
+$('#add-visit-service').addEventListener('click', () => addVisitService());
+$('#visit-services').addEventListener('click', (event) => event.target.closest('[data-remove-service]')?.closest('.visit-service')?.remove());
+function visitTimestamp(row) {
+  $('#visit-timestamp').textContent = row ? `Tercatat: ${date(row.data?.waktu_realisasi_kunjungan || row.created_at)}` : `Waktu kunjungan: ${date(new Date().toISOString())} (otomatis saat disimpan)`;
+}
+function renderSavedVisits() {
+  const selected = $('#visit-saved').value;
+  $('#visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>' + visitCache.filter((row) => row.owner_id === currentUser?.id).map((row) => `<option value="${esc(row.id)}">${esc(row.data?.nama_perusahaan)} · ${esc(date(row.data?.waktu_realisasi_kunjungan || row.created_at))}</option>`).join('');
+  if (visitCache.some((row) => row.id === selected)) $('#visit-saved').value = selected;
+}
+$('#visit-saved').addEventListener('change', () => {
+  const row = visitCache.find((item) => item.id === $('#visit-saved').value);
+  if (row) fillVisitForm(row, '2');
 });
 function resetVisitForm() {
   $('#visit-form').reset(); editingVisitId = null;
   openVisitStep(1);
   $('#visit-form-title').textContent = 'Catat kunjungan'; $('#new-visit').hidden = true;
-  $('#visit-form').elements.tanggal_realisasi_kunjungan.value = localToday();
+  $('#visit-saved').value = ''; $('#visit-services').replaceChildren(); addVisitService(); visitTimestamp();
   $('#photo-note').textContent = ''; status('#visit-status', '');
 }
-function fillVisitForm(row) {
+function fillVisitForm(row, step = '2') {
   editingVisitId = row.id; $('#visit-form-title').textContent = 'Lengkapi kunjungan'; $('#new-visit').hidden = false;
-  openVisitStep(1);
+  openVisitStep(step);
   for (const name of visitFields) if ($('#visit-form').elements[name]) $('#visit-form').elements[name].value = row.data?.[name] || '';
+  $('#visit-saved').value = row.id;
+  $('#visit-services').replaceChildren();
+  const services = Array.isArray(row.data?.layanan_outsourcing) ? row.data.layanan_outsourcing : [];
+  services.forEach((item) => addVisitService(item.bagian, item.jumlah));
+  if (!services.length) addVisitService();
+  visitTimestamp(row);
   $('#visit-photo').value = '';
   $('#photo-note').textContent = row.photo_drive_url ? 'Foto tersimpan di Drive. Pilih foto baru hanya jika ingin menggantinya.' : row.photo_path ? 'Foto tersimpan; sinkronisasi Drive sedang diproses.' : '';
   document.querySelector('[data-tab="visits"]').click();
@@ -172,7 +204,8 @@ async function loadVisits() {
   const { data, error } = await client.from('marketing_visits').select('*').order('created_at', { ascending: false }).limit(100);
   if (error) { $('#visit-list').textContent = 'Laporan belum dapat dibaca: ' + error.message; return; }
   visitCache = data || [];
-  $('#visit-list').innerHTML = visitCache.length ? visitCache.map((v) => `<div class="item"><strong>${esc(v.data?.nama_perusahaan)}</strong><small>${esc(v.data?.tanggal_realisasi_kunjungan)} · ${esc(v.data?.nama_marketing || '')}</small><div>${esc(v.data?.respon || '—')} · <span class="badge ${v.sheet_status === 'error' ? 'error' : v.sheet_status === 'synced' ? '' : 'processing'}">${v.sheet_status === 'synced' ? 'Masuk Sheet' : v.sheet_status === 'error' ? 'Sinkronisasi gagal' : 'Menunggu Sheet'}</span></div><small>Follow up: ${esc(v.data?.tanggal_follow_up || 'belum ditetapkan')}</small><p>${esc(v.data?.catatan || '')}</p>${v.sheet_error ? `<small class="error">${esc(v.sheet_error)}</small>` : ''}${v.photo_drive_url ? `<div><a href="${esc(v.photo_drive_url)}" target="_blank" rel="noopener noreferrer">Lihat foto</a></div>` : ''}${v.owner_id === currentUser.id ? `<div class="item-actions"><button type="button" data-open-visit="${esc(v.id)}">Buka / ubah</button>${v.sheet_status === 'error' || v.sheet_status === 'pending' ? `<button type="button" data-retry-visit="${esc(v.id)}">Coba sinkron lagi</button>` : ''}</div>` : ''}</div>`).join('') : '<p class="hint">Belum ada laporan kunjungan.</p>';
+  renderSavedVisits();
+  $('#visit-list').innerHTML = visitCache.length ? visitCache.map((v) => `<div class="item"><strong>${esc(v.data?.nama_perusahaan)}</strong><small>${esc(date(v.data?.waktu_realisasi_kunjungan || v.created_at))} · ${esc(v.data?.nama_marketing || '')}</small><div><span class="badge ${v.data?.visit_stage === 'initial' ? 'processing' : ''}">${v.data?.visit_stage === 'initial' ? 'Tahap 1 · perlu detail' : 'Detail terisi'}</span> <span class="badge ${v.sheet_status === 'error' ? 'error' : v.sheet_status === 'synced' ? '' : 'processing'}">${v.sheet_status === 'synced' ? 'Masuk Sheet' : v.sheet_status === 'error' ? 'Sinkronisasi gagal' : 'Menunggu Sheet'}</span></div><small>Follow up: ${esc(v.data?.tanggal_follow_up || 'belum ditetapkan')}</small><p>${esc(v.data?.catatan || '')}</p>${v.sheet_error ? `<small class="error">${esc(v.sheet_error)}</small>` : ''}${v.photo_drive_url ? `<div><a href="${esc(v.photo_drive_url)}" target="_blank" rel="noopener noreferrer">Lihat foto</a></div>` : ''}${v.owner_id === currentUser.id ? `<div class="item-actions"><button type="button" data-open-visit="${esc(v.id)}">${v.data?.visit_stage === 'initial' ? 'Lengkapi detail' : 'Buka / ubah'}</button>${v.sheet_status === 'error' || v.sheet_status === 'pending' ? `<button type="button" data-retry-visit="${esc(v.id)}">Coba sinkron lagi</button>` : ''}</div>` : ''}</div>`).join('') : '<p class="hint">Belum ada laporan kunjungan.</p>';
   const recentProcessing = visitCache.some((v) => v.sheet_status === 'processing' && Date.now() - new Date(v.updated_at).getTime() < 180000);
   if (recentProcessing && !visitPollTimer) visitPollTimer = setInterval(loadVisits, 5000);
   if (!recentProcessing && visitPollTimer) { clearInterval(visitPollTimer); visitPollTimer = null; }
@@ -192,7 +225,10 @@ $('#visit-company').addEventListener('change', () => {
   const form = $('#visit-form');
   if (!form.elements.alamat.value) form.elements.alamat.value = lead.data?.alamat || '';
   if (!form.elements.nomor_kontak_perusahaan.value) form.elements.nomor_kontak_perusahaan.value = lead.data?.telepon || '';
-  if (!form.elements.kategori.value) form.elements.kategori.value = lead.data?.bidang || lead.data?.jenis || '';
+  if (!form.elements.kategori.value) {
+    const category = lead.data?.bidang || lead.data?.jenis || '';
+    form.elements.kategori.value = Array.from(form.elements.kategori.options).some((option) => option.value === category) ? category : 'Lainnya';
+  }
   if (!form.elements.area.value) form.elements.area.value = lead.kabupaten_kota || '';
 });
 $('#get-location').addEventListener('click', () => {
@@ -213,12 +249,18 @@ async function syncVisit(id) {
 $('#visit-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!client || !currentUser) return;
-  const firstInvalid = Array.from($('#visit-form').elements).find((field) => field.willValidate && !field.checkValidity());
+  if (activeVisitStep === '2' && !editingVisitId) {
+    status('#visit-status', 'Pilih kunjungan yang sudah disimpan terlebih dahulu.', true); $('#visit-saved').focus(); return;
+  }
+  const serviceRows = Array.from(document.querySelectorAll('.visit-service'));
+  if (activeVisitStep === '2' && serviceRows.some((row) => !!row.querySelector('[data-service-name]').value.trim() !== !!row.querySelector('[data-service-count]').value.trim())) {
+    status('#visit-status', 'Setiap bagian kerja harus memiliki nama dan jumlah orang.', true); return;
+  }
+  const activePanel = $(`#visit-step-${activeVisitStep}`);
+  const firstInvalid = Array.from(activePanel.querySelectorAll('input,select,textarea')).find((field) => (field.required || field.value) && !field.checkValidity()) ||
+    (activeVisitStep === '2' && !$('#visit-form').elements.respon.value ? $('#visit-form').elements.respon : null) ||
+    (activeVisitStep === '2' && !$('#visit-form').elements.catatan.value.trim() ? $('#visit-form').elements.catatan : null);
   if (firstInvalid) {
-    const step = firstInvalid.closest('[data-visit-step-panel]')?.dataset.visitStepPanel;
-    if (step) openVisitStep(step);
-    const details = firstInvalid.closest('details');
-    if (details) details.open = true;
     firstInvalid.reportValidity();
     firstInvalid.focus();
     status('#visit-status', 'Lengkapi kolom yang ditandai sebelum menyimpan laporan.', true);
@@ -228,6 +270,15 @@ $('#visit-form').addEventListener('submit', async (event) => {
   status('#visit-status', 'Menyimpan laporan…');
   try {
     const payload = visitPayload();
+    if (activeVisitStep === '1') {
+      const initialKeys = ['nama_perusahaan','kategori','nama_pejabat_pic_1','jabatan_pic','koordinat_target','visit_stage'];
+      for (const key of Object.keys(payload)) if (!initialKeys.includes(key)) delete payload[key];
+    } else {
+      const detailKeys = ['nama_perusahaan','alamat','nomor_kontak_pic','nomor_kontak_perusahaan','respon',
+        'tenaga_kerja_saat_ini','bagian_kerja_outsourcing','jumlah_calon_tenaga_kerja','layanan_outsourcing',
+        'catatan','informasi_penting','status_marketing','tanggal_follow_up','visit_stage'];
+      for (const key of Object.keys(payload)) if (!detailKeys.includes(key)) delete payload[key];
+    }
     const { data, error } = await client.functions.invoke('marketing', { body: { action: 'save_visit', visit_id: editingVisitId, visit: payload } });
     if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Gagal menyimpan laporan');
     editingVisitId = data.visit_id;
@@ -242,10 +293,13 @@ $('#visit-form').addEventListener('submit', async (event) => {
       if (linked.error || !linked.data?.ok) throw new Error('Laporan tersimpan, tetapi foto gagal ditautkan: ' + (linked.data?.error || linked.error?.message));
     }
     $('#visit-photo').value = '';
-    await syncVisit(data.visit_id);
+    const synced = await syncVisit(data.visit_id);
     await loadVisits();
     await loadProgress();
-    if (!editingVisitId) resetVisitForm();
+    $('#visit-saved').value = data.visit_id;
+    const saved = visitCache.find((row) => row.id === data.visit_id);
+    if (saved) visitTimestamp(saved);
+    if (activeVisitStep === '1' && synced) status('#visit-status', 'Tahap 1 tersimpan. Detail dapat dilengkapi sekarang atau nanti melalui pilihan kunjungan.');
   } catch (e) { status('#visit-status', String(e.message || e), true); }
   finally { button.disabled = false; }
 });

@@ -72,6 +72,10 @@ const dates = new Set(['tanggal_input','tanggal_janji_kunjungan','tanggal_realis
   'tanggal_follow_up','tanggal_follow_up_aktual','tanggal_menghubungi','tanggal_aktivitas_terakhir']);
 const sheet = {};
 for (const key of fields) sheet[key] = key === 'foto_kunjungan' ? photoUrl : dates.has(key) ? date(v[key]) : safe(v[key]);
+sheet.visit_stage = safe(v.visit_stage === 'initial' ? 'Tahap 1' : 'Lengkap');
+sheet.waktu_realisasi_kunjungan = v.waktu_realisasi_kunjungan && !isNaN(Date.parse(v.waktu_realisasi_kunjungan))
+  ? new Intl.DateTimeFormat('id-ID', {timeZone:'Asia/Jakarta', day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(v.waktu_realisasi_kunjungan)) : '';
+sheet.status_marketing = safe(v.status_marketing);
 return [{json:{visit_id:base.visit_id, photo_drive_file_id:photoId,
   photo_expected:!!base.photo_url, sheet, email:base.email}}];
 """})
@@ -89,7 +93,8 @@ headers = ['AREA','  NAMA PERUSAHAAN','KATEGORI','NOMOR KONTAK PERUSAHAAN','ALAM
     ' NAMA MARKETING','PLOTTING AREA','INFORMASI PENTING','TENAGA KERJA SAAT INI',
     'BAGIAN KERJA OUTSOURCING','JUMLAH CALON TENAGA KERJA','PETUGAS TELEMARKETING',
     'STATUS TELEMARKETING','TANGGAL MENGHUBUNGI','CATATAN TELEMARKETING','ID LAPORAN','EMAIL MARKETING',
-    'TAHAP TERKINI','TANGGAL AKTIVITAS TERAKHIR','CATATAN PROGRES TERAKHIR','LINK FILE PROGRES']
+    'TAHAP TERKINI','TANGGAL AKTIVITAS TERAKHIR','CATATAN PROGRES TERAKHIR','LINK FILE PROGRES',
+    'TAHAP PENGISIAN','WAKTU REALISASI','STATUS MARKETING']
 keys = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_input',
     'tanggal_janji_kunjungan','jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2','nomor_kontak_pic',
     'foto_kunjungan','tanggal_realisasi_kunjungan','respon','tanggal_follow_up','catatan',
@@ -102,7 +107,10 @@ mapping.update({'ID LAPORAN': '={{ $json.visit_id }}', 'EMAIL MARKETING': '={{ $
     'TAHAP TERKINI': '={{ $json.sheet.tahap_terkini }}',
     'TANGGAL AKTIVITAS TERAKHIR': '={{ $json.sheet.tanggal_aktivitas_terakhir }}',
     'CATATAN PROGRES TERAKHIR': '={{ $json.sheet.catatan_progres_terakhir }}',
-    'LINK FILE PROGRES': '={{ $json.sheet.link_file_progres }}'})
+    'LINK FILE PROGRES': '={{ $json.sheet.link_file_progres }}',
+    'TAHAP PENGISIAN': '={{ $json.sheet.visit_stage }}',
+    'WAKTU REALISASI': '={{ $json.sheet.waktu_realisasi_kunjungan }}',
+    'STATUS MARKETING': '={{ $json.sheet.status_marketing }}'})
 schema = [{'id': h, 'displayName': h, 'required': False, 'defaultMatch': False, 'display': True,
            'type': 'string', 'canBeUsedToMatch': True} for h in headers]
 sheets = node('Sinkron DataMarketing', 'n8n-nodes-base.googleSheets', 4.7, 1540, 0, {

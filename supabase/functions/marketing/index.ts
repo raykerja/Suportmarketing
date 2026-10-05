@@ -171,17 +171,30 @@ Deno.serve(async (request) => {
       'tanggal_realisasi_kunjungan','respon','tanggal_follow_up','catatan','titik_lokasi_laporan',
       'koordinat_target','tanggal_follow_up_aktual','catatan_hasil_follow_up','nama_marketing','plotting_area',
       'informasi_penting','tenaga_kerja_saat_ini','bagian_kerja_outsourcing','jumlah_calon_tenaga_kerja',
-      'petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing'];
+      'petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing',
+      'status_marketing','waktu_realisasi_kunjungan','visit_stage'];
     const incoming = data.visit && typeof data.visit === 'object' && !Array.isArray(data.visit)
       ? data.visit as Record<string, unknown> : {};
     const visit: Record<string, string> = {};
     for (const key of fields) visit[key] = String(incoming[key] ?? '').trim().slice(0, key === 'catatan' ? 3000 : 2000);
+    const initial = visit.visit_stage === 'initial';
+    const services = Array.isArray(incoming.layanan_outsourcing) ? incoming.layanan_outsourcing : [];
+    if (services.length > 30 || services.some((row: unknown) => {
+      if (!row || typeof row !== 'object' || Array.isArray(row)) return true;
+      const item = row as Record<string, unknown>;
+      return !String(item.bagian || '').trim() || String(item.bagian).length > 100 ||
+        !/^\d+$/.test(String(item.jumlah || '')) || Number(item.jumlah) < 1 || Number(item.jumlah) > 100000;
+    })) return response({ error: 'Bagian kerja dan jumlah personel tidak valid' }, 400, origin);
+    const parsedServices = services.map((row: Record<string, unknown>) => ({ bagian: String(row.bagian).trim(), jumlah: Number(row.jumlah) }));
     visit.nama_marketing = membership.display_name || membership.email;
-    if (!visit.nama_perusahaan || visit.nama_perusahaan.length > 180 || !visit.respon || !visit.catatan ||
-      !/^\d{4}-\d{2}-\d{2}$/.test(visit.tanggal_realisasi_kunjungan) ||
+    if (!visit.nama_perusahaan || visit.nama_perusahaan.length > 180 ||
+      (initial ? (!visit.kategori || !visit.nama_pejabat_pic_1 || !visit.jabatan_pic) : (!visit.respon || !visit.catatan)) ||
+      (visit.tanggal_realisasi_kunjungan && !/^\d{4}-\d{2}-\d{2}$/.test(visit.tanggal_realisasi_kunjungan)) ||
       !['tanggal_input','tanggal_janji_kunjungan','tanggal_follow_up','tanggal_follow_up_aktual','tanggal_menghubungi']
         .every((key) => !visit[key] || /^\d{4}-\d{2}-\d{2}$/.test(visit[key])) ||
-      (visit.jumlah_calon_tenaga_kerja && (!/^\d+$/.test(visit.jumlah_calon_tenaga_kerja) || Number(visit.jumlah_calon_tenaga_kerja) > 100000))) {
+      (visit.jumlah_calon_tenaga_kerja && (!/^\d+$/.test(visit.jumlah_calon_tenaga_kerja) || Number(visit.jumlah_calon_tenaga_kerja) > 100000)) ||
+      (visit.tenaga_kerja_saat_ini && (!/^\d+$/.test(visit.tenaga_kerja_saat_ini) || Number(visit.tenaga_kerja_saat_ini) > 100000)) ||
+      (visit.status_marketing && !['Prospek baru','Perlu follow up','Proposal disampaikan','Penawaran disampaikan','Negosiasi','Deal','Gagal'].includes(visit.status_marketing))) {
       return response({ error: 'Nama target, tanggal, respons, catatan, atau jumlah tenaga kerja tidak valid' }, 400, origin);
     }
     const id = String(data.visit_id || '');
@@ -191,13 +204,22 @@ Deno.serve(async (request) => {
         .eq('id', id).eq('owner_id', authData.user.id).maybeSingle();
       if (!previous) return response({ error: 'Laporan tidak ditemukan' }, 404, origin);
       visit.tanggal_input = String(previous.data?.tanggal_input || visit.tanggal_input);
+      visit.tanggal_realisasi_kunjungan = String(previous.data?.tanggal_realisasi_kunjungan || visit.tanggal_realisasi_kunjungan);
+      visit.waktu_realisasi_kunjungan = String(previous.data?.waktu_realisasi_kunjungan || visit.waktu_realisasi_kunjungan);
       const { data: progress } = await admin.from('marketing_progress').select('stage,next_follow_up').eq('visit_id', id).maybeSingle();
       if (progress) {
         visit.tanggal_follow_up = progress.next_follow_up || '';
         if (progress.stage === 'deal') visit.respon = 'Baik';
         if (progress.stage === 'gagal') visit.respon = 'Menolak';
       }
-      const { data: updated, error } = await admin.from('marketing_visits').update({ data: { ...previous.data, ...visit },
+      const savedVisit = initial ? { ...previous.data, ...Object.fromEntries(['nama_perusahaan','kategori','nama_pejabat_pic_1','jabatan_pic','koordinat_target','nama_marketing'].map((key) => [key, visit[key]])),
+        tanggal_realisasi_kunjungan: visit.tanggal_realisasi_kunjungan, waktu_realisasi_kunjungan: visit.waktu_realisasi_kunjungan,
+        visit_stage: previous.data?.visit_stage === 'complete' ? 'complete' : 'initial' } :
+        { ...previous.data, ...Object.fromEntries(fields.filter((key) => key in incoming).map((key) => [key, visit[key]])),
+          ...(Array.isArray(incoming.layanan_outsourcing) ? { layanan_outsourcing: parsedServices } : {}),
+          ...(progress ? { tanggal_follow_up: visit.tanggal_follow_up, respon: visit.respon } : {}), visit_stage: 'complete',
+          tanggal_realisasi_kunjungan: visit.tanggal_realisasi_kunjungan, waktu_realisasi_kunjungan: visit.waktu_realisasi_kunjungan };
+      const { data: updated, error } = await admin.from('marketing_visits').update({ data: savedVisit,
         sheet_status: 'pending', sheet_error: null, updated_at: new Date().toISOString() })
         .eq('id', id).eq('owner_id', authData.user.id).select('id').maybeSingle();
       return error ? response({ error: 'Laporan gagal diperbarui' }, 500, origin)
@@ -205,7 +227,10 @@ Deno.serve(async (request) => {
     }
     visit.tanggal_input = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta', year: 'numeric',
       month: '2-digit', day: '2-digit' }).format(new Date());
-    const { data: created, error } = await admin.from('marketing_visits').insert({ owner_id: authData.user.id, data: visit })
+    visit.tanggal_realisasi_kunjungan = visit.tanggal_input;
+    visit.waktu_realisasi_kunjungan = new Date().toISOString();
+    const { data: created, error } = await admin.from('marketing_visits').insert({ owner_id: authData.user.id,
+      data: { ...visit, layanan_outsourcing: parsedServices, visit_stage: initial ? 'initial' : 'complete' } })
       .select('id').single();
     return error ? response({ error: 'Laporan gagal disimpan' }, 500, origin)
       : response({ ok: true, visit_id: created.id }, 200, origin);

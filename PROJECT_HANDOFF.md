@@ -17,9 +17,9 @@ Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform
 
 ## Status fitur penting
 
-- **Kunjungan** memakai Supabase dan sinkron ke `DataMarketing`. Formulir HP terdiri dari tiga langkah.
+- **Kunjungan** memakai Supabase dan sinkron ke `DataMarketing`. Backend dua tahap, header Sheet AG–AI, dan workflow n8n sudah diterapkan. Frontend diterbitkan melalui GitHub Pages pada rilis ini.
 - **Riset target** dan **Surat & Penawaran** memakai Supabase, n8n, dan folder Drive per akun.
-- **Navigasi target** mengelompokkan Cari Target, Review Hasil, dan Buat Penawaran dalam satu menu. Draft surat teks lama tetap ada dalam bagian lipat. Tombol Back browser memakai riwayat panel.
+- **Navigasi target** mengelompokkan Cari Target, Review Hasil, dan Buat Penawaran dalam satu menu. Menu draft surat teks lama dihapus dari tampilan lokal; data historis tetap tersimpan. Tombol Back browser memakai riwayat panel.
 - **Review hasil riset → dokumen penawaran web**: migration, workflow n8n, secret, dan Edge Function aktif. Setelah izin template diperbarui oleh pemilik, dua ID template rapi dipasang kembali ke workflow `R7kXoTLBk8X0d4cy`. Eksekusi internal `1293` berhasil: Google Docs dan RAB masuk folder Yasir, Supabase `marketing_offers` berstatus `done`, UMK dan tanggal terisi, rumus PPN 12% tetap. Templat saat ini memiliki akses umum `anyone with link: writer`; batasi ke akun Google n8n tertentu setelah identitas credential dipastikan agar workflow tidak putus. Uji tombol sesudah login nyata belum dapat dilakukan melalui browser otomatis.
 - **Penawaran manual (production 0.6.4)**: form mengisi tanggal, penerima, nama/alamat instansi, wilayah, UMK, dan jumlah empat layanan pada template Docs/RAB yang sama. Migration `20261005_manual_offers.sql`, Edge Function versi 8, dan empat node n8n telah diterapkan. Uji webhook internal lulus sampai Docs/RAB di folder Yasir dan Supabase `done`; klik form setelah login nyata masih perlu pemeriksaan visual. Arsip draft teks lama tetap ada.
 - **Progres & Pengingat** masih pratinjau di browser karena `progressEnabled: false`. Migration `20261004_marketing_progress.sql` dan revisi workflow hanya draft; jangan menganggapnya sudah terpasang.

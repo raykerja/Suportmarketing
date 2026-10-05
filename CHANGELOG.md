@@ -1,3 +1,11 @@
+## Versi draft 0.6.5 — 2026-10-05
+
+ADDED: Form kunjungan dua tahap, pemilihan kunjungan tersimpan, beberapa bagian kerja dengan jumlah, waktu kunjungan dari server, status marketing.
+CHANGED: Arsip surat teks lama disembunyikan; field telemarketing dan catatan follow up keluar dari form kunjungan.
+FIXED: Tahap pertama dapat disimpan tanpa respons/catatan tahap kedua; data historis dipertahankan saat melengkapi detail.
+REMOVED: Tidak ada data atau tabel yang dihapus.
+NOTES: Persetujuan produksi diterima. Header Sheet AG–AI, dua node n8n aktif, Edge Function, dan frontend GitHub Pages diperbarui dalam rilis ini. Workflow memetakan kolom AG–AI untuk tahap, waktu, dan status; ringkasan bagian kerja memakai kolom yang ada.
+
 # CHANGELOG
 
 VERSION: 0.6.7 (pemutakhiran ikon tab dan izin template)

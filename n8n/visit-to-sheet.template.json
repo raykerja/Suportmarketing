@@ -140,7 +140,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const base = $('Validasi Kunjungan').first().json;\nconst photoId = $json.id || base.photo_drive_file_id || null;\nconst photoUrl = photoId ? `https://drive.google.com/file/d/${photoId}/view` : '';\nconst v = base.visit;\nconst safe = (x) => { const s = String(x ?? '').trim(); return /^[=+@]/.test(s) ? \"'\" + s : s; };\nconst date = (x) => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(x || '')) ? String(x).split('-').reverse().join('/') : '';\nconst fields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_input',\n  'tanggal_janji_kunjungan','jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2',\n  'nomor_kontak_pic','foto_kunjungan','tanggal_realisasi_kunjungan','respon','tanggal_follow_up',\n  'catatan','titik_lokasi_laporan','koordinat_target','tanggal_follow_up_aktual',\n  'catatan_hasil_follow_up','nama_marketing','plotting_area','informasi_penting',\n  'tenaga_kerja_saat_ini','bagian_kerja_outsourcing','jumlah_calon_tenaga_kerja',\n  'petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing'];\nconst dates = new Set(['tanggal_input','tanggal_janji_kunjungan','tanggal_realisasi_kunjungan',\n  'tanggal_follow_up','tanggal_follow_up_aktual','tanggal_menghubungi']);\nconst sheet = {};\nfor (const key of fields) sheet[key] = key === 'foto_kunjungan' ? photoUrl : dates.has(key) ? date(v[key]) : safe(v[key]);\nreturn [{json:{visit_id:base.visit_id, photo_drive_file_id:photoId,\n  photo_expected:!!base.photo_url, sheet, email:base.email}}];\n"
+        "jsCode": "const base = $('Validasi Kunjungan').first().json;\nconst photoId = $json.id || base.photo_drive_file_id || null;\nconst photoUrl = photoId ? `https://drive.google.com/file/d/${photoId}/view` : '';\nconst v = base.visit;\nconst safe = (x) => { const s = String(x ?? '').trim(); return /^[=+@]/.test(s) ? \"'\" + s : s; };\nconst date = (x) => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(x || '')) ? String(x).split('-').reverse().join('/') : '';\nconst fields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_input',\n  'tanggal_janji_kunjungan','jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2',\n  'nomor_kontak_pic','foto_kunjungan','tanggal_realisasi_kunjungan','respon','tanggal_follow_up',\n  'catatan','titik_lokasi_laporan','koordinat_target','tanggal_follow_up_aktual',\n  'catatan_hasil_follow_up','nama_marketing','plotting_area','informasi_penting',\n  'tenaga_kerja_saat_ini','bagian_kerja_outsourcing','jumlah_calon_tenaga_kerja',\n  'petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing'];\nconst dates = new Set(['tanggal_input','tanggal_janji_kunjungan','tanggal_realisasi_kunjungan',\n  'tanggal_follow_up','tanggal_follow_up_aktual','tanggal_menghubungi']);\nconst sheet = {};\nconst waktu = v.waktu_realisasi_kunjungan && !isNaN(Date.parse(v.waktu_realisasi_kunjungan))\n  ? new Intl.DateTimeFormat('id-ID', {timeZone:'Asia/Jakarta', day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(v.waktu_realisasi_kunjungan)) : '';\n\nfor (const key of fields) sheet[key] = key === 'foto_kunjungan' ? photoUrl : dates.has(key) ? date(v[key]) : safe(v[key]);\nsheet.visit_stage = safe(v.visit_stage === 'initial' ? 'Tahap 1' : 'Lengkap');\nsheet.waktu_realisasi_kunjungan = waktu;\nsheet.status_marketing = safe(v.status_marketing);\nreturn [{json:{visit_id:base.visit_id, photo_drive_file_id:photoId,\n  photo_expected:!!base.photo_url, sheet, email:base.email}}];\n"
       }
     },
     {
@@ -199,7 +199,10 @@
             "TANGGAL MENGHUBUNGI": "={{ $json.sheet.tanggal_menghubungi }}",
             "CATATAN TELEMARKETING": "={{ $json.sheet.catatan_telemarketing }}",
             "ID LAPORAN": "={{ $json.visit_id }}",
-            "EMAIL MARKETING": "={{ $json.email }}"
+            "EMAIL MARKETING": "={{ $json.email }}",
+            "TAHAP PENGISIAN": "={{ $json.sheet.visit_stage }}",
+            "WAKTU REALISASI": "={{ $json.sheet.waktu_realisasi_kunjungan }}",
+            "STATUS MARKETING": "={{ $json.sheet.status_marketing }}"
           },
           "matchingColumns": [
             "ID LAPORAN"
@@ -487,6 +490,33 @@
             {
               "id": "EMAIL MARKETING",
               "displayName": "EMAIL MARKETING",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TAHAP PENGISIAN",
+              "displayName": "TAHAP PENGISIAN",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "WAKTU REALISASI",
+              "displayName": "WAKTU REALISASI",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "STATUS MARKETING",
+              "displayName": "STATUS MARKETING",
               "required": false,
               "defaultMatch": false,
               "display": true,

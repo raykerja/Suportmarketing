@@ -1,3 +1,16 @@
+## Draft kunjungan dua tahap — 2026-10-05
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Syntax JS dan HTML | Tidak ada error | `node --check app.js` dan parser HTML lulus | PASS | Lokal |
+| Workflow draft | JSON dan skrip pembangkit valid | `python3 -m json.tool` dan `python3 -m py_compile` lulus | PASS | Lokal |
+| Diff | Tidak ada whitespace error | `git diff --check` lulus | PASS | Lokal |
+| Header Sheet AG–AI | Tiga header tersedia | Ketiga header terbaca, kolom menjadi 35 | PASS | Production, tab DataMarketing |
+| Workflow n8n | Dua node berubah, workflow tetap aktif | Readback cocok dengan payload; 9 node, 35 mapping | PASS | Production |
+| Edge Function | Source baru aktif, tanpa login ditolak | Download ulang identik; HTTP 401 tanpa login | PASS | Production |
+| Simpan tahap 1, foto, Sheet, tahap 2 | Record sama dan sinkron | Belum dijalankan dengan akun login | NOT TESTED | Hindari membuat data calon klien fiktif |
+| UI HP 320/390 px | Kolom tidak overflow | Belum diuji di browser dengan akun login | NOT TESTED | Verifikasi setelah deployment |
+
 # TEST_RESULTS
 
 ## Uji 0.6.7 — 2026-10-05
