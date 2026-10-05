@@ -1,5 +1,14 @@
 # CHANGELOG
 
+VERSION: 0.6.6 (favicon standar browser)
+DATE: 2026-10-05
+
+ADDED: `favicon.ico` multiukuran dan PNG persegi dari logo RAY yang sama.
+CHANGED: HTML memakai `/favicon.ico` untuk tab browser dan PNG persegi untuk Apple Touch.
+FIXED: Jalur standar `/favicon.ico` sebelumnya HTTP 404, sehingga browser masih menampilkan ikon huruf “R”.
+REMOVED: Tidak ada.
+NOTES: Logo sumber tetap `logo-ray.png`; ukuran ikon dibuat 16–256 piksel agar terbaca pada tab browser.
+
 VERSION: 0.6.5 (favicon dan audit akses generator)
 DATE: 2026-10-05
 

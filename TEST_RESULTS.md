@@ -1,5 +1,13 @@
 # TEST_RESULTS
 
+## Uji 0.6.6 — 2026-10-05
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Jalur standar favicon sebelum perbaikan | Browser menemukan `/favicon.ico` | HTTP 404 | FAIL | Penyebab ikon “R” bawaan pada tangkapan layar |
+| Aset favicon baru | ICO berisi ukuran 16–256 px dan PNG persegi valid | Pemeriksaan format dan dimensi lokal lulus | PASS | Logo RAY asli digunakan |
+| Produksi favicon | HTML live menunjuk ICO dan `/favicon.ico` HTTP 200 | Menunggu build GitHub Pages | NOT TESTED | Diverifikasi setelah push |
+
 ## Uji 0.6.5 — 2026-10-05
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
