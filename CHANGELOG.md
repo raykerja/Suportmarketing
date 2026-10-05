@@ -1,5 +1,14 @@
 # CHANGELOG
 
+VERSION: 0.6.5 (favicon dan audit akses generator)
+DATE: 2026-10-05
+
+ADDED: URL favicon khusus dengan nama file baru untuk memaksa browser mengambil ulang lambang RAY.
+CHANGED: Relasi favicon memakai path absolut dan `shortcut icon`; ikon Apple memakai aset yang sama.
+FIXED: Callback kegagalan diuji pada Edge Function production: penawaran uji berubah dari `processing` menjadi `error` dengan pesan tersimpan.
+REMOVED: Tidak ada.
+NOTES: OAuth Google Drive n8n terverifikasi sebagai `yasiryasir1602@gmail.com`; akun itu punya izin `writer` eksplisit dan akses baca/salin/edit ke kedua template. Izin umum `anyone with link: writer` masih ada karena konektor yang tersedia tidak mendukung pencabutannya dan permintaan perubahan izin sebelumnya ditolak oleh peninjauan otomatis. Cabang error penuh dalam n8n belum dipicu secara terkendali.
+
 VERSION: 0.6.4 (penawaran manual production)
 DATE: 2026-10-05
 

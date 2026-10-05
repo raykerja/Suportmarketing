@@ -1,5 +1,14 @@
 # TEST_RESULTS
 
+## Uji 0.6.5 — 2026-10-05
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Callback kegagalan Edge | Penawaran `processing` menjadi `error` dan pesan tersimpan | HTTP 200; record internal `d78ee126-8b3f-4880-8cd7-cc5a173908f1` menjadi `error` dengan pesan yang benar | PASS | Panggilan callback langsung; cabang gagal n8n penuh belum diuji |
+| Identitas OAuth n8n | Email credential Google Drive diketahui | Workflow diagnostik sementara membaca Drive `about`: `yasiryasir1602@gmail.com`; workflow dinonaktifkan dan dihapus | PASS | Tidak mengekspor token OAuth |
+| Akses kedua template | Credential n8n dapat membaca dan menyalin Docs/RAB | Dua GET file Google Drive via credential sama sukses; `canCopy=true`, `canEdit=true` | PASS | Akses umum `anyone:writer` masih aktif |
+| Favicon baru | HTML memakai URL baru untuk menghindari cache ikon lama | Link `icon`, `shortcut icon`, dan Apple menunjuk `/favicon-ray.png?v=20261005-5` | PARTIAL | Perlu verifikasi visual pada tab setelah deploy |
+
 ## Draft 0.6.4 — 2026-10-05
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
