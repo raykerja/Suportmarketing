@@ -1,5 +1,16 @@
 # TEST_RESULTS
 
+## Koreksi 0.6.2 — 2026-10-05
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Navigasi menu | Target & Penawaran membuka Cari Target, Review, Buat Penawaran; Back kembali ke panel sebelumnya | Simulasi DOM lokal lulus untuk semua langkah; kombinasi HTML baru dan JS lama berhasil mereproduksi kegagalan semula | PASS | Login pada browser production belum dapat diuji |
+| Ukuran isian | Select dan input di semua menu penuh dan sama tinggi | Enam kontrol lintas menu dalam DOM lokal: lebar 100%, tinggi 54 px, font 16 px | PASS | Render visual HP masih belum terverifikasi |
+| Salinan surat panjang | Penerima rapi | PDF salinan QA terisi dan halaman pertama diperiksa visual, tanpa tabrakan | PASS | Belum aktif di generator |
+| Salinan RAB | Nama PT, tanggal, rumus utuh | Ekspor XLSX salinan QA terisi membuktikan teks `PT. RAY MITRA`, tanggal dan rumus PPN | PARTIAL | Visual native Sheet belum dilihat; belum aktif di generator |
+| Uji generator dengan template rapi | Dua file masuk folder akun | Eksekusi n8n 1292: kedua copy Google Drive 404; callback error gagal parsing JSON | FAIL | Workflow dipulihkan ke template asli, record uji ditandai error |
+| Akses template rapi | n8n dapat membaca dua salinan | Permintaan berbagi Drive ditolak peninjauan otomatis | BLOCKED | Tidak dilanjutkan melalui jalur lain |
+
 ## Draft 0.6.1 — 2026-10-05
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |

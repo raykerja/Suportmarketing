@@ -1,5 +1,14 @@
 # PROCESS_LOG
 
+## 2026-10-05 — Koreksi laporan pengguna dan uji generator
+
+- Mereproduksi masalah menu: HTML terbaru dengan `app.js` versi lama dari cache tidak membuka submenu. GitHub Pages mengirim cache 600 detik. Menambah versi pada URL CSS/JS agar file baru dimuat bersama; menguji menu utama, tiga submenu, dan Back dengan DOM lokal.
+- Aturan lebar dan tinggi pilihan pada `style.css` masih menimpa pilihan tertentu di layar kecil. `theme-ray.css` memperkuat aturan untuk semua select dan input di workspace; enam kontrol dari menu berbeda diuji berukuran 100% × 54 px dengan font 16 px.
+- Mengisi salinan QA Docs dan RAB dengan nama instansi panjang, alamat, UMK, dan tanggal. PDF Docs diperiksa secara visual; penerima tidak bertabrakan. Ekspor XLSX dari RAB mempertahankan teks gambar `PT. RAY MITRA`, dua gambar, tanggal pada `J36:L36`, dan rumus PPN 12%.
+- Uji webhook penawaran production pada target internal menerima HTTP 200, tetapi eksekusi n8n `1292` gagal: node penyalinan kedua template rapi memperoleh HTTP 404 dari Google Drive. Node callback juga gagal memvalidasi JSON ketika cabang error sehingga record sempat berstatus `processing`.
+- Permintaan berbagi dua salinan template kepada akun yang diduga dipakai n8n melalui Google Drive ditolak oleh peninjauan persetujuan otomatis (`approval policy is never`); tidak dicoba ulang dengan alat lain. Dua ID template workflow aktif dikembalikan ke ID asli dan diverifikasi. Record uji internal ditandai `error`; tidak ada dokumen hasil uji di Drive. Nomor surat mungkin sudah terpakai oleh counter sebelum penyalinan gagal; jangan reset tanpa audit.
+- Browser otomatis tetap tidak tersedia. Uji interaksi dilakukan dengan DOM lokal; uji setelah login nyata belum terverifikasi.
+
 ## 2026-10-05 — Tata letak surat, RAB, dan menu target
 
 - Membaca source frontend, workflow penawaran portabel, template Google Docs/Sheets asli, dan hasil tangkapan layar. Template Docs memakai tab serta spasi panjang pada alamat penerima; itu menyebabkan nama instansi panjang bergeser. Blok tersebut diganti pada salinan QA menjadi paragraf biasa yang membungkus teks secara konsisten.

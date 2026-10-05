@@ -1,5 +1,14 @@
 # CHANGELOG
 
+VERSION: 0.6.2 (koreksi cache dan formulir)
+DATE: 2026-10-05
+
+ADDED: Versi URL aset CSS dan JavaScript agar rilis halaman memuat pasangan file yang sama.
+CHANGED: Ukuran select dan input di semua menu disamakan menjadi tinggi 54 px, lebar penuh, dan teks 16 px, termasuk aturan layar kecil.
+FIXED: Navigasi Target & Penawaran yang gagal saat HTML terbaru memakai JavaScript lama dari cache.
+REMOVED: Tidak ada.
+NOTES: Uji generator dengan template rapi gagal pada salinan Google Drive karena credential n8n menerima 404. Workflow dikembalikan ke dua ID template asli; permintaan berbagi salinan ditolak oleh peninjauan persetujuan otomatis. Dokumen rapi belum aktif pada generator production. Satu record uji internal ditandai error, tanpa file baru di Drive.
+
 VERSION: 0.6.1 (draft tata letak penawaran dan navigasi HP)
 DATE: 2026-10-05
 
@@ -7,7 +16,7 @@ ADDED: Submenu Target & Penawaran untuk Cari Target, Review Hasil, dan Buat Pena
 CHANGED: Pilihan formulir disamakan dengan lebar input lain; draft surat teks lama dilipat di bawah generator Google Docs/RAB. Salinan template Docs dan RAB dibuat untuk pemeriksaan tata letak.
 FIXED: Pada salinan Docs, blok penerima tidak lagi memakai tab/spasi panjang. Pada salinan RAB, objek gambar bertuliskan `T. RAY MITRA` diperbaiki menjadi `PT. RAY MITRA`, dan tanggal di `J36:L36` disejajarkan ke kanan. Rumus PPN 12% tetap.
 REMOVED: Tidak ada fungsi lama yang dihapus.
-NOTES: Pada persetujuan lanjutan 2026-10-05, dua salinan template QA ditunjuk oleh workflow penawaran n8n aktif; hanya dua ID template berubah dan status workflow tetap aktif. Halaman dipublikasikan lewat commit `e4e9168` di GitHub Pages; build sukses dan tiga aset live cocok dengan source. Uji menghasilkan dokumen baru belum dijalankan.
+NOTES: Dua salinan template QA sempat ditunjuk oleh workflow penawaran n8n, lalu dikembalikan ke template asli setelah uji akses gagal. Halaman dipublikasikan lewat commit `e4e9168` di GitHub Pages; build sukses. Hasil uji berikutnya dicatat pada versi 0.6.2.
 
 VERSION: 0.1.0 (persiapan migrasi)
 DATE: 2026-10-04

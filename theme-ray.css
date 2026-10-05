@@ -24,9 +24,12 @@ header { background: linear-gradient(115deg, #14204a, #071c45); }
 .hero p:last-child { color: #e4edfa; }
 .tabs .active, .visit-step-nav button.active, .progress-steps span.current { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
 .card { border-color: var(--ray-line); box-shadow: 0 1px 2px rgba(14,27,46,.06), 0 6px 20px rgba(14,27,46,.06); }
-input, select, textarea { display: block; width: 100%; min-width: 0; min-height: 46px; border-color: #c6d3e3; color: var(--ray-navy); }
+input, select, textarea { display: block; width: 100%; min-width: 0; border-color: #c6d3e3; color: var(--ray-navy); }
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]), select,
+#workspace input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]), #workspace select { box-sizing: border-box; width: 100%; min-height: 54px; height: 54px; padding: 0 14px; font-size: 16px; line-height: 1.25; }
 select { appearance: none; padding-right: 38px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%235b6b80' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; background-size: 16px; }
 form, form label, .columns > *, .form-grid > * { min-width: 0; }
+form label, .client-filters label { width: 100%; }
 .sub-tabs { margin-top: -6px; }
 .sub-tabs button { font-size: 13px; }
 #pipeline-menu.active { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
