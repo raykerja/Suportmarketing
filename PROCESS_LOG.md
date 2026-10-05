@@ -1,5 +1,13 @@
 # PROCESS_LOG
 
+## 2026-10-05 — Uji ulang template setelah izin diperbarui
+
+- Metadata Google Drive menunjukkan dua template QA kini dapat dibuka lewat link. Backup workflow aktif disimpan lokal sebelum dua ID template diubah kembali.
+- Uji internal baru memakai target fiktif `UJI INTERNAL - PT Ray Mitra Perkasa` dan folder Yasir. Webhook menjawab HTTP 200; eksekusi n8n `1293` selesai sukses.
+- Supabase `marketing_offers` berstatus `done`, nomor surat `12/202/RAYMP/X/2026`, serta berisi ID Docs dan RAB. Kedua file ditemukan langsung dalam folder Google Drive Yasir.
+- Dokumen hasil berisi target, alamat, tanggal 5 Oktober 2026, dan nomor surat. RAB hasil berisi UMK 3.701.709, tanggal rata kanan di `J36`, rumus PPN 12% di `I34:L34`, serta total terhitung di `I35:L35`.
+- Callback jalur sukses bekerja. Callback jalur error masih memiliki kegagalan parsing JSON dari eksekusi lama `1292`; belum diubah pada uji ini. Akses umum template saat ini `anyone with link: writer`, lebih luas dari kebutuhan workflow; jangan menutupnya sebelum akun Google credential n8n teridentifikasi dan akses khusus diuji.
+
 ## 2026-10-05 — Koreksi laporan pengguna dan uji generator
 
 - Mereproduksi masalah menu: HTML terbaru dengan `app.js` versi lama dari cache tidak membuka submenu. GitHub Pages mengirim cache 600 detik. Menambah versi pada URL CSS/JS agar file baru dimuat bersama; menguji menu utama, tiga submenu, dan Back dengan DOM lokal.

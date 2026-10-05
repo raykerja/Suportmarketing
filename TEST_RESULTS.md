@@ -1,5 +1,15 @@
 # TEST_RESULTS
 
+## Uji ulang 0.6.3 — 2026-10-05
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Salin template rapi | n8n membaca dua template tanpa 404 | Eksekusi `1293` selesai sukses; dua file dibuat | PASS | Izin Drive diperbarui pemilik |
+| Folder akun Yasir | Dua file berada di folder akun | Docs dan RAB terlihat dalam folder `1yPPnp-ZmM6xaRdAgQuS0mke404K1vjTJ` | PASS | Uji internal, bukan surat ke klien |
+| Supabase | Penawaran menjadi `done` dengan dua ID file | Record `ffd9b918-b66d-475a-86ba-f71e291e8780` berstatus `done` | PASS | Nomor surat uji 12/202/RAYMP/X/2026 |
+| Isi Docs dan RAB | Nama, tanggal, UMK, dan rumus terisi | Docs memuat target/nomor/tanggal; Sheet memuat UMK 3.701.709, tanggal `J36` rata kanan, rumus PPN dan total | PASS | Teks gambar `PT. RAY MITRA` telah diverifikasi pada template sumber; belum diekspor ulang dari hasil ini |
+| Callback jalur error | Error tercatat tanpa status tertahan | Belum diuji ulang; eksekusi lama `1292` gagal parsing JSON | FAIL | Perbaikan terpisah diperlukan |
+
 ## Koreksi 0.6.2 — 2026-10-05
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |

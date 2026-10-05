@@ -1,5 +1,14 @@
 # CHANGELOG
 
+VERSION: 0.6.3 (template penawaran aktif dan teruji)
+DATE: 2026-10-05
+
+ADDED: Uji penawaran internal dengan Google Docs, Google Sheets RAB, folder Drive Yasir, dan status Supabase.
+CHANGED: Dua ID template rapi dipasang kembali ke workflow n8n penawaran setelah akses Google diperbarui pemilik.
+FIXED: Gagal menyalin template akibat 404; eksekusi internal `1293` selesai dengan dua file dan callback `done`.
+REMOVED: Tidak ada.
+NOTES: Backup workflow sebelum perubahan tersimpan lokal di `private/`. Callback pada jalur error belum diperbaiki. Dua template saat ini berbagi akses umum `anyone with link: writer`; perlu diganti ke izin akun n8n tertentu setelah email credential diketahui.
+
 VERSION: 0.6.2 (koreksi cache dan formulir)
 DATE: 2026-10-05
 
