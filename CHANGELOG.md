@@ -1,5 +1,14 @@
 # CHANGELOG
 
+VERSION: 0.6.7 (pemutakhiran ikon tab dan izin template)
+DATE: 2026-10-05
+
+ADDED: Pembaruan favicon pada event `pageshow` dengan URL ikon baru agar Chrome memuat ulang ikon pada navigasi halaman.
+CHANGED: Kedua template Google Drive telah diubah pemilik menjadi akses umum `Dibatasi`.
+FIXED: Credential Google Drive n8n terverifikasi masih dapat membaca, menyalin, dan mengedit kedua template setelah pembatasan izin.
+REMOVED: Izin umum `anyone with link: writer` dari kedua template.
+NOTES: Workflow diagnostik izin sementara telah dihapus. Tampilan ikon pada profil browser pengguna belum dapat diamati langsung; endpoint ikon dan HTML production diuji setelah deploy.
+
 VERSION: 0.6.6 (favicon standar browser)
 DATE: 2026-10-05
 

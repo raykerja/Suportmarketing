@@ -1,5 +1,13 @@
 # TEST_RESULTS
 
+## Uji 0.6.7 — 2026-10-05
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Akses umum kedua template | Tidak ada `anyone` | Metadata surat dan RAB hanya mencantumkan owner serta `yasiryasir1602@gmail.com` Editor | PASS | Setelah perubahan izin oleh pemilik |
+| Akses credential n8n setelah pembatasan | Generator tetap dapat membaca/menyalin template | Workflow diagnostik sukses; Google Drive API memberi `canCopy=true`, `canEdit=true` untuk kedua file | PASS | Workflow diagnostik dinonaktifkan dan dihapus |
+| Penyegaran favicon saat halaman tampil | Browser mengganti ikon lama dengan PNG RAY dari URL baru | Kode `pageshow` telah dipasang | PARTIAL | Tampilan tab browser pengguna belum dapat dilihat langsung |
+
 ## Uji 0.6.6 — 2026-10-05
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
