@@ -10,7 +10,7 @@
 | Callback error | JSON valid saat node sebelumnya gagal | Ekspresi lokal menghasilkan JSON valid dengan pesan error | PARTIAL | Perlu uji gagal terkendali di n8n |
 | Edge Function dan migration | Kode valid serta skema mendukung lead kosong | esbuild lulus; migration live menampilkan `lead_id` nullable dan `manual_input`; Edge Function versi 8 aktif | PASS | Aksi browser dengan login nyata belum diuji |
 | End-to-end manual | Docs/RAB di folder akun; Supabase `done` | Webhook internal → n8n → Docs/RAB di folder Yasir → offer `done`; nama, penerima, tanggal, UMK, jumlah 2/3/0/1, dan rumus PPN cocok | PASS | Uji melalui webhook langsung; bukan klik form dengan login nyata |
-| Favicon tab | Browser memuat lambang RAY | Link favicon PNG ditambah pada HTML; verifikasi HTTPS menunggu push | PARTIAL | Cache ikon browser mungkin perlu refresh |
+| Favicon tab | Browser memuat lambang RAY | Link favicon PNG ada pada HTML live; logo PNG HTTP 200 dan hash cocok; build Pages sukses | PARTIAL | Ikon visual pada tab pengguna belum dilihat ulang; cache mungkin perlu refresh |
 
 ## Uji ulang 0.6.3 — 2026-10-05
 

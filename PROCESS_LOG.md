@@ -9,7 +9,7 @@
 - Uji lokal: parser TypeScript/esbuild, `node --check`, JSON workflow, simulasi DOM form dan menu, validasi tanggal tidak sah, mode target lama, jumlah personel RAB, dan body callback lulus.
 - Setelah izin rilis diterima, backup workflow dan skema tersimpan lokal di `private/`. Migration Supabase berhasil (`lead_id` nullable, `manual_input` JSONB), empat node n8n cocok pada readback, Edge Function `marketing` menjadi versi 8 dengan `verify_jwt=false`, dan frontend commit `cc04206` terbit di GitHub Pages.
 - Uji manual internal memakai input tanggal 5 Oktober 2026, penerima Kepala Bagian Pengadaan, UMK 3.701.709, jumlah personel 2/3/0/1. Webhook diterima; Supabase offer `8c0687d8-50b2-4104-b0fb-a81abd60abf8` berstatus `done`, nomor `13/202/RAYMP/X/2026`. Docs dan RAB ditemukan di folder Yasir. Isi surat dan sel A4, B10, G10, I9:L9, I34:L35, J36 cocok. Jalur callback gagal belum dieksekusi terkendali.
-- Sesuai tangkapan layar pemilik, favicon RAY ditambahkan lewat asset PNG logo yang sudah ada; verifikasi deployment dicatat setelah push berikutnya.
+- Sesuai tangkapan layar pemilik, favicon RAY ditambahkan lewat asset PNG logo yang sudah ada. Commit `b0937ec` terbit; GitHub Pages build sukses dan `index.html`, `app.js`, `theme-ray.css`, `logo-ray.png` pada domain production sama hash dengan source. Tampilan ikon pada tab browser pengguna dapat tetap memakai cache sampai refresh.
 
 ## 2026-10-05 — Uji ulang template setelah izin diperbarui
 
