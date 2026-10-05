@@ -10,6 +10,7 @@
 - Browser otomatis tidak tersedia dan kontrol Safari ditolak; visual HP serta RAB native belum bisa diperiksa langsung. Pada tahap persiapan ini belum ada push, perubahan n8n aktif, atau deployment production.
 - Setelah persetujuan pengguna untuk mengganti template, workflow aktif `R7kXoTLBk8X0d4cy` dicadangkan ke `private/backup-offer-live-before-template-switch-20261005.json`. Dua ID pada node `Salin Template Surat` dan `Salin Template RAB` diganti dengan salinan QA. Readback n8n membuktikan workflow tetap aktif, 13 node dan semua field `name`, `nodes`, `connections`, `settings` identik dengan backup setelah memperhitungkan tepat dua ID tersebut.
 - Tidak ada eksekusi generator baru, data Supabase baru, atau file hasil penawaran baru dalam uji ini. Hak akses credential Google n8n ke dua template baru belum dibuktikan melalui eksekusi end-to-end.
+- Setelah persetujuan push, commit halaman `e4e9168` dikirim ke `origin/main`. Push awal melalui credential macOS yang salah ditolak HTTP 403; percobaan berikutnya memakai key proyek `github_raykerja` melalui askpass privat dan berhasil tanpa menyimpan token dalam Git. GitHub Pages build selesai sukses; `index.html`, `app.js`, dan `theme-ray.css` di domain production HTTP 200 dan SHA-256 sama dengan source commit.
 
 ## 2026-10-04
 

@@ -10,6 +10,7 @@
 | Alur Back dan HP | Back menuju panel sebelumnya; select selebar input | Implementasi lokal dan CSS diperiksa secara statis | PARTIAL | Uji interaksi 320/390 px serta login nyata masih diperlukan |
 | Generator production: konfigurasi | Dua template QA ditunjuk oleh n8n tanpa mengubah alur lain | Readback workflow aktif: 13 node; hanya dua ID template berubah; koneksi dan pengaturan sama dengan backup | PASS | Persetujuan mengganti template diterima 2026-10-05 |
 | Generator production: hasil file | Google Docs dan RAB baru selesai di folder akun | Belum ada eksekusi generator baru | NOT TESTED | Perlu satu uji terkontrol yang menambah file Drive dan record penawaran |
+| GitHub Pages production | Commit halaman terbit di domain marketing | Build commit `e4e9168` sukses; HTML, JavaScript, dan CSS HTTP 200 dengan hash sama seperti source | PASS | Pemeriksaan aset publik; alur sesudah login belum diuji |
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
 | --- | --- | --- | --- | --- |

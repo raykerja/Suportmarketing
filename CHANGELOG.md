@@ -7,7 +7,7 @@ ADDED: Submenu Target & Penawaran untuk Cari Target, Review Hasil, dan Buat Pena
 CHANGED: Pilihan formulir disamakan dengan lebar input lain; draft surat teks lama dilipat di bawah generator Google Docs/RAB. Salinan template Docs dan RAB dibuat untuk pemeriksaan tata letak.
 FIXED: Pada salinan Docs, blok penerima tidak lagi memakai tab/spasi panjang. Pada salinan RAB, objek gambar bertuliskan `T. RAY MITRA` diperbaiki menjadi `PT. RAY MITRA`, dan tanggal di `J36:L36` disejajarkan ke kanan. Rumus PPN 12% tetap.
 REMOVED: Tidak ada fungsi lama yang dihapus.
-NOTES: Pada persetujuan lanjutan 2026-10-05, dua salinan template QA ditunjuk oleh workflow penawaran n8n aktif; hanya dua ID template berubah dan status workflow tetap aktif. Perubahan halaman disiapkan untuk GitHub Pages. Uji menghasilkan dokumen baru belum dijalankan.
+NOTES: Pada persetujuan lanjutan 2026-10-05, dua salinan template QA ditunjuk oleh workflow penawaran n8n aktif; hanya dua ID template berubah dan status workflow tetap aktif. Halaman dipublikasikan lewat commit `e4e9168` di GitHub Pages; build sukses dan tiga aset live cocok dengan source. Uji menghasilkan dokumen baru belum dijalankan.
 
 VERSION: 0.1.0 (persiapan migrasi)
 DATE: 2026-10-04
