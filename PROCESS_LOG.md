@@ -5,6 +5,8 @@
 - Menambah menu induk Sales Visit & Progress dengan submenu Sales Visit dan Progres & Pengingat; menyesuaikan status aktif dan `aria-expanded` saat berpindah panel.
 - Sesuai perubahan lanjutan sebelum deploy, mengganti label Target & Penawaran menjadi Target, Penawaran & Database dan memindahkan tombol Database Target ke submenu keempat. ID panel `leads` dan pemanggilan data tetap sama; status aktif menu induk kini mencakup `leads`.
 - Menjaga `progressEnabled: false`. Publikasi production disetujui pada 2026-10-06; interaksi setelah login nyata memerlukan sesi pengguna sah.
+- Commit frontend dan dokumentasi `e5e036e` dibuat. Push pertama ditolak HTTP 403 karena akun GitHub default tidak punya izin tulis; push ulang memakai askpass proyek di `private/` berhasil tanpa memasukkan credential ke Git.
+- GitHub Pages melaporkan build `e5e036e` selesai. Domain HTTPS merespons 200; `index.html`, `app.js`, `theme-ray.css`, dan `config.js` cocok SHA-256 dengan source. Label kedua menu utama dan submenu Database Target ditemukan di HTML live. Chrome menampilkan halaman login production; tidak ada sesi login sah untuk memeriksa interaksi setelah login.
 
 ## Draft form kunjungan dua tahap — 2026-10-05
 

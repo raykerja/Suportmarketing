@@ -1,6 +1,6 @@
 # Serah terima proyek Support Marketing RMP
 
-Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform coding lain. Source resmi: [raykerja/Suportmarketing](https://github.com/raykerja/Suportmarketing), branch `main`. Situs production: `https://marketing.raykerja.cloud` (GitHub Pages). Gunakan commit `main` terbaru; jangan mulai ulang aplikasi dari nol. Rilis terakhir yang diverifikasi: `33597e8` (5 Oktober 2026).
+Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform coding lain. Source resmi: [raykerja/Suportmarketing](https://github.com/raykerja/Suportmarketing), branch `main`. Situs production: `https://marketing.raykerja.cloud` (GitHub Pages). Gunakan commit `main` terbaru; jangan mulai ulang aplikasi dari nol. Rilis frontend terakhir yang diverifikasi: `e5e036e` (6 Oktober 2026).
 
 ## Peta sistem
 
@@ -19,7 +19,7 @@ Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform
 
 - **Kunjungan** memakai Supabase dan sinkron ke `DataMarketing`. Form dua tahap, Edge Function, header Sheet AG–AI, dan workflow n8n aktif sudah diterapkan. Tahap 1 menyimpan data singkat dan waktu dari server; tahap 2 melengkapi record yang sama. GitHub Pages dan aset live telah diverifikasi. Uji penuh dari akun login → foto Drive → Sheet masih diperlukan; jangan menyatakan end-to-end PASS.
 - **Riset target** dan **Surat & Penawaran** memakai Supabase, n8n, dan folder Drive per akun.
-- **Navigasi target** mengelompokkan Cari Target, Review Hasil, dan Buat Penawaran dalam satu menu. Menu draft surat teks lama disembunyikan di production; data historis tetap tersimpan. Tombol Back browser memakai riwayat panel.
+- **Navigasi utama** mengelompokkan Sales Visit dan Progres & Pengingat di bawah Sales Visit & Progress; Cari Target, Review Hasil, Buat Penawaran, dan Database Target di bawah Target, Penawaran & Database. Menu draft surat teks lama disembunyikan di production; data historis tetap tersimpan. Tombol Back browser memakai riwayat panel. Progres & Pengingat tetap pratinjau.
 - **Review hasil riset → dokumen penawaran web**: migration, workflow n8n, secret, dan Edge Function aktif. Eksekusi internal `1293` berhasil: Google Docs dan RAB masuk folder Yasir, Supabase `marketing_offers` berstatus `done`, UMK dan tanggal terisi, rumus PPN 12% tetap. Kedua template kini **Restricted** dan credential n8n `yasiryasir1602@gmail.com` terverifikasi dapat membaca serta menyalinnya. Uji tombol sesudah login nyata belum dapat dilakukan melalui browser otomatis.
 - **Penawaran manual**: form mengisi tanggal, penerima, nama/alamat instansi, wilayah, UMK, dan jumlah empat layanan pada template Docs/RAB yang sama. Migration `20261005_manual_offers.sql`, Edge Function, dan empat node n8n telah diterapkan. Uji webhook internal lulus sampai Docs/RAB di folder Yasir dan Supabase `done`; klik form setelah login nyata masih perlu pemeriksaan visual. Arsip draft teks lama tetap tersimpan, tetapi menunya disembunyikan.
 - **Progres & Pengingat** masih pratinjau di browser karena `progressEnabled: false`. Migration `20261004_marketing_progress.sql` dan revisi workflow hanya draft; jangan menganggapnya sudah terpasang.

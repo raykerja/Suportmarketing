@@ -8,6 +8,8 @@
 | Mode progres | Tetap pratinjau tanpa write backend | `config.js` masih menetapkan `progressEnabled: false`; tidak ada perubahan Edge Function, migration, atau n8n | PASS | Pemeriksaan konfigurasi dan diff |
 | Navigasi setelah login dan Back | Submenu berpindah panel; Back memulihkan menu aktif | Handler dan state panel diperiksa dalam kode; belum dapat diklik dengan sesi login sah | PARTIAL | Perlu uji browser sesudah login |
 | Responsif 320/390 px | Menu dan submenu dapat digunakan tanpa tabrakan | Belum diuji visual pada sesi login | NOT TESTED | Perlu uji browser sesudah login |
+| GitHub Pages production | Commit frontend terbit tanpa gagal build | Build `e5e036e` berstatus `built`; HTTPS 200; HTML, JS, CSS, dan config live cocok SHA-256 dengan source | PASS | 2026-10-06, pemeriksaan aset publik |
+| Label menu production | Kedua menu utama dan Database Target tersedia | Ketiga label ditemukan pada HTML live; Chrome menampilkan halaman login | PARTIAL | Menu setelah login belum dapat dibuka tanpa sesi sah |
 
 ## Rilis kunjungan dua tahap — 2026-10-05
 

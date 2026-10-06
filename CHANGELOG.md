@@ -5,7 +5,7 @@ ADDED: Submenu Sales Visit dan Progres & Pengingat di bawah Sales Visit & Progre
 CHANGED: Navigasi Kunjungan dan Progres & Pengingat menjadi satu kelompok; label menu kunjungan berubah menjadi Sales Visit; menu Target & Penawaran berubah menjadi Target, Penawaran & Database.
 FIXED: Tidak ada.
 REMOVED: Tombol menu utama Kunjungan, Progres & Pengingat, dan Database Target yang terpisah; panel dan data lama tetap dipertahankan.
-NOTES: Publikasi frontend ke production disetujui pada 2026-10-06. `progressEnabled` tetap `false`; progres masih pratinjau. Tidak ada perubahan backend, migration, atau n8n.
+NOTES: Publikasi frontend ke production disetujui pada 2026-10-06 dan dirilis pada commit `e5e036e`. GitHub Pages build selesai, HTTPS 200, dan HTML/JS/CSS live cocok dengan source. `progressEnabled` tetap `false`; progres masih pratinjau. Tidak ada perubahan backend, migration, atau n8n.
 
 ## Versi 0.6.8 — 2026-10-05
 
