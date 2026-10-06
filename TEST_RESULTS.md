@@ -47,7 +47,9 @@
 | Struktur dan syntax | Selector unik, JavaScript valid, diff rapi | Pemeriksaan lokal dijalankan setelah revisi | PASS | `node --check`, parser HTML, `git diff --check` |
 | Responsif 320/390 px | Menu dan panel baru tetap dapat digunakan | Browser mock lokal pada 320 dan 390 px menampilkan menu geser horizontal dan panel satu kolom tanpa tumpang tindih pada area yang diperiksa | PASS | Chrome DevTools; seluruh panjang form belum diperiksa visual |
 | Data klien/PIC nyata | Daftar per PIC sesuai data perusahaan | Sumber klien dan PIC belum tersedia/terverifikasi | NOT TESTED | Tidak ada koneksi database aktif |
-| Production dan end-to-end | Situs live dan penyimpanan nyata terverifikasi | Revisi belum dipush/deploy; tidak ada write backend | NOT TESTED | Membutuhkan persetujuan eksplisit dan rancangan data nyata |
+| Production frontend | Build dan aset live sesuai commit | GitHub Pages commit `334a350` berstatus `built`; HTTPS 200; HTML, `app.js`, `clients-preview.js`, dan `theme-ray.css` cocok SHA-256 dengan source | PASS | `progressEnabled` live tetap `false` |
+| Interaksi setelah login production | Submenu dapat digunakan oleh akun sah | Belum diuji pada sesi login production | NOT TESTED | Pengujian browser mock lokal lulus; tidak ada write backend |
+| Penyimpanan data klien nyata end-to-end | Data tersimpan dan terbaca per PIC | Belum tersedia karena fitur masih pratinjau | NOT TESTED | Perlu sumber klien/PIC tervalidasi dan rancangan akses |
 
 ## Uji 0.6.7 — 2026-10-05
 

@@ -1,6 +1,6 @@
 # Serah terima proyek Support Marketing RMP
 
-Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform coding lain. Source resmi: [raykerja/Suportmarketing](https://github.com/raykerja/Suportmarketing), branch `main`. Situs production: `https://marketing.raykerja.cloud` (GitHub Pages). Gunakan commit `main` terbaru; jangan mulai ulang aplikasi dari nol. Rilis frontend terakhir yang diverifikasi: `95eb039` (6 Oktober 2026).
+Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform coding lain. Source resmi: [raykerja/Suportmarketing](https://github.com/raykerja/Suportmarketing), branch `main`. Situs production: `https://marketing.raykerja.cloud` (GitHub Pages). Gunakan commit `main` terbaru; jangan mulai ulang aplikasi dari nol. Rilis frontend terakhir yang diverifikasi: `334a350` (6 Oktober 2026).
 
 ## Peta sistem
 
@@ -23,7 +23,7 @@ Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform
 - **Review hasil riset → dokumen penawaran web**: migration, workflow n8n, secret, dan Edge Function aktif. Eksekusi internal `1293` berhasil: Google Docs dan RAB masuk folder Yasir, Supabase `marketing_offers` berstatus `done`, UMK dan tanggal terisi, rumus PPN 12% tetap. Kedua template kini **Restricted** dan credential n8n `yasiryasir1602@gmail.com` terverifikasi dapat membaca serta menyalinnya. Uji tombol sesudah login nyata belum dapat dilakukan melalui browser otomatis.
 - **Penawaran manual**: form mengisi tanggal, penerima, nama/alamat instansi, wilayah, UMK, dan jumlah empat layanan pada template Docs/RAB yang sama. Migration `20261005_manual_offers.sql`, Edge Function, dan empat node n8n telah diterapkan. Uji webhook internal lulus sampai Docs/RAB di folder Yasir dan Supabase `done`; klik form setelah login nyata masih perlu pemeriksaan visual. Arsip draft teks lama tetap tersimpan, tetapi menunya disembunyikan.
 - **Progres & Pengingat** masih pratinjau di browser karena `progressEnabled: false`. Migration `20261004_marketing_progress.sql` dan revisi workflow hanya draft; jangan menganggapnya sudah terpasang.
-- **Active Client,Repitching & Progress** masih pratinjau dengan data fiktif di `clients-preview.js`. Revisi lokal 0.6.11 menempatkannya paling kiri dengan submenu Database Client Active (filter PIC RMP), PIC Visit (dua tahap), serta Progress & Pengingat penawaran ulang. Revisi ini belum dipush/deploy; belum ada tabel klien, penawaran ulang, atau data kontrak nyata yang tersambung.
+- **Active Client,Repitching & Progress** masih pratinjau dengan data fiktif di `clients-preview.js`. Rilis frontend 0.6.11 menempatkannya paling kiri dengan submenu Database Client Active (filter PIC RMP), PIC Visit (dua tahap), serta Progress & Pengingat penawaran ulang. HTML/JS/CSS live sudah cocok dengan source; interaksi setelah login production belum diuji. Belum ada tabel klien, penawaran ulang, atau data kontrak nyata yang tersambung.
 - Admin pertama: `yasir@raykerja.cloud`. Akun staf dan foldernya dikelola melalui menu Pengaturan.
 
 ## Titik lanjut untuk upgrade berikutnya
