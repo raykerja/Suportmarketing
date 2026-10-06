@@ -32,7 +32,7 @@ form, form label, .columns > *, .form-grid > * { min-width: 0; }
 form label, .client-filters label { width: 100%; }
 .sub-tabs { margin-top: -6px; }
 .sub-tabs button { font-size: 13px; }
-#pipeline-menu.active { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
+#sales-menu.active, #pipeline-menu.active { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
 .legacy-letter-layout summary { cursor: pointer; color: var(--ray-blue); font-weight: 700; padding: 12px 0; }
 .legacy-letter-layout .columns { margin-top: 8px; }
 .manual-offer-card { margin: 8px 0 16px; }

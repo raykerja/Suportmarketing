@@ -96,7 +96,8 @@ $('#setup-form').addEventListener('submit', async (event) => {
   showWorkspace(currentUser);
 });
 
-const pipelineTabs = new Set(['research', 'review', 'letters']);
+const salesTabs = new Set(['visits', 'progress']);
+const pipelineTabs = new Set(['research', 'review', 'letters', 'leads']);
 function activateTab(tab, record = true) {
   if (!$('#' + tab)?.classList.contains('panel')) tab = 'visits';
   const current = document.querySelector('.panel:not([hidden])')?.id;
@@ -105,6 +106,10 @@ function activateTab(tab, record = true) {
     history.pushState({ ...history.state, marketingTab: tab }, '');
   }
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
+  const inSales = salesTabs.has(tab);
+  $('#sales-tabs').hidden = !inSales;
+  $('#sales-menu').classList.toggle('active', inSales);
+  $('#sales-menu').setAttribute('aria-expanded', String(inSales));
   const inPipeline = pipelineTabs.has(tab);
   $('#pipeline-tabs').hidden = !inPipeline;
   $('#pipeline-menu').classList.toggle('active', inPipeline);
@@ -114,6 +119,7 @@ function activateTab(tab, record = true) {
   if (tab === 'letters') { loadLeads(); loadOffers(); }
 }
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
+$('#sales-menu').addEventListener('click', () => activateTab('visits'));
 $('#pipeline-menu').addEventListener('click', () => activateTab('research'));
 window.addEventListener('popstate', (event) => {
   if (currentUser && !invitePending) activateTab(event.state?.marketingTab || 'visits', false);

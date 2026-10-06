@@ -1,3 +1,12 @@
+VERSION: 0.6.9 (pengelompokan menu Marketing)
+DATE: 2026-10-06
+
+ADDED: Submenu Sales Visit dan Progres & Pengingat di bawah Sales Visit & Progress; Database Target menjadi submenu keempat pada Target, Penawaran & Database.
+CHANGED: Navigasi Kunjungan dan Progres & Pengingat menjadi satu kelompok; label menu kunjungan berubah menjadi Sales Visit; menu Target & Penawaran berubah menjadi Target, Penawaran & Database.
+FIXED: Tidak ada.
+REMOVED: Tombol menu utama Kunjungan, Progres & Pengingat, dan Database Target yang terpisah; panel dan data lama tetap dipertahankan.
+NOTES: Publikasi frontend ke production disetujui pada 2026-10-06. `progressEnabled` tetap `false`; progres masih pratinjau. Tidak ada perubahan backend, migration, atau n8n.
+
 ## Versi 0.6.8 — 2026-10-05
 
 ADDED: Form kunjungan dua tahap, pemilihan kunjungan tersimpan, beberapa bagian kerja dengan jumlah, waktu kunjungan dari server, status marketing.

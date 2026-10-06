@@ -1,3 +1,14 @@
+## Pengelompokan menu Marketing — 2026-10-06
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Struktur menu lokal | Satu menu induk dengan dua submenu dan dua panel lama | Browser lokal menampilkan node Sales Visit & Progress, dua submenu, serta panel `visits` dan `progress`; tidak ada error console pada halaman login | PASS | Struktur DOM; belum login |
+| Database Target | Berada di dalam Target, Penawaran & Database | Tombol `data-tab="leads"` hanya ada pada submenu; `leads` termasuk kelompok `pipelineTabs` sehingga induk tetap aktif saat panel database dibuka | PASS | Pemeriksaan DOM dan kode; klik setelah login belum diuji |
+| Syntax dan diff | JavaScript valid, tidak ada whitespace error | `node --check app.js`, `node --check clients-preview.js`, dan `git diff --check` lulus | PASS | Lokal |
+| Mode progres | Tetap pratinjau tanpa write backend | `config.js` masih menetapkan `progressEnabled: false`; tidak ada perubahan Edge Function, migration, atau n8n | PASS | Pemeriksaan konfigurasi dan diff |
+| Navigasi setelah login dan Back | Submenu berpindah panel; Back memulihkan menu aktif | Handler dan state panel diperiksa dalam kode; belum dapat diklik dengan sesi login sah | PARTIAL | Perlu uji browser sesudah login |
+| Responsif 320/390 px | Menu dan submenu dapat digunakan tanpa tabrakan | Belum diuji visual pada sesi login | NOT TESTED | Perlu uji browser sesudah login |
+
 ## Rilis kunjungan dua tahap — 2026-10-05
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |

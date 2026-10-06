@@ -1,3 +1,11 @@
+## 2026-10-06 — Pengelompokan Sales Visit & Progress
+
+- Memeriksa navigasi, riwayat panel, tautan pengingat, mode pratinjau progres, dan kondisi `main` yang bersih serta sama dengan remote sebelum revisi.
+- Menggunakan pola menu induk/submenu yang sudah dipakai Target & Penawaran. ID panel `visits` dan `progress`, handler form, serta backend tidak diubah.
+- Menambah menu induk Sales Visit & Progress dengan submenu Sales Visit dan Progres & Pengingat; menyesuaikan status aktif dan `aria-expanded` saat berpindah panel.
+- Sesuai perubahan lanjutan sebelum deploy, mengganti label Target & Penawaran menjadi Target, Penawaran & Database dan memindahkan tombol Database Target ke submenu keempat. ID panel `leads` dan pemanggilan data tetap sama; status aktif menu induk kini mencakup `leads`.
+- Menjaga `progressEnabled: false`. Publikasi production disetujui pada 2026-10-06; interaksi setelah login nyata memerlukan sesi pengguna sah.
+
 ## Draft form kunjungan dua tahap — 2026-10-05
 
 - Inspeksi source production, struktur JSONB `marketing_visits`, bucket foto privat, sinkronisasi Sheet/Drive, dan form tiga langkah.
