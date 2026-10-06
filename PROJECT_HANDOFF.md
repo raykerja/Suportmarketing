@@ -1,6 +1,6 @@
 # Serah terima proyek Support Marketing RMP
 
-Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform coding lain. Source resmi: [raykerja/Suportmarketing](https://github.com/raykerja/Suportmarketing), branch `main`. Situs production: `https://marketing.raykerja.cloud` (GitHub Pages). Gunakan commit `main` terbaru; jangan mulai ulang aplikasi dari nol. Rilis frontend terakhir yang diverifikasi: `334a350` (6 Oktober 2026).
+Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform coding lain. Source resmi: [raykerja/Suportmarketing](https://github.com/raykerja/Suportmarketing), branch `main`. Situs production: `https://marketing.raykerja.cloud` (GitHub Pages). Gunakan commit `main` terbaru; jangan mulai ulang aplikasi dari nol. Rilis frontend terakhir yang diverifikasi: `e35a150` (6 Oktober 2026).
 
 ## Peta sistem
 
@@ -24,6 +24,7 @@ Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform
 - **Penawaran manual**: form mengisi tanggal, penerima, nama/alamat instansi, wilayah, UMK, dan jumlah empat layanan pada template Docs/RAB yang sama. Migration `20261005_manual_offers.sql`, Edge Function, dan empat node n8n telah diterapkan. Uji webhook internal lulus sampai Docs/RAB di folder Yasir dan Supabase `done`; klik form setelah login nyata masih perlu pemeriksaan visual. Arsip draft teks lama tetap tersimpan, tetapi menunya disembunyikan.
 - **Progres & Pengingat** masih pratinjau di browser karena `progressEnabled: false`. Migration `20261004_marketing_progress.sql` dan revisi workflow hanya draft; jangan menganggapnya sudah terpasang.
 - **Active Client,Repitching & Progress** masih pratinjau dengan data fiktif di `clients-preview.js`. Rilis frontend 0.6.11 menempatkannya paling kiri dengan submenu Database Client Active (filter PIC RMP), PIC Visit (dua tahap), serta Progress & Pengingat penawaran ulang. HTML/JS/CSS live sudah cocok dengan source; interaksi setelah login production belum diuji. Belum ada tabel klien, penawaran ulang, atau data kontrak nyata yang tersambung.
+- **Judul workspace** versi 0.6.12 adalah “Aktivitas Marketing & Klien” dengan keterangan tentang target pasar, kunjungan, penawaran, follow-up, dan klien aktif. Keterangan tampil juga pada HP. Aset HTML/CSS production terverifikasi, tetapi tampilan setelah login nyata belum diuji.
 - Admin pertama: `yasir@raykerja.cloud`. Akun staf dan foldernya dikelola melalui menu Pengaturan.
 
 ## Titik lanjut untuk upgrade berikutnya

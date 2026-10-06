@@ -41,7 +41,7 @@
 | --- | --- | --- | --- | --- |
 | Judul dan keterangan | Teks sesuai permintaan | Kedua teks terbaca dari struktur HTML yang dirender parser | PASS | Pemeriksaan lokal |
 | Keterangan pada HP | Keterangan tetap tampil pada lebar hingga 760 px | Aturan CSS tema mengembalikan `display: block` setelah aturan lama yang menyembunyikannya | PASS | Pemeriksaan CSS statis; belum uji visual browser |
-| Production | Teks baru tampil di domain live | Belum dipublikasikan | NOT TESTED | Perlu persetujuan push/deploy production |
+| Production | Teks baru tersedia di domain live | Build/deploy commit `e35a150` sukses; `index.html` dan `theme-ray.css` HTTPS 200 serta cocok byte per byte dengan source; teks baru ada di HTML live | PASS | Tampilan setelah login nyata belum diuji; `progressEnabled` tetap `false` |
 
 ## Pratinjau klien aktif 0.6.11 — 2026-10-06
 

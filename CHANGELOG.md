@@ -5,7 +5,7 @@ ADDED: Tidak ada.
 CHANGED: Judul workspace menjadi "Aktivitas Marketing & Klien" dan keterangannya menjadi "Kelola target pasar, kunjungan, penawaran, follow-up, dan klien aktif dalam satu tempat". Keterangan ditampilkan juga pada layar HP.
 FIXED: Keterangan workspace sebelumnya tersembunyi pada lebar layar hingga 760 px.
 REMOVED: Tidak ada.
-NOTES: Perubahan lokal pada teks HTML dan satu aturan CSS; belum dipublikasikan ke production.
+NOTES: Hanya teks HTML dan satu aturan CSS. Dirilis ke production pada commit `e35a150`; build dan deploy GitHub Pages sukses, serta HTML/CSS live cocok byte per byte dengan source. Tampilan setelah login nyata belum diuji.
 
 VERSION: 0.6.11 (pratinjau alur klien aktif per PIC)
 DATE: 2026-10-06
