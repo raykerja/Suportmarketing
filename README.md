@@ -2,6 +2,14 @@
 
 Portal Marketing PT Ray Mitra Perkasa untuk `marketing.raykerja.cloud`. Source halaman berada di GitHub Pages; data terstruktur dan pengaturan akun berada di Supabase. Hasil riset dan surat yang dibuat pengguna disalin ke folder Google Drive milik pengguna melalui n8n.
 
+### Draft 0.7.0 — AI dan akun staf (belum production)
+
+- Kolom pencarian Asisten Marketing mengambil paling banyak 250 record terbaru per jenis (penawaran, Sales Visit, target, surat lama) yang boleh diakses akun dari Supabase. Hanya ringkasan hingga delapan sumber dikirim ke GPT-6 Luna. Link dokumen Drive ditampilkan jika sudah tercatat di Supabase; aplikasi **belum** menelusuri semua isi folder Drive atau arsip yang lebih lama dari batas pencarian. Progress dan PIC Visit tetap pratinjau.
+- API key perusahaan ditempatkan di **Supabase Dashboard → Edge Functions → Secrets**, nama `OPENAI_API_KEY`. Jangan simpan key di `config.js`, JavaScript browser, Git, atau spreadsheet staf. Tanpa secret, pencarian data tetap menampilkan sumber, tetapi ringkasan AI tidak aktif. Migration `supabase/migrations/20261006_marketing_ai_usage.sql` membatasi 30 panggilan AI per akun per hari (Asia/Jakarta).
+- Admin membuat staf melalui nama, username, kata sandi awal, dan link folder Drive. Form tidak meminta alamat email. Supabase Auth tetap memakai identitas email internal `${username}@staff.marketing.raykerja.cloud` di belakang layar; akun lama tetap login memakai email yang sudah ada. Kata sandi tidak dapat dilihat kembali, sehingga admin harus menyerahkannya secara privat ketika akun dibuat.
+- [Template Excel akun staf](outputs/marketing-akun-staf-20261006/template-akun-staf-marketing.xlsx) berisi 50 baris kosong. File berisi kata sandi setelah diisi harus disimpan privat. Template ini belum menjadi fitur impor massal.
+- Aktivasi memerlukan persetujuan khusus untuk migration production, deploy Edge Function, pemasangan secret, dan push frontend. Uji satu akun staf dan satu pertanyaan nyata sebelum membuka akses tim.
+
 **Pindah ke platform coding lain:** mulai dari [PROJECT_HANDOFF.md](PROJECT_HANDOFF.md). Repository ini memuat source, migration, Edge Function, template workflow n8n yang telah dibersihkan, dan riwayat pekerjaan. Credential serta data privat harus disambungkan terpisah.
 
 ## Struktur

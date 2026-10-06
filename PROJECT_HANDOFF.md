@@ -2,6 +2,8 @@
 
 Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform coding lain. Source resmi: [raykerja/Suportmarketing](https://github.com/raykerja/Suportmarketing), branch `main`. Situs production: `https://marketing.raykerja.cloud` (GitHub Pages). Gunakan commit `main` terbaru; jangan mulai ulang aplikasi dari nol. Rilis frontend terakhir yang diverifikasi: `630a087` (6 Oktober 2026).
 
+**Draft lokal 0.7.0 (belum production):** Asisten Marketing berbasis GPT-6 Luna, secret server `OPENAI_API_KEY`, akun staf username/kata sandi/folder Drive tanpa kolom email, serta template Excel kosong. Migration batas AI, Edge Function, frontend, dan secret belum diterapkan. Akun admin lama masih memakai identitas login lama. Pencarian Drive hanya memakai tautan file yang sudah tercatat di Supabase; belum mencakup seluruh folder Drive.
+
 ## Peta sistem
 
 | Komponen | Lokasi/koneksi | Status |

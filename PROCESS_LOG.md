@@ -210,3 +210,10 @@ Atas permintaan pengguna, tiga bagian utama form kunjungan diganti menjadi tombo
 3. Memakai satu fungsi render untuk kedua dashboard. Pembaruan Sales Visit dari `loadVisits()` dan PIC Visit simulasi muncul di kedua panel; tombol Muat ulang masing-masing memanggil pemuatan yang sama.
 4. Browser mock lokal lulus untuk Sales Visit, PIC Visit dua tahap, dan kegagalan pemuatan. Tata letak 320/390 px diperiksa lewat Chrome DevTools; tab uji, server, dan fixture sementara sudah dibersihkan. Login production belum diuji.
 5. Sesuai instruksi pengguna “terapkan juga”, commit `630a087` dipush ke `main`. GitHub Pages berhasil deploy; HTML, `app.js`, `clients-preview.js`, dan `theme-ray.css` production cocok SHA-256 dengan source. `progressEnabled` tetap `false`; login nyata masih belum diuji.
+## 2026-10-06 — Draft asisten AI dan akun staf username
+
+1. Membaca `AGENTS.md`, `PROJECT_HANDOFF.md`, README, skema Supabase, Edge Function, dan UI Pengaturan. Menemukan Auth production berbasis email serta folder Drive per anggota; tidak ada secret AI pada source.
+2. Menyiapkan satu API key perusahaan sebagai secret Edge Function `OPENAI_API_KEY`. Asisten mencari record Supabase yang telah tersimpan dan menampilkan tautan Drive yang sudah tercatat; tidak mengklaim dapat membaca seluruh folder Drive atau riwayat Progress/PIC Visit yang masih pratinjau.
+3. Form admin disiapkan untuk nama, username, kata sandi awal, dan folder Drive. Karena Supabase Auth tetap memakai email sebagai identitas, username staf dipetakan ke alamat internal yang tidak ditampilkan. Akun admin lama tetap dapat login dengan identitas lamanya. Endpoint undangan lama dipertahankan untuk kompatibilitas.
+4. Menyiapkan migration batas 30 permintaan AI per akun per hari berdasarkan zona Asia/Jakarta. Tidak ada secret atau data staf yang dimasukkan ke repository. Template Excel 50 baris kosong dibuat dengan Artifact Tool dan dirender untuk pemeriksaan visual.
+5. `node --check app.js`, pemeriksaan diff, dan bundling Edge Function berhasil. Belum ada migration, secret, deploy, push, atau uji akun/AI end-to-end pada production.

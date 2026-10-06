@@ -2,9 +2,11 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 
 const cfg = window.RAY_CONFIG || {};
 const progressPreviewMode = cfg.progressEnabled !== true;
+const staffLoginDomain = 'staff.marketing.raykerja.cloud';
 let invitePending = /(?:^|[&#])type=(?:invite|recovery)(?:&|$)/.test(location.hash);
 const $ = (s) => document.querySelector(s);
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const memberLabel = (member) => member?.display_name || (member?.email || '').split('@')[0] || 'Akun';
 const date = (v) => v ? new Date(v).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 const client = cfg.supabaseUrl && cfg.supabasePublishableKey
   ? createClient(cfg.supabaseUrl, cfg.supabasePublishableKey) : null;
@@ -61,7 +63,8 @@ function showWorkspace(user) {
     visitCache = []; $('#visit-list').textContent = ''; $('#visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>';
     publishVisitSnapshot();
     $('#review-list').textContent = ''; $('#offer-list').textContent = ''; $('#lead-list').textContent = '';
-    $('#activation-link').value = ''; $('#activation-panel').hidden = true;
+    $('#ai-answer').textContent = ''; $('#ai-answer').hidden = true; $('#ai-sources').textContent = '';
+    status('#ai-search-status', '');
     $('#account-info').textContent = ''; $('#folder-url').value = '';
     $('#member-list').textContent = ''; $('#admin-settings').hidden = true;
     activateTab('visits', false);
@@ -92,8 +95,10 @@ $('#login-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!client) return;
   status('#login-status', 'Memeriksa akun…');
-  const { error } = await client.auth.signInWithPassword({ email: $('#email').value.trim(), password: $('#password').value });
-  status('#login-status', error ? 'Email atau kata sandi tidak sesuai.' : '', !!error);
+  const login = $('#login-name').value.trim().toLowerCase();
+  const email = login.includes('@') ? login : `${login}@${staffLoginDomain}`;
+  const { error } = await client.auth.signInWithPassword({ email, password: $('#password').value });
+  status('#login-status', error ? 'Username atau kata sandi tidak sesuai.' : '', !!error);
 });
 $('#logout').addEventListener('click', async () => {
   const { error } = await client.auth.signOut();
@@ -686,10 +691,15 @@ async function loadSettings() {
   const { data, error } = await client.functions.invoke('marketing', { body: { action: 'settings' } });
   if (error || !data?.ok) { status('#folder-status', data?.error || error?.message || 'Pengaturan gagal dibaca', true); return; }
   currentMember = data.self;
-  $('#account-info').textContent = `${data.self.display_name || data.self.email} · ${data.self.role === 'admin' ? 'Admin' : 'Staf'}`;
+  $('#account-info').textContent = `${memberLabel(data.self)} · ${data.self.role === 'admin' ? 'Admin' : 'Staf'}`;
   $('#folder-url').value = data.self.drive_folder_url || '';
   $('#admin-settings').hidden = data.self.role !== 'admin';
-  $('#member-list').innerHTML = (data.members || []).map((m) => `<div class="item"><strong>${esc(m.display_name || m.email)}</strong><small>${esc(m.email)} · ${esc(m.role)} · ${m.active ? 'aktif' : 'nonaktif'}</small><form class="member-folder-form" data-user-id="${esc(m.user_id)}"><label>Folder Drive<input type="url" value="${esc(m.drive_folder_url || '')}" required></label><button type="submit">Simpan folder</button></form></div>`).join('');
+  $('#ai-key-status').textContent = data.ai_ready ? 'Kunci AI terpasang di server.' : 'Kunci AI belum terpasang di server.';
+  $('#ai-search-submit').textContent = data.ai_ready ? 'Cari dengan AI' : 'Cari data';
+  $('#member-list').innerHTML = (data.members || []).map((m) => {
+    const username = m.email?.endsWith(`@${staffLoginDomain}`) ? m.email.split('@')[0] : 'akun lama';
+    return `<div class="item"><strong>${esc(memberLabel(m))}</strong><small>${esc(username)} · ${esc(m.role)} · ${m.active ? 'aktif' : 'nonaktif'}</small><form class="member-folder-form" data-user-id="${esc(m.user_id)}"><label>Folder Drive<input type="url" value="${esc(m.drive_folder_url || '')}" required></label><button type="submit">Simpan folder</button></form></div>`;
+  }).join('');
 }
 $('#folder-form').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -699,16 +709,26 @@ $('#folder-form').addEventListener('submit', async (event) => {
 });
 $('#invite-form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  $('#activation-link').value = ''; $('#activation-panel').hidden = true;
-  status('#invite-status', 'Membuat akun dan link aktivasi…');
-  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'invite_member', email: $('#invite-email').value.trim(),
-    display_name: $('#invite-name').value.trim(), drive_folder_url: $('#invite-folder').value.trim() } });
-  status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Akun gagal dibuat' : `Akun ${data.email} dibuat. Salin link aktivasi berikut dan kirim hanya kepada pemilik email.`, !!error || !data?.ok);
-  if (data?.ok) { $('#activation-link').value = data.activation_link || ''; $('#activation-panel').hidden = !data.activation_link; $('#invite-form').reset(); loadSettings(); }
+  const submit = $('#invite-form button[type="submit"]');
+  submit.disabled = true;
+  status('#invite-status', 'Membuat akun staf…');
+  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'create_staff', username: $('#invite-username').value.trim(),
+    password: $('#invite-password').value, display_name: $('#invite-name').value.trim(), drive_folder_url: $('#invite-folder').value.trim() } });
+  submit.disabled = false;
+  status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Akun gagal dibuat' : `Akun ${data.username} siap digunakan. Berikan username dan kata sandi secara privat kepada staf.`, !!error || !data?.ok);
+  if (data?.ok) { $('#invite-form').reset(); $('#invite-password').type = 'password'; $('#toggle-invite-password').textContent = 'Tampilkan'; loadSettings(); }
 });
-$('#copy-activation').addEventListener('click', async () => {
-  try { await navigator.clipboard.writeText($('#activation-link').value); status('#invite-status', 'Link aktivasi disalin. Kirim hanya kepada pemilik akun.'); }
-  catch { status('#invite-status', 'Gagal menyalin otomatis. Pilih dan salin link secara manual.', true); }
+$('#toggle-invite-password').addEventListener('click', () => {
+  const input = $('#invite-password');
+  input.type = input.type === 'password' ? 'text' : 'password';
+  $('#toggle-invite-password').textContent = input.type === 'password' ? 'Tampilkan' : 'Sembunyikan';
+});
+$('#generate-invite-password').addEventListener('click', () => {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
+  const bytes = crypto.getRandomValues(new Uint8Array(18));
+  $('#invite-password').value = Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join('');
+  $('#invite-password').type = 'text';
+  $('#toggle-invite-password').textContent = 'Sembunyikan';
 });
 $('#member-list').addEventListener('submit', async (event) => {
   const form = event.target.closest('.member-folder-form');
@@ -718,4 +738,21 @@ $('#member-list').addEventListener('submit', async (event) => {
     drive_folder_url: form.querySelector('input').value.trim() } });
   status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Folder gagal disimpan' : 'Folder staf tersimpan.', !!error || !data?.ok);
   if (data?.ok) loadSettings();
+});
+$('#ai-search-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!client || !currentUser) return;
+  const submit = $('#ai-search-submit');
+  submit.disabled = true;
+  $('#ai-answer').hidden = true;
+  $('#ai-sources').textContent = '';
+  status('#ai-search-status', 'Mencari data yang dapat Anda akses…');
+  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'ai_search', query: $('#ai-query').value.trim() } });
+  submit.disabled = false;
+  if (error || !data?.ok) { status('#ai-search-status', data?.error || error?.message || 'Pencarian gagal.', true); return; }
+  $('#ai-answer').textContent = data.answer || '';
+  $('#ai-answer').hidden = !data.answer;
+  const safeLink = (value) => /^https:\/\/(?:docs|drive)\.google\.com\//i.test(value || '');
+  $('#ai-sources').innerHTML = (data.sources || []).map((source) => `<div class="item"><strong>${esc(source.title)}</strong><small>${esc(source.type)} · ${esc(source.status || '—')} · ${esc(date(source.updated_at))}</small>${source.detail ? `<p>${esc(source.detail)}</p>` : ''}${safeLink(source.url) ? `<a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">Buka dokumen Drive</a>` : ''}</div>`).join('');
+  status('#ai-search-status', data.sources?.length ? `${data.sources.length} sumber ditemukan.${data.ai_ready ? '' : ' Ringkasan AI belum aktif; API key belum terpasang.'}` : 'Belum ada data yang cocok.');
 });
