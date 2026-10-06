@@ -44,6 +44,7 @@
 | Gagal memuat Sales Visit | Pesan error pada kedua panel dan data usang hilang | Browser mock mengirim error; kedua daftar Sales dikosongkan dan status gagal tampil | PASS | Jalur event frontend |
 | Responsif HP | Dashboard New Client tidak bertumpuk | Chrome DevTools lokal pada 320/390 px: dua sumber tersusun satu kolom, tombol dan kartu terbaca | PASS | Area dashboard yang diperiksa |
 | Syntax dan struktur | JavaScript valid, ID HTML unik, mode progres tetap pratinjau | `node --check`, parser HTML, `git diff --check` lulus; `progressEnabled=false` | PASS | Lokal |
+| GitHub Pages production | Submenu dan dashboard New Client tersedia di domain live | Build/deploy `630a087` sukses; `index.html`, `app.js`, `clients-preview.js`, `theme-ray.css` HTTPS 200 dan cocok SHA-256 dengan source; `progressEnabled=false` | PASS | Pemeriksaan aset publik |
 | Production setelah login | Data Sales nyata tampil sesuai akses akun | Belum diuji | NOT TESTED | Uji browser memakai data fiktif |
 
 

@@ -5,7 +5,7 @@ ADDED: Dashboard Sales Visit dan PIC Visit di bagian atas submenu New Client,Vis
 CHANGED: Submenu New Client `Progres & Pengingat` menjadi `Monitoring & Tindaklanjut`; judul panel dan keterangan pratinjau mengikuti nama dan sumber data yang benar.
 FIXED: Status muat Sales Visit, perubahan PIC Visit, dan kondisi gagal muat kini diperbarui pada kedua dashboard dari satu fungsi render.
 REMOVED: Tidak ada fungsi lama yang dihapus.
-NOTES: Frontend siap dipublikasikan sesuai persetujuan pengguna. Sales Visit tetap dibaca dari pemuatan Supabase yang sudah ada; PIC Visit dan progres target masih pratinjau. Tidak ada perubahan backend, n8n, Sheet, atau Drive.
+NOTES: Dirilis ke production pada commit `630a087`; build/deploy GitHub Pages sukses dan HTML/JS/CSS live cocok SHA-256 dengan source. Sales Visit tetap dibaca dari pemuatan Supabase yang sudah ada; PIC Visit dan progres target masih pratinjau. Tidak ada perubahan backend, n8n, Sheet, atau Drive. Interaksi setelah login nyata belum diuji.
 
 VERSION: 0.6.13 (dashboard kunjungan pada Monitoring & Tindaklanjut)
 DATE: 2026-10-06

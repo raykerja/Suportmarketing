@@ -1,6 +1,6 @@
 # Serah terima proyek Support Marketing RMP
 
-Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform coding lain. Source resmi: [raykerja/Suportmarketing](https://github.com/raykerja/Suportmarketing), branch `main`. Situs production: `https://marketing.raykerja.cloud` (GitHub Pages). Gunakan commit `main` terbaru; jangan mulai ulang aplikasi dari nol. Rilis frontend terakhir yang diverifikasi: `d29ab24` (6 Oktober 2026).
+Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform coding lain. Source resmi: [raykerja/Suportmarketing](https://github.com/raykerja/Suportmarketing), branch `main`. Situs production: `https://marketing.raykerja.cloud` (GitHub Pages). Gunakan commit `main` terbaru; jangan mulai ulang aplikasi dari nol. Rilis frontend terakhir yang diverifikasi: `630a087` (6 Oktober 2026).
 
 ## Peta sistem
 
