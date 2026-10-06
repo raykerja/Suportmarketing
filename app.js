@@ -32,6 +32,20 @@ let editingLetterId = null;
 function status(id, message, error = false) {
   const el = $(id); el.textContent = message; el.style.color = error ? '#b73729' : '#0a4fa6';
 }
+function publishVisitSnapshot(error = '') {
+  const visits = error ? [] : visitCache.map((row) => ({
+    id: row.id,
+    name: row.data?.nama_perusahaan,
+    at: row.data?.waktu_realisasi_kunjungan || row.created_at,
+    owner: row.data?.nama_marketing,
+    contact: row.data?.nama_pejabat_pic_1,
+    response: row.data?.respon,
+    note: row.data?.catatan,
+    next: row.data?.tanggal_follow_up,
+    visitStage: row.data?.visit_stage
+  }));
+  window.dispatchEvent(new CustomEvent('marketing:visits-snapshot', { detail: { visits, error } }));
+}
 function printDocument(html) {
   const area = $('#print-area');
   area.innerHTML = html;
@@ -44,6 +58,8 @@ function showWorkspace(user) {
   if (!user) {
     currentMember = null;
     researchCache = []; leadCache = []; letterCache = []; offerCache = []; offerRequestId = null; manualOfferRequestId = null;
+    visitCache = []; $('#visit-list').textContent = ''; $('#visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>';
+    publishVisitSnapshot();
     $('#review-list').textContent = ''; $('#offer-list').textContent = ''; $('#lead-list').textContent = '';
     $('#activation-link').value = ''; $('#activation-panel').hidden = true;
     $('#account-info').textContent = ''; $('#folder-url').value = '';
@@ -213,9 +229,12 @@ function fillVisitForm(row, step = '2') {
 }
 async function loadVisits() {
   if (!client || !currentUser) return;
+  const requestedUserId = currentUser.id;
   const { data, error } = await client.from('marketing_visits').select('*').order('created_at', { ascending: false }).limit(100);
-  if (error) { $('#visit-list').textContent = 'Laporan belum dapat dibaca: ' + error.message; return; }
+  if (currentUser?.id !== requestedUserId) return;
+  if (error) { $('#visit-list').textContent = 'Laporan belum dapat dibaca: ' + error.message; publishVisitSnapshot('Sales Visit belum dapat dimuat. Coba Muat ulang pada menu Sales Visit.'); return; }
   visitCache = data || [];
+  publishVisitSnapshot();
   renderSavedVisits();
   $('#visit-list').innerHTML = visitCache.length ? visitCache.map((v) => `<div class="item"><strong>${esc(v.data?.nama_perusahaan)}</strong><small>${esc(date(v.data?.waktu_realisasi_kunjungan || v.created_at))} · ${esc(v.data?.nama_marketing || '')}</small><div><span class="badge ${v.data?.visit_stage === 'initial' ? 'processing' : ''}">${v.data?.visit_stage === 'initial' ? 'Tahap 1 · perlu detail' : 'Detail terisi'}</span> <span class="badge ${v.sheet_status === 'error' ? 'error' : v.sheet_status === 'synced' ? '' : 'processing'}">${v.sheet_status === 'synced' ? 'Masuk Sheet' : v.sheet_status === 'error' ? 'Sinkronisasi gagal' : 'Menunggu Sheet'}</span></div><small>Follow up: ${esc(v.data?.tanggal_follow_up || 'belum ditetapkan')}</small><p>${esc(v.data?.catatan || '')}</p>${v.sheet_error ? `<small class="error">${esc(v.sheet_error)}</small>` : ''}${v.photo_drive_url ? `<div><a href="${esc(v.photo_drive_url)}" target="_blank" rel="noopener noreferrer">Lihat foto</a></div>` : ''}${v.owner_id === currentUser.id ? `<div class="item-actions"><button type="button" data-open-visit="${esc(v.id)}">${v.data?.visit_stage === 'initial' ? 'Lengkapi detail' : 'Buka / ubah'}</button>${v.sheet_status === 'error' || v.sheet_status === 'pending' ? `<button type="button" data-retry-visit="${esc(v.id)}">Coba sinkron lagi</button>` : ''}</div>` : ''}</div>`).join('') : '<p class="hint">Belum ada laporan kunjungan.</p>';
   const recentProcessing = visitCache.some((v) => v.sheet_status === 'processing' && Date.now() - new Date(v.updated_at).getTime() < 180000);
@@ -223,6 +242,7 @@ async function loadVisits() {
   if (!recentProcessing && visitPollTimer) { clearInterval(visitPollTimer); visitPollTimer = null; }
 }
 $('#refresh-visits').addEventListener('click', loadVisits);
+$('#refresh-activity-sales').addEventListener('click', loadVisits);
 $('#new-visit').addEventListener('click', resetVisitForm);
 $('#visit-list').addEventListener('click', async (event) => {
   const open = event.target.closest('[data-open-visit]')?.dataset.openVisit;

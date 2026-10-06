@@ -1,4 +1,4 @@
-// Pratinjau klien aktif, PIC Visit, dan penawaran ulang. Tidak membaca atau menulis data production.
+// Pratinjau klien aktif, PIC Visit, dan penawaran ulang; dashboard membaca ringkasan Sales Visit yang sudah dimuat aplikasi.
 (() => {
   const $ = (selector) => document.querySelector(selector);
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -35,6 +35,9 @@
       history: [{ date: day(-3), stage: 'follow_up', note: 'Menunggu jadwal pembahasan penyesuaian kebutuhan.' }] }
   ];
   const picVisits = [];
+  let salesVisits = [];
+  let salesVisitError = '';
+  let salesVisitsLoaded = false;
   let selectedId = clients[0].id;
   let activePicVisitStep = '1';
   const today = day(0);
@@ -83,7 +86,40 @@
       </div>
       <p class="client-need"><strong>Kebutuhan / peluang</strong><br>${escapeHtml(row.need)}</p>
       <p><strong>Penawaran ulang:</strong> ${escapeHtml(row.offerType)} · ${escapeHtml(stages[row.stage])}<br><small>Follow up: ${displayDate(row.next)}</small></p>
-      <div class="actions"><button type="button" data-client-action="visit" data-client-id="${row.id}">Buka PIC Visit</button><button type="button" data-client-action="progress" data-client-id="${row.id}">Buka Progress & Pengingat</button></div>`;
+      <div class="actions"><button type="button" data-client-action="visit" data-client-id="${row.id}">Buka PIC Visit</button><button type="button" data-client-action="progress" data-client-id="${row.id}">Buka Monitoring & Tindaklanjut</button></div>`;
+  }
+  function activityDate(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 'Tanggal belum tersedia' : date.toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' });
+  }
+  function renderActivityItem(row) {
+    const details = [
+      row.owner && `PIC RMP: ${row.owner}`,
+      row.contact && `PIC klien: ${row.contact}`,
+      row.response && `Respons: ${row.response}`,
+      row.next && `Follow up: ${displayDate(row.next)}`
+    ].filter(Boolean);
+    return `<div class="item"><strong>${escapeHtml(row.name || 'Perusahaan belum diisi')}</strong>
+      <small>${escapeHtml(activityDate(row.at))}</small>
+      <div><span class="badge ${row.visitStage === 'initial' ? 'processing' : ''}">${row.visitStage === 'initial' ? 'Tahap 1 · perlu detail' : 'Detail terisi'}</span></div>
+      ${details.length ? `<small>${details.map(escapeHtml).join(' · ')}</small>` : ''}
+      <p>${escapeHtml(row.note || 'Catatan hasil kunjungan belum diisi.')}</p></div>`;
+  }
+  function renderActivityDashboard() {
+    $('#activity-dashboard-summary').innerHTML = `
+      <div><strong>${picVisits.length}</strong><small>PIC Visit simulasi</small></div>
+      <div><strong>${picVisits.filter((row) => row.visitStage === 'initial').length}</strong><small>PIC Visit perlu detail</small></div>
+      <div><strong>${salesVisits.length}</strong><small>Sales Visit terbaca</small></div>
+      <div><strong>${salesVisits.filter((row) => row.visitStage === 'initial').length}</strong><small>Sales Visit perlu detail</small></div>`;
+    $('#activity-pic-list').innerHTML = picVisits.length ? picVisits.map((row) => {
+      const client = clients.find((item) => item.id === row.clientId);
+      return renderActivityItem({ ...row, name: client?.name, owner: client?.owner });
+    }).join('') : '<p class="hint">Belum ada PIC Visit simulasi yang diinput pada sesi ini.</p>';
+    $('#activity-sales-status').textContent = salesVisitError || (salesVisitsLoaded
+      ? `Menampilkan ${salesVisits.length} laporan terbaru yang dapat diakses akun ini (maksimal 100).`
+      : 'Memuat Sales Visit…');
+    $('#activity-sales-list').innerHTML = salesVisits.length ? salesVisits.map(renderActivityItem).join('')
+      : `<p class="hint">${salesVisitError ? 'Data Sales Visit belum dapat ditampilkan.' : salesVisitsLoaded ? 'Belum ada Sales Visit yang dapat ditampilkan.' : 'Menunggu data Sales Visit.'}</p>`;
   }
   function syncProgressStage() {
     const closed = !isOpen({ stage: $('#client-progress-stage').value });
@@ -147,7 +183,14 @@
     if (previousId !== selectedId) $('#pic-visit-client').value = selectedId;
     renderProgress();
     renderPicVisits();
+    renderActivityDashboard();
   }
+  window.addEventListener('marketing:visits-snapshot', (event) => {
+    salesVisits = Array.isArray(event.detail?.visits) ? event.detail.visits : [];
+    salesVisitError = event.detail?.error || '';
+    salesVisitsLoaded = true;
+    renderActivityDashboard();
+  });
   function fillPicVisit(row) {
     selectedId = row.clientId;
     renderAll();

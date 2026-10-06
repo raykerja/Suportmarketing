@@ -21,10 +21,10 @@
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
   <link rel="stylesheet" href="style.css?v=20261005-8">
-  <link rel="stylesheet" href="theme-ray.css?v=20261006-2">
+  <link rel="stylesheet" href="theme-ray.css?v=20261006-3">
   <script src="config.js"></script>
-  <script defer src="clients-preview.js?v=20261006-1"></script>
-  <script type="module" src="app.js?v=20261006-3"></script>
+  <script defer src="clients-preview.js?v=20261006-2"></script>
+  <script type="module" src="app.js?v=20261006-4"></script>
 </head>
 <body>
   <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="open-settings" type="button" data-tab="settings" hidden>Pengaturan</button></header>
@@ -36,7 +36,7 @@
     <section id="workspace" hidden>
       <div class="hero"><div><p class="eyebrow">WORKSPACE MARKETING</p><h1>Aktivitas Marketing &amp; Klien</h1><p>Kelola target pasar, kunjungan, penawaran, follow-up, dan klien aktif dalam satu tempat</p></div></div>
       <nav class="tabs" aria-label="Menu Marketing"><button id="active-client-menu" type="button" aria-controls="active-client-tabs" aria-expanded="false">Active Client,Repitching & Progress</button><button id="sales-menu" class="active" type="button" aria-controls="sales-tabs" aria-expanded="true">New Client,Visit & Progress</button><button id="pipeline-menu" type="button" aria-controls="pipeline-tabs" aria-expanded="false">Target, Penawaran & Database</button></nav>
-      <nav id="active-client-tabs" class="tabs sub-tabs" aria-label="Tahapan klien aktif dan penawaran ulang" hidden><button data-tab="clients">1. Database Client Active</button><button data-tab="pic-visits">2. PIC Visit</button><button data-tab="client-progress">3. Progress & Pengingat</button></nav>
+      <nav id="active-client-tabs" class="tabs sub-tabs" aria-label="Tahapan klien aktif dan penawaran ulang" hidden><button data-tab="clients">1. Database Client Active</button><button data-tab="pic-visits">2. PIC Visit</button><button data-tab="client-progress">3. Monitoring &amp; Tindaklanjut</button></nav>
       <nav id="sales-tabs" class="tabs sub-tabs" aria-label="Tahapan Sales Visit dan Progres"><button data-tab="visits" class="active">1. Sales Visit</button><button data-tab="progress">2. Progres & Pengingat</button></nav>
       <nav id="pipeline-tabs" class="tabs sub-tabs" aria-label="Tahapan target, penawaran, dan database" hidden><button data-tab="research">1. Cari Target</button><button data-tab="review">2. Review Hasil</button><button data-tab="letters">3. Buat Penawaran</button><button data-tab="leads">4. Database Target</button></nav>
       <section id="visits" class="panel">
@@ -132,8 +132,13 @@
         </div>
       </section>
       <section id="client-progress" class="panel" hidden>
-        <div class="preview-note"><strong>PRATINJAU PROGRESS PENAWARAN ULANG</strong><span>Tahap, respons, dan pengingat di bawah memakai klien contoh. Simulasi tidak menyimpan data ke Supabase, Sheet, atau Drive dan hilang saat halaman dimuat ulang.</span></div>
-        <div class="card"><div class="section-head"><div><p class="eyebrow">TINDAK LANJUT KLIEN AKTIF</p><h2>Progress & Pengingat Penawaran Ulang</h2><p class="hint">Pantau tahap penawaran ulang, respons klien, dan jadwal follow up per PIC RMP.</p></div></div><div id="client-progress-summary" class="progress-summary"></div><div id="client-progress-due" class="progress-due"></div></div>
+        <div class="preview-note"><strong>PRATINJAU MONITORING KLIEN AKTIF</strong><span>PIC Visit dan riwayat penawaran ulang masih simulasi di browser. Sales Visit di dashboard dibaca dari laporan yang tersedia untuk akun Anda; dashboard tidak mengubah data tersebut.</span></div>
+        <div class="card activity-dashboard"><div class="section-head"><div><p class="eyebrow">AKTIVITAS KUNJUNGAN</p><h2>Dashboard PIC Visit &amp; Sales Visit</h2><p class="hint">Pantau input kunjungan sebelum mencatat perkembangan penawaran ulang. PIC Visit adalah simulasi; Sales Visit berasal dari laporan tersimpan.</p></div></div>
+          <div id="activity-dashboard-summary" class="progress-summary" aria-label="Ringkasan input kunjungan"></div>
+          <div class="activity-dashboard-grid"><div><div class="section-head"><h3>PIC Visit <small>(simulasi)</small></h3><button type="button" data-tab="pic-visits">Buka PIC Visit</button></div><div id="activity-pic-list" class="list activity-dashboard-list" aria-live="polite"></div></div>
+            <div><div class="section-head"><h3>Sales Visit <small>(tersimpan)</small></h3><div class="actions"><button id="refresh-activity-sales" type="button">Muat ulang</button><button type="button" data-tab="visits">Buka Sales Visit</button></div></div><p id="activity-sales-status" class="hint" role="status">Memuat Sales Visit…</p><div id="activity-sales-list" class="list activity-dashboard-list" aria-live="polite"></div></div></div>
+        </div>
+        <div class="card"><div class="section-head"><div><p class="eyebrow">TINDAK LANJUT KLIEN AKTIF</p><h2>Monitoring &amp; Tindaklanjut Penawaran Ulang</h2><p class="hint">Pantau tahap penawaran ulang, respons klien, dan jadwal follow up per PIC RMP.</p></div></div><div id="client-progress-summary" class="progress-summary"></div><div id="client-progress-due" class="progress-due"></div></div>
         <div class="columns"><div class="card"><h2>Catat perkembangan</h2><form id="client-progress-form">
           <label>Klien aktif<select id="client-progress-client" required><option value="">Pilih klien</option></select></label><p id="client-progress-owner" class="hint"></p>
           <label>Jenis penawaran<select id="client-progress-type" required><option>Perpanjangan kontrak</option><option>Layanan tambahan</option><option>Perpanjangan + perluasan</option></select></label>

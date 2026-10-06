@@ -35,6 +35,18 @@
 
 # TEST_RESULTS
 
+## Dashboard Monitoring & Tindaklanjut 0.6.13 — 2026-10-06
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Nama submenu | Label menjadi Monitoring & Tindaklanjut; panel lama tetap dipakai | Label, judul panel, dan tombol detail klien diperbarui; ID `client-progress` dan handler navigasi tetap | PASS | Source lokal |
+| Sales Visit pada dashboard | Input Sales Visit tampil tanpa menulis ulang data | Browser mock menerima satu ringkasan Sales Visit dan menampilkannya; sumber tetap `loadVisits()` dengan batas 100 dan RLS akun | PASS | Data uji fiktif, bukan sesi Supabase production |
+| PIC Visit pada dashboard | Tahap 1 dan detail tampil sebagai satu input | Browser mock menyimpan tahap 1 lalu detail pada record yang sama; dashboard berubah dari perlu detail menjadi detail terisi dan memperbarui catatan | PASS | Memori browser |
+| Gagal memuat Sales Visit | Error jelas dan data lama tidak tertinggal | Browser mock mengirim status error; daftar Sales Visit lama dikosongkan dan pesan gagal muncul | PASS | Jalur event dashboard |
+| Responsif | Dashboard terbaca tanpa tumpang tindih pada HP | Chrome DevTools lokal: dua sumber menjadi satu kolom pada 320/390 px; jarak tombol dan status diperbaiki | PASS | Area dashboard yang diperiksa; bukan login production |
+| Syntax dan diff | JS valid, HTML ID unik, diff rapi | `node --check` dan `git diff --check` lulus; pemeriksaan HTML ID dilakukan | PASS | Lokal |
+| Production setelah login | Sales Visit nyata dan akses per akun sesuai RLS | Belum diuji atau dipublikasikan | NOT TESTED | Butuh persetujuan push/deploy dan sesi login sah |
+
 ## Judul workspace Marketing 0.6.12 — 2026-10-06
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
