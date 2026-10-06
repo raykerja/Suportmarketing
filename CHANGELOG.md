@@ -1,11 +1,11 @@
-VERSION: 0.7.0 (draft asisten AI dan akun staf tanpa kolom email)
+VERSION: 0.7.0 (pencarian Marketing dan akun staf tanpa kolom email)
 DATE: 2026-10-06
 
 ADDED: Pencarian data Marketing dengan ringkasan GPT-6 Luna melalui Edge Function, batas 30 permintaan AI per akun per hari, pembuatan akun staf dengan username/kata sandi/folder Drive, serta template Excel kosong untuk 50 staf.
 CHANGED: Form login menerima username staf atau identitas akun lama; form admin tidak meminta email staf. API key dibaca hanya dari secret `OPENAI_API_KEY` di server.
 FIXED: Tidak ada credential AI yang perlu disimpan di frontend atau repository.
 REMOVED: Kolom email dan link aktivasi dari form pembuatan akun baru. Endpoint undangan lama tetap ada untuk kompatibilitas.
-NOTES: Semua perubahan masih lokal. Migration batas AI, Edge Function, secret, dan frontend belum diterapkan di production. Pencarian Drive terbatas pada tautan file yang sudah tercatat di Supabase; Progress/PIC Visit masih pratinjau. Uji Auth dan AI end-to-end memerlukan environment aman dan API key.
+NOTES: Migration batas AI diterapkan dan diverifikasi; Edge Function `marketing` versi 11 aktif, serta frontend commit `04e46a2` terbit di GitHub Pages. Secret `OPENAI_API_KEY` belum terpasang sehingga pencarian sumber tersedia tetapi ringkasan AI belum aktif. Pencarian Drive terbatas pada tautan file yang sudah tercatat di Supabase; Progress/PIC Visit masih pratinjau. Uji Auth staf dan AI end-to-end belum dilakukan.
 
 VERSION: 0.6.14 (monitoring New Client)
 DATE: 2026-10-06

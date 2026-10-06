@@ -1,17 +1,19 @@
-## Draft AI, akun staf, dan template Excel 0.7.0 — 2026-10-06
+## Rilis pencarian Marketing, akun staf, dan template Excel 0.7.0 — 2026-10-06
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
 | --- | --- | --- | --- | --- |
 | Syntax frontend | JavaScript dapat diparse | `node --check app.js` exit 0 | PASS | Lokal |
 | Elemen formulir baru | ID HTML yang dipakai JavaScript tersedia | 12 ID login, akun staf, dan asisten ditemukan pada HTML | PASS | Pemeriksaan statis |
-| Syntax Edge Function | TypeScript dapat dibundel | `esbuild` menghasilkan bundle tanpa error | PASS | Belum deploy |
+| Syntax Edge Function | TypeScript dapat dibundel | `esbuild` menghasilkan bundle tanpa error | PASS | Edge Function versi 11 aktif |
 | Struktur Excel | Kolom nama, username, kata sandi awal, folder Drive tersedia | Workbook XLSX 50 baris kosong dirender dan ditinjau visual | PASS | Tidak berisi credential nyata |
 | API key di frontend | Tidak ada key AI di HTML/JS/config | Source hanya menyebut nama secret `OPENAI_API_KEY`; nilai key tidak ditulis | PASS | Secret production belum dipasang |
 | Login staf username | Staf baru dapat login dan akun lama tetap masuk | Kode pemetaan username ke identitas internal diperiksa | PARTIAL | Perlu uji Supabase Auth dengan akun nyata |
 | Pembatasan akses pencarian AI | Staf hanya menerima record miliknya | Filter `owner_id` pada query server diperiksa | PARTIAL | Perlu uji dua akun production/staging |
-| AI → sumber Supabase/Drive | Ringkasan sesuai record dan tautan dokumen | Belum ada API key atau deployment untuk uji end-to-end | NOT TESTED | Drive hanya dari tautan yang sudah tersimpan |
-| Batas 30 panggilan/hari | Panggilan ke-31 ditolak menurut hari Asia/Jakarta | Migration disiapkan, belum dijalankan | NOT TESTED | Perlu database aman |
+| AI → sumber Supabase/Drive | Ringkasan sesuai record dan tautan dokumen | Secret `OPENAI_API_KEY` belum ada; AI belum dapat diuji end-to-end | NOT TESTED | Drive hanya dari tautan yang sudah tersimpan |
+| Batas 30 panggilan/hari | Panggilan ke-31 ditolak menurut hari Asia/Jakarta | Tabel dan fungsi aktif; RLS aktif, `authenticated` tidak punya EXECUTE, `service_role` punya EXECUTE; 0 pemakaian | PARTIAL | Perlu uji kuota setelah key terpasang |
 | Tampilan HP setelah login | Asisten dan form admin tidak overlap | CSS responsif disiapkan; browser headless lokal gagal diluncurkan (`SIGABRT`) | NOT TESTED | Perlu pratinjau browser setelah backend siap |
+| Supabase production | Migration dan Edge Function baru aktif tanpa mengubah data lama | Function versi 11 ACTIVE, `verify_jwt=false`; permintaan tanpa login dan webhook salah sama-sama HTTP 401; jumlah record lama tetap 1 anggota, 1 kunjungan, 7 penawaran, 66 target, 1 surat | PASS | Belum uji aksi dengan login sah |
+| GitHub Pages production | Frontend dan template Excel terbaru tersedia | Workflow `pages-build-deployment` commit `04e46a2` sukses; HTML, JS, CSS, dan XLSX HTTP 200 serta SHA-256 cocok source | PASS | Setelah login belum diuji |
 
 ## Penamaan ulang menu utama — 2026-10-06
 
