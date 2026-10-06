@@ -1,3 +1,11 @@
+## Penamaan ulang menu utama — 2026-10-06
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Teks dua tombol utama | Nama tepat sesuai permintaan | `New Client,Visit & Progress` dan `Active Client,Repitching & Progress` ada pada navigasi HTML | PASS | Pemeriksaan source lokal |
+| Struktur navigasi | ID, submenu, dan panel tetap | Hanya teks dua tombol berubah; `sales-menu`, `sales-tabs`, dan `data-tab="clients"` tetap | PASS | Pemeriksaan diff |
+| Production | Label baru muncul di situs live | Menunggu build dan pemeriksaan domain setelah push | NOT TESTED | Persetujuan production diterima 2026-10-06 |
+
 ## Pengelompokan menu Marketing — 2026-10-06
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |

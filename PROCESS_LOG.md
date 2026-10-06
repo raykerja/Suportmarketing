@@ -1,3 +1,9 @@
+## 2026-10-06 — Penamaan ulang dua menu utama
+
+- Memastikan `main` lokal bersih dan sama dengan remote `2de53e4` sebelum revisi.
+- Mengganti dua label tombol navigasi sesuai teks pengguna. ID menu, submenu, panel, handler JavaScript, CSS, dan backend tidak diubah.
+- Menu Progres & Pengingat dan Active Client,Repitching & Progress tetap pratinjau. Publikasi production disetujui pada 2026-10-06.
+
 ## 2026-10-06 — Pengelompokan Sales Visit & Progress
 
 - Memeriksa navigasi, riwayat panel, tautan pengingat, mode pratinjau progres, dan kondisi `main` yang bersih serta sama dengan remote sebelum revisi.
