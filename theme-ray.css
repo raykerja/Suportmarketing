@@ -22,6 +22,7 @@ header { background: linear-gradient(115deg, #14204a, #071c45); }
 .hero { background: linear-gradient(115deg, #14204a, #0a4fa6); }
 .hero .eyebrow { color: #f1d084; }
 .hero p:last-child { color: #e4edfa; }
+@media (max-width: 760px) { .hero p:last-child { display: block; } }
 .tabs .active, .visit-step-nav button.active, .progress-steps span.current { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
 .card { border-color: var(--ray-line); box-shadow: 0 1px 2px rgba(14,27,46,.06), 0 6px 20px rgba(14,27,46,.06); }
 input, select, textarea { display: block; width: 100%; min-width: 0; border-color: #c6d3e3; color: var(--ray-navy); }

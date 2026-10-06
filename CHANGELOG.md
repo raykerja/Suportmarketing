@@ -1,3 +1,12 @@
+VERSION: 0.6.12 (judul workspace Marketing)
+DATE: 2026-10-06
+
+ADDED: Tidak ada.
+CHANGED: Judul workspace menjadi "Aktivitas Marketing & Klien" dan keterangannya menjadi "Kelola target pasar, kunjungan, penawaran, follow-up, dan klien aktif dalam satu tempat". Keterangan ditampilkan juga pada layar HP.
+FIXED: Keterangan workspace sebelumnya tersembunyi pada lebar layar hingga 760 px.
+REMOVED: Tidak ada.
+NOTES: Perubahan lokal pada teks HTML dan satu aturan CSS; belum dipublikasikan ke production.
+
 VERSION: 0.6.11 (pratinjau alur klien aktif per PIC)
 DATE: 2026-10-06
 
