@@ -1,4 +1,4 @@
-// Pratinjau halaman saja. Tidak membaca atau menulis data production.
+// Pratinjau klien aktif, PIC Visit, dan penawaran ulang. Tidak membaca atau menulis data production.
 (() => {
   const $ = (selector) => document.querySelector(selector);
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
@@ -19,99 +19,326 @@
   };
   const clients = [
     { id: 'contoh-1', name: 'PT Contoh Manufaktur', area: 'Semarang', service: 'Security',
-      people: 12, contractEnd: day(75), owner: 'Tim Marketing', pic: 'HRGA',
+      people: 12, contractEnd: day(75), owner: 'PIC RMP Contoh A', pic: 'HRGA',
       need: 'Evaluasi perpanjangan kontrak dan kebutuhan personel shift malam.',
       offerType: 'Perpanjangan kontrak', stage: 'review', next: day(-2),
       history: [{ date: day(-7), stage: 'review', note: 'Jadwalkan evaluasi layanan sebelum menyiapkan penawaran ulang.' }] },
     { id: 'contoh-2', name: 'Hotel Contoh Sentosa', area: 'Yogyakarta', service: 'Cleaning Service',
-      people: 8, contractEnd: day(145), owner: 'Tim Marketing', pic: 'Facility Manager',
+      people: 8, contractEnd: day(145), owner: 'PIC RMP Contoh B', pic: 'Facility Manager',
       need: 'Peluang layanan tambahan untuk area parkir dan keamanan acara.',
       offerType: 'Layanan tambahan', stage: 'sent', next: day(3),
       history: [{ date: day(-4), stage: 'sent', note: 'Contoh penawaran layanan tambahan telah disampaikan.' }] },
     { id: 'contoh-3', name: 'PT Contoh Logistik', area: 'Solo', service: 'Driver',
-      people: 5, contractEnd: day(35), owner: 'Tim Marketing', pic: 'Procurement',
+      people: 5, contractEnd: day(35), owner: 'PIC RMP Contoh A', pic: 'Procurement',
       need: 'Pembahasan perpanjangan dan penyesuaian jumlah pengemudi.',
       offerType: 'Perpanjangan + perluasan', stage: 'follow_up', next: day(0),
       history: [{ date: day(-3), stage: 'follow_up', note: 'Menunggu jadwal pembahasan penyesuaian kebutuhan.' }] }
   ];
+  const picVisits = [];
   let selectedId = clients[0].id;
+  let activePicVisitStep = '1';
   const today = day(0);
   const isOpen = (row) => !['won', 'lost'].includes(row.stage);
   const isDue = (row) => isOpen(row) && row.next && row.next <= today;
   const isExpiring = (row) => row.contractEnd >= today && row.contractEnd <= day(90);
+  const setStatus = (selector, message, error = false) => {
+    const node = $(selector);
+    node.textContent = message;
+    node.classList.toggle('error', error);
+  };
+  $('#client-pic-filter').innerHTML = '<option value="all">Semua PIC</option>' +
+    [...new Set(clients.map((row) => row.owner))].map((owner) => `<option value="${escapeHtml(owner)}">${escapeHtml(owner)}</option>`).join('');
 
   function render() {
     const due = clients.filter(isDue).length;
     $('#client-summary').innerHTML = `
       <div><strong>${clients.length}</strong><small>Klien contoh</small></div>
+      <div><strong>${[...new Set(clients.map((row) => row.owner))].length}</strong><small>PIC RMP contoh</small></div>
       <div><strong>${clients.filter(isExpiring).length}</strong><small>Kontrak ≤ 90 hari</small></div>
-      <div><strong>${due}</strong><small>Follow up jatuh tempo</small></div>
-      <div><strong>${clients.filter((row) => isOpen(row) && /tambahan|perluasan/i.test(row.offerType)).length}</strong><small>Peluang layanan tambahan</small></div>`;
+      <div><strong>${due}</strong><small>Follow up jatuh tempo</small></div>`;
     const query = $('#client-search').value.trim().toLocaleLowerCase('id');
     const filter = $('#client-filter').value;
+    const picFilter = $('#client-pic-filter').value;
     const visible = clients.filter((row) => {
       const matchesQuery = !query || [row.name, row.service, row.area].some((value) => value.toLocaleLowerCase('id').includes(query));
-      return matchesQuery && (filter === 'all' || (filter === 'due' ? isDue(row) : row.stage === filter));
+      return matchesQuery && (picFilter === 'all' || row.owner === picFilter) && (filter === 'all' || (filter === 'due' ? isDue(row) : row.stage === filter));
     });
+    if (!$('#clients').hidden && visible.length && !visible.some((row) => row.id === selectedId)) selectedId = visible[0].id;
+    const detailId = visible.some((row) => row.id === selectedId) ? selectedId : visible[0]?.id;
     $('#client-list').innerHTML = visible.length ? visible.map((row) => `
-      <button type="button" class="client-item ${row.id === selectedId ? 'selected' : ''}" data-client-id="${row.id}" aria-pressed="${row.id === selectedId}">
+      <button type="button" class="client-item ${row.id === detailId ? 'selected' : ''}" data-client-id="${row.id}" aria-pressed="${row.id === detailId}">
         <span class="client-item-top"><strong>${escapeHtml(row.name)}</strong><span class="client-pill ${isDue(row) ? 'overdue' : ''}">${isDue(row) ? 'Perlu follow up' : escapeHtml(stages[row.stage])}</span></span>
         <span>${escapeHtml(row.service)} · ${escapeHtml(row.area)} · ${row.people} personel</span>
-        <small>Kontrak: ${displayDate(row.contractEnd)} · Follow up: ${displayDate(row.next)}</small>
+        <small>PIC RMP: ${escapeHtml(row.owner)} · Kontrak: ${displayDate(row.contractEnd)} · Follow up: ${displayDate(row.next)}</small>
       </button>`).join('') : '<p class="hint">Tidak ada klien contoh yang cocok dengan filter.</p>';
-    const row = clients.find((item) => item.id === selectedId);
-    if (!row) return;
+    const row = visible.find((item) => item.id === detailId);
+    if (!row) { $('#client-detail').textContent = 'Tidak ada klien contoh yang cocok dengan filter.'; return; }
     $('#client-detail').innerHTML = `
       <h3>${escapeHtml(row.name)}</h3>
       <div class="client-facts">
         <div><small>Layanan berjalan</small><strong>${escapeHtml(row.service)} · ${row.people} personel</strong></div>
         <div><small>Masa kontrak</small><strong>${displayDate(row.contractEnd)}</strong></div>
         <div><small>PIC klien</small><strong>${escapeHtml(row.pic)}</strong></div>
-        <div><small>Pemilik tindak lanjut</small><strong>${escapeHtml(row.owner)}</strong></div>
+        <div><small>PIC RMP penanggung jawab</small><strong>${escapeHtml(row.owner)}</strong></div>
       </div>
       <p class="client-need"><strong>Kebutuhan / peluang</strong><br>${escapeHtml(row.need)}</p>
-      <form id="client-offer-form">
-        <h3>Perbarui penawaran</h3>
-        <label>Jenis penawaran<select name="offerType" required>
-          ${['Perpanjangan kontrak', 'Layanan tambahan', 'Perpanjangan + perluasan'].map((option) => `<option ${row.offerType === option ? 'selected' : ''}>${option}</option>`).join('')}
-        </select></label>
-        <label>Tahap penawaran<select name="stage" required>
-          ${Object.entries(stages).map(([key, label]) => `<option value="${key}" ${row.stage === key ? 'selected' : ''}>${label}</option>`).join('')}
-        </select></label>
-        <label>Jadwal follow up berikutnya<input name="next" type="date" value="${escapeHtml(row.next)}"></label>
-        <label>Hasil pembahasan & langkah berikutnya<textarea name="note" rows="3" maxlength="1000" required placeholder="Catat respons klien, kendala, dan tindakan berikutnya"></textarea></label>
-        <button class="primary" type="submit">Coba perbarui (simulasi)</button>
-        <p id="client-status" role="status" class="hint">Simulasi ini tidak menyimpan data.</p>
-      </form>
-      <h3>Riwayat penawaran</h3>
-      <div class="client-history">${row.history.slice().reverse().map((event) => `<div class="item timeline-item"><strong>${escapeHtml(stages[event.stage])}</strong><small>${displayDate(event.date)}</small><p>${escapeHtml(event.note)}</p></div>`).join('')}</div>`;
+      <p><strong>Penawaran ulang:</strong> ${escapeHtml(row.offerType)} · ${escapeHtml(stages[row.stage])}<br><small>Follow up: ${displayDate(row.next)}</small></p>
+      <div class="actions"><button type="button" data-client-action="visit" data-client-id="${row.id}">Buka PIC Visit</button><button type="button" data-client-action="progress" data-client-id="${row.id}">Buka Progress & Pengingat</button></div>`;
   }
-  $('#client-search').addEventListener('input', render);
-  $('#client-filter').addEventListener('change', render);
+  function syncProgressStage() {
+    const closed = !isOpen({ stage: $('#client-progress-stage').value });
+    $('#client-progress-next-wrap').hidden = closed;
+    $('#client-progress-next').required = !closed;
+    if (closed) $('#client-progress-next').value = '';
+  }
+  function renderProgress() {
+    const open = clients.filter(isOpen);
+    const due = clients.filter(isDue).sort((a, b) => a.next.localeCompare(b.next));
+    $('#client-progress-summary').innerHTML = `
+      <div><strong>${due.filter((row) => row.next < today).length}</strong><small>Terlambat</small></div>
+      <div><strong>${due.filter((row) => row.next === today).length}</strong><small>Hari ini</small></div>
+      <div><strong>${open.filter((row) => row.next > today).length}</strong><small>Akan datang</small></div>
+      <div><strong>${open.filter((row) => !row.next).length}</strong><small>Belum dijadwalkan</small></div>`;
+    $('#client-progress-due').innerHTML = due.length ? `<h3>Perlu ditindaklanjuti</h3>${due.map((row) => `
+      <div class="due-item"><div><strong>${escapeHtml(row.name)}</strong><small>${escapeHtml(row.owner)} · ${displayDate(row.next)} · ${escapeHtml(stages[row.stage])}</small></div><button type="button" data-client-progress-open="${row.id}">Catat progress</button></div>`).join('')}` : '<p class="hint">Tidak ada penawaran ulang yang jatuh tempo hari ini atau terlambat.</p>';
+    const row = clients.find((item) => item.id === selectedId);
+    $('#client-progress-client').innerHTML = '<option value="">Pilih klien</option>' + clients.map((item) => `<option value="${item.id}">${escapeHtml(item.name)} · ${escapeHtml(item.owner)}</option>`).join('');
+    $('#client-progress-client').value = row?.id || '';
+    $('#client-progress-owner').textContent = row ? `PIC RMP: ${row.owner} · Tahap saat ini: ${stages[row.stage]}` : '';
+    if (!row) { $('#client-progress-history').textContent = 'Pilih klien untuk melihat riwayat.'; return; }
+    $('#client-progress-type').value = row.offerType;
+    $('#client-progress-stage').value = row.stage;
+    $('#client-progress-next').value = row.next;
+    syncProgressStage();
+    $('#client-progress-history').innerHTML = row.history.slice().reverse().map((event) => `
+      <div class="item timeline-item"><strong>${escapeHtml(stages[event.stage])}</strong><small>${displayDate(event.date)}</small><p>${escapeHtml(event.note)}</p></div>`).join('');
+  }
+  function addPicVisitService(name = '', count = '') {
+    const row = document.createElement('div');
+    row.className = 'visit-service';
+    row.innerHTML = `<label>Bagian kerja<input data-pic-service-name maxlength="100" value="${escapeHtml(name)}" placeholder="Security / Cleaning Service"></label><label>Jumlah<input data-pic-service-count type="number" min="0" max="100000" value="${escapeHtml(count)}" inputmode="numeric"></label><button type="button" data-remove-pic-service>Hapus</button>`;
+    $('#pic-visit-services').appendChild(row);
+  }
+  function openPicVisitStep(step) {
+    activePicVisitStep = step;
+    for (const number of ['1', '2']) {
+      const active = number === step;
+      $(`#pic-visit-step-${number}`).hidden = !active;
+      $(`#pic-visit-step-button-${number}`).classList.toggle('active', active);
+      $(`#pic-visit-step-button-${number}`).setAttribute('aria-expanded', String(active));
+    }
+    $('#save-pic-visit').textContent = step === '1' ? 'Simulasikan tahap 1' : 'Simulasikan detail';
+  }
+  function renderPicVisits() {
+    const clientValue = $('#pic-visit-client').value || selectedId;
+    const savedValue = $('#pic-visit-saved').value;
+    $('#pic-visit-client').innerHTML = '<option value="">Pilih klien aktif</option>' + clients.map((row) => `<option value="${row.id}">${escapeHtml(row.name)}</option>`).join('');
+    $('#pic-visit-client').value = clientValue;
+    const owner = clients.find((row) => row.id === clientValue)?.owner;
+    $('#pic-visit-owner').textContent = owner ? `PIC RMP: ${owner}` : '';
+    $('#pic-visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>' + picVisits.map((row) => `<option value="${row.id}">${escapeHtml(clients.find((client) => client.id === row.clientId)?.name)} · ${escapeHtml(new Date(row.at).toLocaleString('id-ID'))}</option>`).join('');
+    if (picVisits.some((row) => row.id === savedValue)) $('#pic-visit-saved').value = savedValue;
+    $('#pic-visit-list').innerHTML = picVisits.length ? picVisits.map((row) => `
+      <div class="item"><strong>${escapeHtml(clients.find((client) => client.id === row.clientId)?.name)}</strong><small>${escapeHtml(new Date(row.at).toLocaleString('id-ID'))} · ${escapeHtml(row.contact)} · ${escapeHtml(clients.find((client) => client.id === row.clientId)?.owner)}</small><p>${escapeHtml(row.note || 'Detail belum dilengkapi.')}</p><span class="badge ${row.visitStage === 'initial' ? 'processing' : ''}">${row.visitStage === 'initial' ? 'Tahap 1 · perlu detail' : 'Detail terisi'}</span><div><button type="button" data-open-pic-visit="${row.id}">${row.visitStage === 'initial' ? 'Lengkapi detail' : 'Buka / ubah'}</button></div></div>`).join('') : '<p class="hint">Belum ada PIC Visit simulasi. Catat tahap 1 untuk melihat contoh alurnya.</p>';
+  }
+  function renderAll() {
+    const previousId = selectedId;
+    render();
+    if (previousId !== selectedId) $('#pic-visit-client').value = selectedId;
+    renderProgress();
+    renderPicVisits();
+  }
+  function fillPicVisit(row) {
+    selectedId = row.clientId;
+    renderAll();
+    $('#pic-visit-saved').value = row.id;
+    $('#pic-visit-client').value = row.clientId;
+    $('#pic-visit-category').value = row.category;
+    $('#pic-visit-contact').value = row.contact;
+    $('#pic-visit-role').value = row.role;
+    $('#pic-visit-coordinates').value = row.coordinates || '';
+    $('#pic-visit-address').value = row.address || '';
+    $('#pic-visit-phone').value = row.phone || '';
+    $('#pic-visit-company-phone').value = row.companyPhone || '';
+    $('#pic-visit-response').value = row.response || '';
+    $('#pic-visit-workforce').value = row.workforce || '';
+    $('#pic-visit-need').value = row.need || '';
+    $('#pic-visit-note').value = row.note || '';
+    $('#pic-visit-important').value = row.important || '';
+    $('#pic-visit-stage').value = row.offerStage || '';
+    $('#pic-visit-next').value = row.next || '';
+    $('#pic-visit-services').replaceChildren();
+    (row.services?.length ? row.services : [{ name: '', count: '' }]).forEach((service) => addPicVisitService(service.name, service.count));
+    $('#pic-visit-title').textContent = 'Lengkapi PIC Visit';
+    $('#new-pic-visit').hidden = false;
+    $('#pic-visit-timestamp').textContent = `Tercatat (simulasi): ${new Date(row.at).toLocaleString('id-ID')}`;
+    openPicVisitStep('2');
+    document.querySelector('[data-tab="pic-visits"]').click();
+  }
+  function resetPicVisit() {
+    $('#pic-visit-form').reset();
+    $('#pic-visit-client').value = selectedId;
+    $('#pic-visit-saved').value = '';
+    $('#pic-visit-services').replaceChildren();
+    addPicVisitService();
+    $('#pic-visit-title').textContent = 'Catat PIC Visit';
+    $('#new-pic-visit').hidden = true;
+    $('#pic-visit-timestamp').textContent = 'Waktu simulasi dicatat saat tombol Simpan ditekan.';
+    $('#pic-visit-photo-note').textContent = '';
+    $('#pic-visit-location-status').textContent = '';
+    setStatus('#pic-visit-status', '');
+    openPicVisitStep('1');
+    renderPicVisits();
+  }
+  $('#client-search').addEventListener('input', renderAll);
+  $('#client-filter').addEventListener('change', renderAll);
+  $('#client-pic-filter').addEventListener('change', renderAll);
   $('#client-list').addEventListener('click', (event) => {
     const id = event.target.closest('[data-client-id]')?.dataset.clientId;
-    if (clients.some((row) => row.id === id)) { selectedId = id; render(); }
+    if (clients.some((row) => row.id === id)) {
+      selectedId = id;
+      $('#pic-visit-client').value = id;
+      renderAll();
+    }
   });
-  $('#client-detail').addEventListener('submit', (event) => {
-    if (event.target.id !== 'client-offer-form') return;
+  $('#client-detail').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-client-action]');
+    const action = button?.dataset.clientAction;
+    if (button) {
+      selectedId = button.dataset.clientId;
+      $('#pic-visit-client').value = selectedId;
+      renderAll();
+    }
+    if (action === 'visit') document.querySelector('[data-tab="pic-visits"]').click();
+    if (action === 'progress') document.querySelector('[data-tab="client-progress"]').click();
+  });
+  $('#client-progress-client').addEventListener('change', () => {
+    selectedId = $('#client-progress-client').value;
+    $('#client-progress-note').value = '';
+    renderAll();
+  });
+  $('#client-progress-stage').addEventListener('change', syncProgressStage);
+  $('#client-progress-due').addEventListener('click', (event) => {
+    const id = event.target.closest('[data-client-progress-open]')?.dataset.clientProgressOpen;
+    if (!clients.some((row) => row.id === id)) return;
+    selectedId = id;
+    renderAll();
+    $('#client-progress-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  $('#client-progress-date').value = today;
+  $('#client-progress-form').addEventListener('submit', (event) => {
     event.preventDefault();
-    const row = clients.find((item) => item.id === selectedId);
-    const form = event.target;
-    const stage = form.elements.stage.value;
-    const next = form.elements.next.value;
-    const note = form.elements.note.value.trim();
-    if (!note || !stages[stage]) return;
-    if (!['won', 'lost'].includes(stage) && (!next || next < today)) {
-      $('#client-status').textContent = 'Untuk penawaran terbuka, pilih jadwal follow up hari ini atau setelahnya.';
-      $('#client-status').classList.add('error');
+    const row = clients.find((client) => client.id === $('#client-progress-client').value);
+    if (!row) { setStatus('#client-progress-status', 'Pilih klien aktif terlebih dahulu.', true); return; }
+    const stage = $('#client-progress-stage').value;
+    const next = $('#client-progress-next').value;
+    const note = $('#client-progress-note').value.trim();
+    if (!note || !$('#client-progress-date').value) { setStatus('#client-progress-status', 'Isi tanggal dan respons klien.', true); return; }
+    if (isOpen({ stage }) && (!next || next < today)) { setStatus('#client-progress-status', 'Tahap terbuka memerlukan follow up hari ini atau setelahnya.', true); return; }
+    row.offerType = $('#client-progress-type').value;
+    row.stage = stage;
+    row.next = isOpen(row) ? next : '';
+    row.history.push({ date: $('#client-progress-date').value, stage, note });
+    selectedId = row.id;
+    renderAll();
+    $('#client-progress-note').value = '';
+    setStatus('#client-progress-status', 'Simulasi diperbarui di browser. Muat ulang halaman untuk mengembalikan data contoh.');
+  });
+  $('#pic-visit-client').addEventListener('change', () => {
+    const client = clients.find((row) => row.id === $('#pic-visit-client').value);
+    $('#pic-visit-owner').textContent = client ? `PIC RMP: ${client.owner}` : '';
+  });
+  $('#get-pic-visit-location').addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      $('#pic-visit-location-status').textContent = 'Perangkat ini tidak menyediakan lokasi. Isi koordinat manual.';
       return;
     }
-    row.offerType = form.elements.offerType.value;
-    row.stage = stage;
-    row.next = ['won', 'lost'].includes(stage) ? '' : next;
-    row.history.push({ date: today, stage, note });
-    render();
-    $('#client-status').textContent = 'Simulasi diperbarui di browser. Muat ulang halaman untuk mengembalikan data contoh.';
+    $('#pic-visit-location-status').textContent = 'Meminta lokasi perangkat…';
+    navigator.geolocation.getCurrentPosition(({ coords }) => {
+      $('#pic-visit-coordinates').value = `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
+      $('#pic-visit-location-status').textContent = 'Koordinat terisi untuk simulasi; belum dikirim atau disimpan.';
+    }, () => {
+      $('#pic-visit-location-status').textContent = 'Lokasi tidak tersedia. Isi koordinat manual jika perlu.';
+    }, { enableHighAccuracy: true, timeout: 10000 });
   });
-  render();
+  document.querySelectorAll('[data-pic-visit-step]').forEach((button) => button.addEventListener('click', () => openPicVisitStep(button.dataset.picVisitStep)));
+  $('#new-pic-visit').addEventListener('click', resetPicVisit);
+  $('#pic-visit-saved').addEventListener('change', () => {
+    const row = picVisits.find((item) => item.id === $('#pic-visit-saved').value);
+    if (row) fillPicVisit(row);
+  });
+  $('#pic-visit-list').addEventListener('click', (event) => {
+    const row = picVisits.find((item) => item.id === event.target.closest('[data-open-pic-visit]')?.dataset.openPicVisit);
+    if (row) fillPicVisit(row);
+  });
+  $('#add-pic-visit-service').addEventListener('click', () => addPicVisitService());
+  $('#pic-visit-services').addEventListener('click', (event) => {
+    if (!event.target.closest('[data-remove-pic-service]')) return;
+    event.target.closest('.visit-service').remove();
+    if (!$('#pic-visit-services').children.length) addPicVisitService();
+  });
+  $('#pic-visit-form').addEventListener('submit', (event) => {
+    event.preventDefault();
+    if (activePicVisitStep === '1') {
+      const fields = ['#pic-visit-client', '#pic-visit-category', '#pic-visit-contact', '#pic-visit-role'].map($);
+      const invalid = fields.find((field) => !field.reportValidity());
+      if (invalid) { invalid.focus(); return; }
+      const row = {
+        id: crypto.randomUUID(), clientId: $('#pic-visit-client').value,
+        category: $('#pic-visit-category').value,
+        contact: $('#pic-visit-contact').value.trim(), role: $('#pic-visit-role').value.trim(),
+        coordinates: $('#pic-visit-coordinates').value.trim(), at: new Date().toISOString(),
+        hasPhoto: !!$('#pic-visit-photo').files.length, visitStage: 'initial'
+      };
+      picVisits.unshift(row);
+      selectedId = row.clientId;
+      renderAll();
+      $('#pic-visit-saved').value = row.id;
+      $('#pic-visit-photo').value = '';
+      $('#pic-visit-photo-note').textContent = row.hasPhoto ? 'Foto dipilih untuk simulasi, tetapi tidak diunggah atau disimpan.' : '';
+      $('#pic-visit-timestamp').textContent = `Tercatat (simulasi): ${new Date(row.at).toLocaleString('id-ID')}`;
+      $('#new-pic-visit').hidden = false;
+      openPicVisitStep('2');
+      setStatus('#pic-visit-status', 'Tahap 1 tersimpan sementara di browser. Lengkapi detail pada record yang sama.');
+      return;
+    }
+    const row = picVisits.find((item) => item.id === $('#pic-visit-saved').value);
+    if (!row) { setStatus('#pic-visit-status', 'Pilih PIC Visit yang sudah dicatat.', true); return; }
+    const response = $('#pic-visit-response').value;
+    const note = $('#pic-visit-note').value.trim();
+    if (!response || !note) { setStatus('#pic-visit-status', 'Isi respons dan catatan hasil kunjungan.', true); return; }
+    if ($('#pic-visit-workforce').value && !$('#pic-visit-workforce').reportValidity()) return;
+    const offerStage = $('#pic-visit-stage').value;
+    const next = $('#pic-visit-next').value;
+    if (offerStage && isOpen({ stage: offerStage }) && (!next || next < today)) {
+      setStatus('#pic-visit-status', 'Status penawaran terbuka memerlukan jadwal follow up hari ini atau setelahnya.', true); return;
+    }
+    const services = [...document.querySelectorAll('#pic-visit-services .visit-service')].map((item) => ({
+      name: item.querySelector('[data-pic-service-name]').value.trim(), count: item.querySelector('[data-pic-service-count]').value.trim()
+    })).filter((item) => item.name || item.count);
+    if (services.some((item) => !item.name || !item.count)) { setStatus('#pic-visit-status', 'Lengkapi nama bagian kerja dan jumlahnya.', true); return; }
+    const previousNote = row.note;
+    Object.assign(row, {
+      address: $('#pic-visit-address').value.trim(), phone: $('#pic-visit-phone').value.trim(),
+      companyPhone: $('#pic-visit-company-phone').value.trim(),
+      response, workforce: $('#pic-visit-workforce').value,
+      need: $('#pic-visit-need').value.trim(), services, note,
+      important: $('#pic-visit-important').value.trim(), offerStage,
+      next: offerStage && isOpen({ stage: offerStage }) ? next : '', visitStage: 'detail'
+    });
+    const client = clients.find((item) => item.id === row.clientId);
+    if (offerStage && client) {
+      const changed = previousNote !== note || client.stage !== offerStage || client.next !== row.next;
+      client.stage = offerStage;
+      client.next = row.next;
+      if (changed) {
+        client.history.push({ date: day(0), stage: offerStage, note: `PIC Visit: ${note}` });
+      }
+    }
+    renderAll();
+    $('#pic-visit-saved').value = row.id;
+    setStatus('#pic-visit-status', 'Detail PIC Visit diperbarui pada record simulasi yang sama. Muat ulang halaman untuk mengembalikan data contoh.');
+  });
+  addPicVisitService();
+  renderAll();
 })();

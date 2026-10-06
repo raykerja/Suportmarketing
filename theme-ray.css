@@ -32,7 +32,7 @@ form, form label, .columns > *, .form-grid > * { min-width: 0; }
 form label, .client-filters label { width: 100%; }
 .sub-tabs { margin-top: -6px; }
 .sub-tabs button { font-size: 13px; }
-#sales-menu.active, #pipeline-menu.active { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
+#active-client-menu.active, #sales-menu.active, #pipeline-menu.active { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
 .legacy-letter-layout summary { cursor: pointer; color: var(--ray-blue); font-weight: 700; padding: 12px 0; }
 .legacy-letter-layout .columns { margin-top: 8px; }
 .manual-offer-card { margin: 8px 0 16px; }
@@ -54,7 +54,9 @@ th { color: var(--ray-muted); background: #f7faff; }
 .badge { background: #e8f0fb; color: var(--ray-blue); }
 .timeline-item { border-left-color: var(--ray-blue); }
 .reminder-banner, .preview-note { background: #fff7e8; border-color: #e5c169; color: #664704; }
-.client-filters { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+.client-filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 12px; }
+#client-progress .columns { margin-top: 18px; }
+#pic-visit-status, #client-progress-status { min-height: 20px; margin: 0; }
 .client-layout { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 18px; margin-top: 18px; align-items: start; }
 .client-item { display: grid; width: 100%; gap: 6px; text-align: left; white-space: normal; line-height: 1.35; }
 .client-item.selected { border-color: var(--ray-blue); background: #eef5ff; }
@@ -75,7 +77,9 @@ th { color: var(--ray-muted); background: #f7faff; }
   .brand-logo { width: 48px; height: 36px; }
   .client-layout, .client-filters { grid-template-columns: 1fr; }
   .client-layout { gap: 12px; margin-top: 12px; }
-  #clients input, #clients select, #clients textarea, #clients button { min-height: 48px; font-size: 16px; }
+  #clients input, #clients select, #clients textarea, #clients button,
+  #pic-visits input, #pic-visits select, #pic-visits textarea, #pic-visits button,
+  #client-progress input, #client-progress select, #client-progress textarea, #client-progress button { min-height: 48px; font-size: 16px; }
   .client-pill { font-size: 11px; min-height: 0; }
   .client-item-top { flex-wrap: wrap; }
 }

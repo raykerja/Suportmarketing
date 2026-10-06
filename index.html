@@ -21,10 +21,10 @@
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
   <link rel="stylesheet" href="style.css?v=20261005-8">
-  <link rel="stylesheet" href="theme-ray.css?v=20261006-1">
+  <link rel="stylesheet" href="theme-ray.css?v=20261006-2">
   <script src="config.js"></script>
-  <script defer src="clients-preview.js"></script>
-  <script type="module" src="app.js?v=20261006-2"></script>
+  <script defer src="clients-preview.js?v=20261006-1"></script>
+  <script type="module" src="app.js?v=20261006-3"></script>
 </head>
 <body>
   <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="open-settings" type="button" data-tab="settings" hidden>Pengaturan</button></header>
@@ -35,7 +35,8 @@
     <section id="setup-panel" class="card login" hidden><img class="login-logo" src="logo-ray.png" alt="Lambang RAY"><p class="eyebrow">AKTIVASI AKUN</p><h1>Buat kata sandi</h1><p>Undangan diterima. Buat kata sandi untuk masuk berikutnya.</p><form id="setup-form"><label>Kata sandi baru<input id="new-password" type="password" minlength="12" autocomplete="new-password" required></label><button class="primary">Simpan kata sandi</button></form><p id="setup-status" role="status"></p></section>
     <section id="workspace" hidden>
       <div class="hero"><div><p class="eyebrow">WORKSPACE MARKETING</p><h1>Target pasar, kunjungan & klien aktif</h1><p>Riset calon klien, catat kunjungan lapangan, pantau penawaran ulang, dan siapkan surat bisnis.</p></div></div>
-      <nav class="tabs" aria-label="Menu Marketing"><button id="sales-menu" class="active" type="button" aria-controls="sales-tabs" aria-expanded="true">New Client,Visit & Progress</button><button id="pipeline-menu" type="button" aria-controls="pipeline-tabs" aria-expanded="false">Target, Penawaran & Database</button><button data-tab="clients">Active Client,Repitching & Progress</button></nav>
+      <nav class="tabs" aria-label="Menu Marketing"><button id="active-client-menu" type="button" aria-controls="active-client-tabs" aria-expanded="false">Active Client,Repitching & Progress</button><button id="sales-menu" class="active" type="button" aria-controls="sales-tabs" aria-expanded="true">New Client,Visit & Progress</button><button id="pipeline-menu" type="button" aria-controls="pipeline-tabs" aria-expanded="false">Target, Penawaran & Database</button></nav>
+      <nav id="active-client-tabs" class="tabs sub-tabs" aria-label="Tahapan klien aktif dan penawaran ulang" hidden><button data-tab="clients">1. Database Client Active</button><button data-tab="pic-visits">2. PIC Visit</button><button data-tab="client-progress">3. Progress & Pengingat</button></nav>
       <nav id="sales-tabs" class="tabs sub-tabs" aria-label="Tahapan Sales Visit dan Progres"><button data-tab="visits" class="active">1. Sales Visit</button><button data-tab="progress">2. Progres & Pengingat</button></nav>
       <nav id="pipeline-tabs" class="tabs sub-tabs" aria-label="Tahapan target, penawaran, dan database" hidden><button data-tab="research">1. Cari Target</button><button data-tab="review">2. Review Hasil</button><button data-tab="letters">3. Buat Penawaran</button><button data-tab="leads">4. Database Target</button></nav>
       <section id="visits" class="panel">
@@ -89,13 +90,59 @@
         </form></div><div class="card"><h2>Riwayat target</h2><div id="progress-history" class="list"><p class="hint">Pilih target untuk melihat riwayatnya.</p></div></div></div>
       </section>
       <section id="clients" class="panel" hidden>
-        <div class="preview-note"><strong>PRATINJAU · DATA CONTOH</strong><span>Perusahaan, kontrak, dan penawaran di menu ini hanya contoh. Perubahan di sini berlaku sementara di browser dan belum tersimpan ke Supabase, Google Sheet, atau Drive.</span></div>
-        <div class="card"><div class="section-head"><div><p class="eyebrow">RELASI KLIEN</p><h2>Klien aktif & penawaran ulang</h2><p class="hint">Pantau masa kontrak, kebutuhan layanan tambahan, penawaran kembali, dan jadwal follow up dalam satu tempat.</p></div></div>
+        <div class="preview-note"><strong>PRATINJAU · DATA CONTOH</strong><span>Perusahaan dan PIC RMP di bawah hanya contoh. Data ini belum tersambung ke daftar klien aktif perusahaan dan tidak tersimpan ke Supabase, Sheet, atau Drive.</span></div>
+        <div class="card"><div class="section-head"><div><p class="eyebrow">RELASI KLIEN</p><h2>Database Client Active</h2><p class="hint">Pantau klien aktif per PIC RMP, masa kontrak, layanan berjalan, dan peluang penawaran ulang.</p></div></div>
           <div id="client-summary" class="progress-summary" aria-label="Ringkasan klien"></div>
-          <div class="client-filters"><label>Cari klien<input id="client-search" type="search" placeholder="Nama perusahaan atau layanan"></label><label>Status penawaran<select id="client-filter"><option value="all">Semua status</option><option value="due">Perlu follow up</option><option value="review">Perlu review</option><option value="proposal">Menyiapkan penawaran</option><option value="sent">Penawaran terkirim</option><option value="follow_up">Negosiasi / follow up</option><option value="won">Disetujui</option><option value="lost">Tidak lanjut</option></select></label></div>
+          <div class="client-filters"><label>Cari klien<input id="client-search" type="search" placeholder="Nama perusahaan atau layanan"></label><label>PIC RMP<select id="client-pic-filter"><option value="all">Semua PIC</option></select></label><label>Status penawaran<select id="client-filter"><option value="all">Semua status</option><option value="due">Perlu follow up</option><option value="review">Perlu review</option><option value="proposal">Menyiapkan penawaran</option><option value="sent">Penawaran terkirim</option><option value="follow_up">Negosiasi / follow up</option><option value="won">Disetujui</option><option value="lost">Tidak lanjut</option></select></label></div>
         </div>
         <div class="client-layout"><div class="card"><h2>Perusahaan yang bekerja sama</h2><div id="client-list" class="list" aria-live="polite"></div></div>
-          <div class="card"><h2>Detail & tindak lanjut</h2><div id="client-detail"><p class="hint">Pilih klien untuk melihat detail dan riwayat penawaran.</p></div></div></div>
+          <div class="card"><h2>Detail klien & PIC</h2><div id="client-detail"><p class="hint">Pilih klien untuk melihat detailnya.</p></div></div></div>
+      </section>
+      <section id="pic-visits" class="panel" hidden>
+        <div class="preview-note"><strong>PRATINJAU PIC VISIT</strong><span>Form mengikuti alur dua tahap Sales Visit untuk klien aktif. Simulasi hanya tersimpan sementara di browser; foto tidak diunggah dan data hilang saat halaman dimuat ulang.</span></div>
+        <div class="visit-layout">
+          <div class="card"><div class="section-head"><div><p class="eyebrow">KUNJUNGAN PIC RMP</p><h2 id="pic-visit-title">Catat PIC Visit</h2></div><button id="new-pic-visit" type="button" hidden>Entri baru</button></div><p class="hint">Pilih klien aktif, catat pertemuan di lokasi, lalu lengkapi respons dan peluang penawaran ulang.</p>
+            <form id="pic-visit-form" novalidate>
+              <div class="visit-step-nav" role="group" aria-label="Tahap PIC Visit"><button id="pic-visit-step-button-1" class="active" type="button" data-pic-visit-step="1" aria-controls="pic-visit-step-1" aria-expanded="true">1. CATAT DI LOKASI</button><button id="pic-visit-step-button-2" type="button" data-pic-visit-step="2" aria-controls="pic-visit-step-2" aria-expanded="false">2. LENGKAPI DETAIL</button></div>
+              <section id="pic-visit-step-1" class="visit-step" data-pic-visit-panel="1"><fieldset><legend class="sr-only">Catat PIC Visit di lokasi</legend>
+                <p id="pic-visit-timestamp" class="visit-timestamp">Waktu simulasi dicatat saat tombol Simpan ditekan.</p>
+                <label>Klien aktif <span class="required">*</span><select id="pic-visit-client" required><option value="">Pilih klien aktif</option></select></label><p id="pic-visit-owner" class="hint"></p>
+                <label>Kategori <span class="required">*</span><select id="pic-visit-category" required><option value="">Pilih kategori</option><option>Swasta</option><option>Pemerintah</option><option>Hotel</option><option>Pabrik</option><option>Rumah Sakit</option><option>Pendidikan</option><option>Lainnya</option></select></label>
+                <div class="form-grid"><label>Nama PIC klien yang ditemui <span class="required">*</span><input id="pic-visit-contact" maxlength="150" required></label><label>Jabatan PIC klien <span class="required">*</span><input id="pic-visit-role" maxlength="100" required></label></div>
+                <label>Foto kunjungan <small>Opsional; file tidak diunggah dalam pratinjau</small><input id="pic-visit-photo" type="file" accept="image/*" capture="environment"></label><p id="pic-visit-photo-note" class="hint"></p>
+                <label>Koordinat kunjungan <small>Opsional; dapat diisi manual</small><input id="pic-visit-coordinates" maxlength="100" placeholder="Contoh: -6.9667, 110.4167"></label><button id="get-pic-visit-location" type="button">Ambil lokasi HP</button><p id="pic-visit-location-status" class="hint" role="status"></p>
+              </fieldset></section>
+              <section id="pic-visit-step-2" class="visit-step" data-pic-visit-panel="2" hidden><fieldset><legend class="sr-only">Lengkapi detail PIC Visit</legend>
+                <label>Pilih PIC Visit yang sudah dicatat <span class="required">*</span><select id="pic-visit-saved"><option value="">Pilih kunjungan</option></select></label>
+                <label>Alamat lokasi kunjungan<input id="pic-visit-address" maxlength="500"></label>
+                <div class="form-grid"><label>Telepon PIC klien<input id="pic-visit-phone" type="tel" maxlength="50"></label><label>Telepon perusahaan / instansi<input id="pic-visit-company-phone" type="tel" maxlength="50"></label></div>
+                <label>Respons klien <span class="required">*</span><select id="pic-visit-response"><option value="">Pilih respons</option><option>Baik</option><option>Perlu tindak lanjut</option><option>Menolak</option><option>Belum bertemu PIC</option><option>Lainnya</option></select></label>
+                <label>Jumlah tenaga kerja saat ini<input id="pic-visit-workforce" type="number" min="0" max="100000" inputmode="numeric"></label>
+                <label>Kebutuhan / peluang layanan<input id="pic-visit-need" maxlength="500" placeholder="Contoh: penambahan personel atau perpanjangan kontrak"></label>
+                <div><strong>Bagian kerja yang dibahas</strong><div id="pic-visit-services" class="visit-services"></div><button id="add-pic-visit-service" type="button">+ Tambah bagian kerja</button></div>
+                <label>Catatan hasil kunjungan <span class="required">*</span><textarea id="pic-visit-note" rows="4" maxlength="3000" placeholder="Hasil pembicaraan dan respons klien"></textarea></label>
+                <label>Catatan penting<textarea id="pic-visit-important" rows="3" maxlength="2000" placeholder="Vendor saat ini, masa kontrak, peluang"></textarea></label>
+                <label>Status penawaran ulang<select id="pic-visit-stage"><option value="">Pilih status</option><option value="review">Perlu review</option><option value="proposal">Menyiapkan penawaran</option><option value="sent">Penawaran terkirim</option><option value="follow_up">Negosiasi / follow up</option><option value="won">Disetujui</option><option value="lost">Tidak lanjut</option></select></label>
+                <label>Jadwal follow up berikutnya<input id="pic-visit-next" type="date"></label>
+              </fieldset></section>
+              <div class="save-bar"><button class="primary" id="save-pic-visit" type="submit">Simulasikan tahap 1</button></div><p id="pic-visit-status" role="status"></p>
+            </form>
+          </div>
+          <div class="card"><h2>Riwayat PIC Visit</h2><div id="pic-visit-list" class="list"></div></div>
+        </div>
+      </section>
+      <section id="client-progress" class="panel" hidden>
+        <div class="preview-note"><strong>PRATINJAU PROGRESS PENAWARAN ULANG</strong><span>Tahap, respons, dan pengingat di bawah memakai klien contoh. Simulasi tidak menyimpan data ke Supabase, Sheet, atau Drive dan hilang saat halaman dimuat ulang.</span></div>
+        <div class="card"><div class="section-head"><div><p class="eyebrow">TINDAK LANJUT KLIEN AKTIF</p><h2>Progress & Pengingat Penawaran Ulang</h2><p class="hint">Pantau tahap penawaran ulang, respons klien, dan jadwal follow up per PIC RMP.</p></div></div><div id="client-progress-summary" class="progress-summary"></div><div id="client-progress-due" class="progress-due"></div></div>
+        <div class="columns"><div class="card"><h2>Catat perkembangan</h2><form id="client-progress-form">
+          <label>Klien aktif<select id="client-progress-client" required><option value="">Pilih klien</option></select></label><p id="client-progress-owner" class="hint"></p>
+          <label>Jenis penawaran<select id="client-progress-type" required><option>Perpanjangan kontrak</option><option>Layanan tambahan</option><option>Perpanjangan + perluasan</option></select></label>
+          <label>Tahap terbaru<select id="client-progress-stage" required><option value="review">Perlu review</option><option value="proposal">Menyiapkan penawaran</option><option value="sent">Penawaran terkirim</option><option value="follow_up">Negosiasi / follow up</option><option value="won">Disetujui</option><option value="lost">Tidak lanjut</option></select></label>
+          <label>Tanggal kegiatan<input id="client-progress-date" type="date" required></label>
+          <label>Respons klien dan langkah berikutnya<textarea id="client-progress-note" rows="4" maxlength="3000" required></textarea></label>
+          <label id="client-progress-next-wrap">Jadwal follow up berikutnya <span class="required">*</span><input id="client-progress-next" type="date" required></label>
+          <button class="primary" type="submit">Coba simpan (simulasi)</button><p id="client-progress-status" role="status"></p>
+        </form></div><div class="card"><h2>Riwayat penawaran ulang</h2><div id="client-progress-history" class="list"></div></div></div>
       </section>
       <section id="research" class="panel" hidden>
         <div class="columns"><div class="card"><h2>Riset target baru</h2><p class="hint">AI dan verifikasi internet dijalankan oleh workflow n8n. Proses dapat memerlukan beberapa menit.</p>

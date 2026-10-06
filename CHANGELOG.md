@@ -1,3 +1,12 @@
+VERSION: 0.6.11 (pratinjau alur klien aktif per PIC)
+DATE: 2026-10-06
+
+ADDED: Submenu Database Client Active dengan filter PIC RMP, PIC Visit dua tahap beserta kategori, kontak, tenaga kerja, catatan, dan lokasi HP opsional seperti Sales Visit, serta Progress & Pengingat penawaran ulang dengan respons dan riwayat simulasi.
+CHANGED: Menu Active Client,Repitching & Progress dipindahkan ke paling kiri; navigasi menjadi menu induk dengan tiga submenu.
+FIXED: Detail database mengikuti filter PIC dan tautan PIC Visit memilih klien yang dibuka.
+REMOVED: Tidak ada fitur atau data production yang dihapus.
+NOTES: Revisi masih lokal, belum di production. Data klien/PIC fiktif hanya di memori browser; foto tidak diunggah. Backend Supabase, Sheet, Drive, n8n, dan mode progres target tidak diubah. Aktivasi data nyata memerlukan sumber klien/PIC tervalidasi dan persetujuan production terpisah.
+
 VERSION: 0.6.10 (nama menu Marketing)
 DATE: 2026-10-06
 

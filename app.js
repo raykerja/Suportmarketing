@@ -96,6 +96,7 @@ $('#setup-form').addEventListener('submit', async (event) => {
   showWorkspace(currentUser);
 });
 
+const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress']);
 const salesTabs = new Set(['visits', 'progress']);
 const pipelineTabs = new Set(['research', 'review', 'letters', 'leads']);
 function activateTab(tab, record = true) {
@@ -106,6 +107,10 @@ function activateTab(tab, record = true) {
     history.pushState({ ...history.state, marketingTab: tab }, '');
   }
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
+  const inActiveClient = activeClientTabs.has(tab);
+  $('#active-client-tabs').hidden = !inActiveClient;
+  $('#active-client-menu').classList.toggle('active', inActiveClient);
+  $('#active-client-menu').setAttribute('aria-expanded', String(inActiveClient));
   const inSales = salesTabs.has(tab);
   $('#sales-tabs').hidden = !inSales;
   $('#sales-menu').classList.toggle('active', inSales);
@@ -119,6 +124,7 @@ function activateTab(tab, record = true) {
   if (tab === 'letters') { loadLeads(); loadOffers(); }
 }
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
+$('#active-client-menu').addEventListener('click', () => activateTab('clients'));
 $('#sales-menu').addEventListener('click', () => activateTab('visits'));
 $('#pipeline-menu').addEventListener('click', () => activateTab('research'));
 window.addEventListener('popstate', (event) => {

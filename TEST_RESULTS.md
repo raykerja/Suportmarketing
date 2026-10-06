@@ -35,6 +35,20 @@
 
 # TEST_RESULTS
 
+## Pratinjau klien aktif 0.6.11 — 2026-10-06
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Navigasi menu | Active Client paling kiri; tiga submenu membuka panelnya | Urutan dan ketiga submenu terlihat serta berpindah panel pada browser mock lokal | PASS | Tanpa login production |
+| Database per PIC | Filter menyisakan klien milik PIC dan detail yang sama | PIC Contoh B menampilkan Hotel Contoh Sentosa; detail dan tombol PIC Visit memilih hotel itu | PASS | Data fiktif di memori |
+| PIC Visit dua tahap | Tahap 1 dan detail memakai record yang sama | Entri tahap 1 dengan kategori, lalu respons, telepon perusahaan, jumlah tenaga kerja, dan catatan tahap 2 tampil sebagai satu PIC Visit berstatus “Detail terisi” | PASS | Browser mock lokal; foto tidak diunggah |
+| Lokasi HP | Koordinat terisi setelah izin lokasi perangkat | Tombol tersedia; izin lokasi dan pembacaan koordinat belum diuji | NOT TESTED | Dapat diisi manual dalam pratinjau |
+| Progress penawaran ulang | Tahap, respons, dan pengingat dapat dicoba | Status “Disetujui” menutup pengingat terlambat dan menambah riwayat simulasi | PASS | Browser mock lokal; hilang saat reload |
+| Struktur dan syntax | Selector unik, JavaScript valid, diff rapi | Pemeriksaan lokal dijalankan setelah revisi | PASS | `node --check`, parser HTML, `git diff --check` |
+| Responsif 320/390 px | Menu dan panel baru tetap dapat digunakan | Browser mock lokal pada 320 dan 390 px menampilkan menu geser horizontal dan panel satu kolom tanpa tumpang tindih pada area yang diperiksa | PASS | Chrome DevTools; seluruh panjang form belum diperiksa visual |
+| Data klien/PIC nyata | Daftar per PIC sesuai data perusahaan | Sumber klien dan PIC belum tersedia/terverifikasi | NOT TESTED | Tidak ada koneksi database aktif |
+| Production dan end-to-end | Situs live dan penyimpanan nyata terverifikasi | Revisi belum dipush/deploy; tidak ada write backend | NOT TESTED | Membutuhkan persetujuan eksplisit dan rancangan data nyata |
+
 ## Uji 0.6.7 — 2026-10-05
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
