@@ -4,7 +4,7 @@
 | --- | --- | --- | --- | --- |
 | Teks dua tombol utama | Nama tepat sesuai permintaan | `New Client,Visit & Progress` dan `Active Client,Repitching & Progress` ada pada navigasi HTML | PASS | Pemeriksaan source lokal |
 | Struktur navigasi | ID, submenu, dan panel tetap | Hanya teks dua tombol berubah; `sales-menu`, `sales-tabs`, dan `data-tab="clients"` tetap | PASS | Pemeriksaan diff |
-| Production | Label baru muncul di situs live | Menunggu build dan pemeriksaan domain setelah push | NOT TESTED | Persetujuan production diterima 2026-10-06 |
+| Production | Label baru muncul di situs live | Build `95eb039` berstatus `built`; HTTPS 200; `index.html` cocok SHA-256 dengan source; kedua label baru ditemukan persis | PASS | Pemeriksaan aset publik; tampilan setelah login belum diuji |
 
 ## Pengelompokan menu Marketing — 2026-10-06
 

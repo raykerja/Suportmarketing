@@ -3,6 +3,7 @@
 - Memastikan `main` lokal bersih dan sama dengan remote `2de53e4` sebelum revisi.
 - Mengganti dua label tombol navigasi sesuai teks pengguna. ID menu, submenu, panel, handler JavaScript, CSS, dan backend tidak diubah.
 - Menu Progres & Pengingat dan Active Client,Repitching & Progress tetap pratinjau. Publikasi production disetujui pada 2026-10-06.
+- Commit `95eb039` dipush ke `main`; GitHub Pages berstatus `built`. HTML production HTTP 200 dan SHA-256 cocok dengan source. Kedua label baru serta label Target, Penawaran & Database ditemukan persis di domain live; `config.js` production tetap `progressEnabled: false`.
 
 ## 2026-10-06 — Pengelompokan Sales Visit & Progress
 

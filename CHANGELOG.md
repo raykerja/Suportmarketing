@@ -5,7 +5,7 @@ ADDED: Tidak ada.
 CHANGED: Label menu utama Sales Visit & Progress menjadi New Client,Visit & Progress; label Klien Aktif & Penawaran Ulang menjadi Active Client,Repitching & Progress.
 FIXED: Tidak ada.
 REMOVED: Tidak ada.
-NOTES: Hanya teks navigasi dan dokumentasi. Panel, submenu, mode pratinjau, serta backend tidak diubah. Publikasi production disetujui pada 2026-10-06; hasil verifikasi live dicatat di TEST_RESULTS.md.
+NOTES: Hanya teks navigasi dan dokumentasi. Panel, submenu, mode pratinjau, serta backend tidak diubah. Rilis frontend `95eb039` terbit di production; build GitHub Pages selesai, HTTPS 200, dan HTML live cocok dengan source.
 
 VERSION: 0.6.9 (pengelompokan menu Marketing)
 DATE: 2026-10-06
