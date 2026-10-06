@@ -243,6 +243,7 @@ async function loadVisits() {
 }
 $('#refresh-visits').addEventListener('click', loadVisits);
 $('#refresh-activity-sales').addEventListener('click', loadVisits);
+$('#refresh-new-activity-sales').addEventListener('click', loadVisits);
 $('#new-visit').addEventListener('click', resetVisitForm);
 $('#visit-list').addEventListener('click', async (event) => {
   const open = event.target.closest('[data-open-visit]')?.dataset.openVisit;

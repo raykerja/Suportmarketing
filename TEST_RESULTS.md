@@ -35,6 +35,18 @@
 
 # TEST_RESULTS
 
+## Monitoring New Client 0.6.14 — 2026-10-06
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Nama dan posisi | Submenu kedua New Client bernama Monitoring & Tindaklanjut; dashboard di atas form | Label baru dan dua sumber dashboard ada sebelum `progress-form`; ID panel `progress` tetap | PASS | Pemeriksaan HTML lokal |
+| Dua dashboard sinkron | Sales Visit dan PIC Visit tampil pada panel Active dan New Client | Browser mock: satu Sales Visit tampil pada keduanya; PIC Visit tahap 1 lalu detail memperbarui kedua daftar | PASS | Data uji fiktif; tidak menulis ke Supabase |
+| Gagal memuat Sales Visit | Pesan error pada kedua panel dan data usang hilang | Browser mock mengirim error; kedua daftar Sales dikosongkan dan status gagal tampil | PASS | Jalur event frontend |
+| Responsif HP | Dashboard New Client tidak bertumpuk | Chrome DevTools lokal pada 320/390 px: dua sumber tersusun satu kolom, tombol dan kartu terbaca | PASS | Area dashboard yang diperiksa |
+| Syntax dan struktur | JavaScript valid, ID HTML unik, mode progres tetap pratinjau | `node --check`, parser HTML, `git diff --check` lulus; `progressEnabled=false` | PASS | Lokal |
+| Production setelah login | Data Sales nyata tampil sesuai akses akun | Belum diuji | NOT TESTED | Uji browser memakai data fiktif |
+
+
 ## Dashboard Monitoring & Tindaklanjut 0.6.13 — 2026-10-06
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |

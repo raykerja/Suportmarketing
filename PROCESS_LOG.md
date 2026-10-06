@@ -203,3 +203,9 @@ Atas permintaan pengguna, tiga bagian utama form kunjungan diganti menjadi tombo
 4. Uji browser lokal dengan data Sales Visit fiktif dan PIC Visit dua tahap lulus. Pada 320 px ditemukan jarak status terlalu rapat dengan tombol; CSS disesuaikan dan 320/390 px diperiksa ulang. Tab Chrome uji ditutup, server serta fixture sementara dibersihkan.
 5. Setelah persetujuan pengguna “terapkan”, commit `d29ab24` dipush ke `main`. GitHub Pages build/deploy berhasil; HTML, `app.js`, `clients-preview.js`, dan `theme-ray.css` di HTTPS production cocok SHA-256 dengan source. `progressEnabled` tetap `false`.
 6. Belum ada pengujian interaksi setelah login nyata; PIC Visit dan riwayat penawaran ulang tetap simulasi.
+## 2026-10-06 — Monitoring New Client (0.6.14)
+
+1. Memeriksa panel `progress` yang masih memakai mode pratinjau dan dashboard klien aktif versi 0.6.13. Menjaga ID panel, handler navigasi, dan alur simpan Sales Visit yang sudah berjalan.
+2. Mengganti label submenu New Client menjadi Monitoring & Tindaklanjut. Menempatkan dashboard Sales Visit dan PIC Visit sebelum ringkasan serta form perkembangan; daftar Sales ditampilkan lebih dahulu pada panel New Client.
+3. Memakai satu fungsi render untuk kedua dashboard. Pembaruan Sales Visit dari `loadVisits()` dan PIC Visit simulasi muncul di kedua panel; tombol Muat ulang masing-masing memanggil pemuatan yang sama.
+4. Browser mock lokal lulus untuk Sales Visit, PIC Visit dua tahap, dan kegagalan pemuatan. Tata letak 320/390 px diperiksa lewat Chrome DevTools; tab uji, server, dan fixture sementara sudah dibersihkan. Login production belum diuji.

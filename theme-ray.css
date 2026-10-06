@@ -61,7 +61,7 @@ th { color: var(--ray-muted); background: #f7faff; }
 .activity-dashboard-grid > div { min-width: 0; padding: 14px; border: 1px solid var(--ray-line); border-radius: 12px; }
 .activity-dashboard-grid h3 { margin: 0; font-size: 17px; }
 .activity-dashboard-grid h3 small { font-size: 12px; font-weight: 500; color: var(--ray-muted); }
-#activity-sales-status { margin: 10px 0 0; }
+#activity-sales-status, #new-activity-sales-status { margin: 10px 0 0; }
 .activity-dashboard-list { max-height: 480px; overflow-y: auto; align-content: start; margin-top: 10px; padding-right: 4px; }
 .activity-dashboard-list .item { overflow-wrap: anywhere; }
 .activity-dashboard-list .item p { white-space: pre-wrap; margin: 8px 0 0; }

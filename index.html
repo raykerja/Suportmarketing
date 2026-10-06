@@ -21,10 +21,10 @@
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
   <link rel="stylesheet" href="style.css?v=20261005-8">
-  <link rel="stylesheet" href="theme-ray.css?v=20261006-3">
+  <link rel="stylesheet" href="theme-ray.css?v=20261006-4">
   <script src="config.js"></script>
-  <script defer src="clients-preview.js?v=20261006-2"></script>
-  <script type="module" src="app.js?v=20261006-4"></script>
+  <script defer src="clients-preview.js?v=20261006-3"></script>
+  <script type="module" src="app.js?v=20261006-5"></script>
 </head>
 <body>
   <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="open-settings" type="button" data-tab="settings" hidden>Pengaturan</button></header>
@@ -37,7 +37,7 @@
       <div class="hero"><div><p class="eyebrow">WORKSPACE MARKETING</p><h1>Aktivitas Marketing &amp; Klien</h1><p>Kelola target pasar, kunjungan, penawaran, follow-up, dan klien aktif dalam satu tempat</p></div></div>
       <nav class="tabs" aria-label="Menu Marketing"><button id="active-client-menu" type="button" aria-controls="active-client-tabs" aria-expanded="false">Active Client,Repitching & Progress</button><button id="sales-menu" class="active" type="button" aria-controls="sales-tabs" aria-expanded="true">New Client,Visit & Progress</button><button id="pipeline-menu" type="button" aria-controls="pipeline-tabs" aria-expanded="false">Target, Penawaran & Database</button></nav>
       <nav id="active-client-tabs" class="tabs sub-tabs" aria-label="Tahapan klien aktif dan penawaran ulang" hidden><button data-tab="clients">1. Database Client Active</button><button data-tab="pic-visits">2. PIC Visit</button><button data-tab="client-progress">3. Monitoring &amp; Tindaklanjut</button></nav>
-      <nav id="sales-tabs" class="tabs sub-tabs" aria-label="Tahapan Sales Visit dan Progres"><button data-tab="visits" class="active">1. Sales Visit</button><button data-tab="progress">2. Progres & Pengingat</button></nav>
+      <nav id="sales-tabs" class="tabs sub-tabs" aria-label="Tahapan Sales Visit dan Progres"><button data-tab="visits" class="active">1. Sales Visit</button><button data-tab="progress">2. Monitoring &amp; Tindaklanjut</button></nav>
       <nav id="pipeline-tabs" class="tabs sub-tabs" aria-label="Tahapan target, penawaran, dan database" hidden><button data-tab="research">1. Cari Target</button><button data-tab="review">2. Review Hasil</button><button data-tab="letters">3. Buat Penawaran</button><button data-tab="leads">4. Database Target</button></nav>
       <section id="visits" class="panel">
         <button id="visit-reminder-banner" class="reminder-banner" type="button" hidden></button>
@@ -72,8 +72,13 @@
         </div>
       </section>
       <section id="progress" class="panel" hidden>
-        <div id="progress-preview-note" class="preview-note" hidden><strong>Pratinjau tampilan</strong><span>Data target dan riwayat di bawah adalah contoh. Tombol simulasi hanya mengubah tampilan browser ini; belum menyimpan ke Supabase, Sheet, atau Drive.</span></div>
-        <div class="card"><div class="section-head"><div><p class="eyebrow">TINDAK LANJUT</p><h2>Progres target</h2><p class="hint">Buka target dari daftar jatuh tempo atau pilih kunjungan untuk mencatat langkah berikutnya.</p></div><button id="refresh-progress" type="button">Muat ulang</button></div>
+        <div id="progress-preview-note" class="preview-note" hidden><strong>Pratinjau tampilan</strong><span>PIC Visit dan riwayat tindak lanjut di bawah masih contoh sementara di browser. Sales Visit pada dashboard dibaca dari laporan tersimpan yang tersedia untuk akun Anda; dashboard tidak mengubah data tersebut.</span></div>
+        <div class="card activity-dashboard"><div class="section-head"><div><p class="eyebrow">AKTIVITAS KUNJUNGAN</p><h2>Dashboard Sales Visit &amp; PIC Visit</h2><p class="hint">Pantau input kunjungan sebelum mencatat tindak lanjut. Sales Visit berasal dari laporan tersimpan; PIC Visit masih simulasi.</p></div></div>
+          <div id="new-activity-dashboard-summary" class="progress-summary" aria-label="Ringkasan input kunjungan New Client"></div>
+          <div class="activity-dashboard-grid"><div><div class="section-head"><h3>Sales Visit <small>(tersimpan)</small></h3><div class="actions"><button id="refresh-new-activity-sales" type="button">Muat ulang</button><button type="button" data-tab="visits">Buka Sales Visit</button></div></div><p id="new-activity-sales-status" class="hint" role="status">Memuat Sales Visit…</p><div id="new-activity-sales-list" class="list activity-dashboard-list" aria-live="polite"></div></div>
+            <div><div class="section-head"><h3>PIC Visit <small>(simulasi)</small></h3><button type="button" data-tab="pic-visits">Buka PIC Visit</button></div><div id="new-activity-pic-list" class="list activity-dashboard-list" aria-live="polite"></div></div></div>
+        </div>
+        <div class="card"><div class="section-head"><div><p class="eyebrow">TINDAK LANJUT</p><h2>Monitoring &amp; Tindaklanjut Target</h2><p class="hint">Buka target dari daftar jatuh tempo atau pilih kunjungan untuk mencatat langkah berikutnya.</p></div><button id="refresh-progress" type="button">Muat ulang</button></div>
           <div id="progress-summary" class="progress-summary"></div><div id="progress-due" class="progress-due"></div>
         </div>
         <div class="columns"><div class="card"><h2>Catat perkembangan</h2><form id="progress-form">

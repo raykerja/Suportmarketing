@@ -106,20 +106,27 @@
       <p>${escapeHtml(row.note || 'Catatan hasil kunjungan belum diisi.')}</p></div>`;
   }
   function renderActivityDashboard() {
-    $('#activity-dashboard-summary').innerHTML = `
+    const picSummary = `
       <div><strong>${picVisits.length}</strong><small>PIC Visit simulasi</small></div>
-      <div><strong>${picVisits.filter((row) => row.visitStage === 'initial').length}</strong><small>PIC Visit perlu detail</small></div>
+      <div><strong>${picVisits.filter((row) => row.visitStage === 'initial').length}</strong><small>PIC Visit perlu detail</small></div>`;
+    const salesSummary = `
       <div><strong>${salesVisits.length}</strong><small>Sales Visit terbaca</small></div>
       <div><strong>${salesVisits.filter((row) => row.visitStage === 'initial').length}</strong><small>Sales Visit perlu detail</small></div>`;
-    $('#activity-pic-list').innerHTML = picVisits.length ? picVisits.map((row) => {
+    const picList = picVisits.length ? picVisits.map((row) => {
       const client = clients.find((item) => item.id === row.clientId);
       return renderActivityItem({ ...row, name: client?.name, owner: client?.owner });
     }).join('') : '<p class="hint">Belum ada PIC Visit simulasi yang diinput pada sesi ini.</p>';
-    $('#activity-sales-status').textContent = salesVisitError || (salesVisitsLoaded
+    const salesStatus = salesVisitError || (salesVisitsLoaded
       ? `Menampilkan ${salesVisits.length} laporan terbaru yang dapat diakses akun ini (maksimal 100).`
       : 'Memuat Sales Visit…');
-    $('#activity-sales-list').innerHTML = salesVisits.length ? salesVisits.map(renderActivityItem).join('')
+    const salesList = salesVisits.length ? salesVisits.map(renderActivityItem).join('')
       : `<p class="hint">${salesVisitError ? 'Data Sales Visit belum dapat ditampilkan.' : salesVisitsLoaded ? 'Belum ada Sales Visit yang dapat ditampilkan.' : 'Menunggu data Sales Visit.'}</p>`;
+    for (const prefix of ['activity-', 'new-activity-']) {
+      $(`#${prefix}dashboard-summary`).innerHTML = prefix === 'new-activity-' ? salesSummary + picSummary : picSummary + salesSummary;
+      $(`#${prefix}pic-list`).innerHTML = picList;
+      $(`#${prefix}sales-status`).textContent = salesStatus;
+      $(`#${prefix}sales-list`).innerHTML = salesList;
+    }
   }
   function syncProgressStage() {
     const closed = !isOpen({ stage: $('#client-progress-stage').value });
