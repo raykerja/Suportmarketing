@@ -5,7 +5,7 @@ ADDED: Dashboard di bagian atas submenu klien aktif yang merangkum dan menampilk
 CHANGED: Submenu klien aktif `Progress & Pengingat` menjadi `Monitoring & Tindaklanjut`; judul panel dan tombol menuju panel mengikuti nama baru.
 FIXED: Ringkasan Sales Visit dikosongkan saat keluar akun dan respons muat lama diabaikan setelah akun berganti. Error pemuatan Sales Visit ditampilkan tanpa menampilkan data lama.
 REMOVED: Tidak ada data atau alur simpan lama yang dihapus.
-NOTES: Perubahan masih lokal. PIC Visit dan tindak lanjut klien aktif tetap simulasi yang hilang saat reload. Sales Visit dibaca dari pemuatan Supabase yang sudah berjalan, sesuai akses akun; dashboard hanya baca. Backend, n8n, Sheet, dan Drive tidak diubah.
+NOTES: Dirilis ke production pada commit `d29ab24`; GitHub Pages berhasil deploy dan HTML/JS/CSS live cocok SHA-256 dengan source. PIC Visit dan tindak lanjut klien aktif tetap simulasi yang hilang saat reload. Sales Visit dibaca dari pemuatan Supabase yang sudah berjalan, sesuai akses akun; dashboard hanya baca. Backend, n8n, Sheet, dan Drive tidak diubah. Alur setelah login nyata belum diuji.
 
 VERSION: 0.6.12 (judul workspace Marketing)
 DATE: 2026-10-06

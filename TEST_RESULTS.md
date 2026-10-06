@@ -45,7 +45,8 @@
 | Gagal memuat Sales Visit | Error jelas dan data lama tidak tertinggal | Browser mock mengirim status error; daftar Sales Visit lama dikosongkan dan pesan gagal muncul | PASS | Jalur event dashboard |
 | Responsif | Dashboard terbaca tanpa tumpang tindih pada HP | Chrome DevTools lokal: dua sumber menjadi satu kolom pada 320/390 px; jarak tombol dan status diperbaiki | PASS | Area dashboard yang diperiksa; bukan login production |
 | Syntax dan diff | JS valid, HTML ID unik, diff rapi | `node --check` dan `git diff --check` lulus; pemeriksaan HTML ID dilakukan | PASS | Lokal |
-| Production setelah login | Sales Visit nyata dan akses per akun sesuai RLS | Belum diuji atau dipublikasikan | NOT TESTED | Butuh persetujuan push/deploy dan sesi login sah |
+| GitHub Pages production | Aset baru terbit dan mode progres lama tidak berubah | Build/deploy `d29ab24` sukses; `index.html`, `app.js`, `clients-preview.js`, `theme-ray.css` HTTPS 200 dan cocok SHA-256 dengan source; label serta posisi dashboard benar; `progressEnabled=false` | PASS | Pemeriksaan aset publik |
+| Production setelah login | Sales Visit nyata dan akses per akun sesuai RLS | Belum diuji dengan akun login sah | NOT TESTED | Uji browser lokal memakai data fiktif; belum verifikasi data nyata di dashboard |
 
 ## Judul workspace Marketing 0.6.12 — 2026-10-06
 

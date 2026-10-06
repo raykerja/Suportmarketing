@@ -201,4 +201,5 @@ Atas permintaan pengguna, tiga bagian utama form kunjungan diganti menjadi tombo
 2. Mengganti nama submenu ketiga menjadi Monitoring & Tindaklanjut. Menambahkan dashboard sebelum ringkasan pengingat dan form riwayat, berisi empat angka pemantauan serta daftar PIC Visit simulasi dan Sales Visit tersimpan.
 3. `app.js` mengirim ringkasan field Sales Visit yang sudah dimuat ke dashboard tanpa query tambahan atau penulisan backend. Data dashboard dibersihkan saat logout; hasil permintaan akun sebelumnya diabaikan. Error muat menampilkan pesan dan mengosongkan daftar yang mungkin usang.
 4. Uji browser lokal dengan data Sales Visit fiktif dan PIC Visit dua tahap lulus. Pada 320 px ditemukan jarak status terlalu rapat dengan tombol; CSS disesuaikan dan 320/390 px diperiksa ulang. Tab Chrome uji ditutup, server serta fixture sementara dibersihkan.
-5. Belum ada pengujian login nyata atau publikasi production; PIC Visit dan riwayat penawaran ulang tetap simulasi.
+5. Setelah persetujuan pengguna “terapkan”, commit `d29ab24` dipush ke `main`. GitHub Pages build/deploy berhasil; HTML, `app.js`, `clients-preview.js`, dan `theme-ray.css` di HTTPS production cocok SHA-256 dengan source. `progressEnabled` tetap `false`.
+6. Belum ada pengujian interaksi setelah login nyata; PIC Visit dan riwayat penawaran ulang tetap simulasi.
