@@ -1,8 +1,8 @@
 # Serah terima proyek Support Marketing RMP
 
-Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform coding lain. Source resmi: [raykerja/Suportmarketing](https://github.com/raykerja/Suportmarketing), branch `main`. Situs production: `https://marketing.raykerja.cloud` (GitHub Pages). Gunakan commit `main` terbaru; jangan mulai ulang aplikasi dari nol. Rilis frontend terakhir yang diverifikasi: `04e46a2` (6 Oktober 2026).
+Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform coding lain. Baca juga [PROJECT_MEMORY.md](PROJECT_MEMORY.md) untuk status terbaru dan pekerjaan terbuka. Source resmi: [raykerja/Suportmarketing](https://github.com/raykerja/Suportmarketing), branch `main`. Situs production: `https://marketing.raykerja.cloud` (GitHub Pages). Gunakan commit `main` terbaru; jangan mulai ulang aplikasi dari nol. Rilis frontend terakhir yang diverifikasi: `04e46a2` (6 Oktober 2026).
 
-**Status 0.7.0:** Akun staf username/kata sandi/folder Drive tanpa kolom email, pencarian data Marketing, dan template Excel kosong sudah terbit. Migration batas AI serta Edge Function `marketing` versi 11 aktif. Secret `OPENAI_API_KEY` belum terpasang, sehingga ringkasan GPT-6 Luna belum aktif; pencarian sumber tetap tersedia. Akun admin lama masih memakai identitas login lama. Pencarian Drive hanya memakai tautan file yang sudah tercatat di Supabase; belum mencakup seluruh folder Drive. Login staf baru dan ringkasan AI belum diuji end-to-end.
+**Status 0.7.0 per 7 Oktober 2026:** Akun staf username/kata sandi/folder Drive tanpa kolom email, pencarian data Marketing, dan template Excel kosong sudah terbit. Migration batas AI aktif; Edge Function `marketing` versi 12 berstatus aktif dan source produksi cocok dengan repository. Secret `OPENAI_API_KEY` sudah tercatat di Supabase, tanpa nilainya di Git. Kode produksi memakai `gpt-6-luna`, `reasoning_effort: none`, dan batas jawaban 400 token. Pencarian sumber tersedia, tetapi jawaban AI dengan akun login sah belum diuji end-to-end. Akun admin lama masih memakai identitas login lama. Pencarian Drive hanya memakai tautan file yang sudah tercatat di Supabase; belum mencakup seluruh folder Drive.
 
 ## Peta sistem
 
@@ -31,7 +31,7 @@ Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform
 
 ## Titik lanjut untuk upgrade berikutnya
 
-1. Ambil `main` terbaru dan baca `AGENTS.md`, dokumen ini, `README.md`, `CHANGELOG.md`, `PROCESS_LOG.md`, serta `TEST_RESULTS.md`. Periksa `git status` sebelum mengubah file.
+1. Ambil `main` terbaru dan baca `AGENTS.md`, `PROJECT_MEMORY.md`, dokumen ini, `README.md`, `CHANGELOG.md`, `PROCESS_LOG.md`, serta `TEST_RESULTS.md`. Periksa `git status` sebelum mengubah file.
 2. Perlakukan GitHub sebagai source kode, bukan salinan database atau credential. Data kunjungan ada di Supabase `marketing_visits`; sinkronisasi berjalan lewat workflow n8n `m12aJ6zFGhfgCjqP` ke tab `DataMarketing` dan folder Drive per akun.
 3. Untuk revisi kunjungan, periksa bersama `index.html`, `app.js`, `style.css`, `supabase/functions/marketing/index.ts`, `n8n/visit-to-sheet.template.json`, dan header Sheet A–AI. Pertahankan ID laporan agar pembaruan tahap 2 tidak membuat baris Sheet baru.
 4. Pengujian yang masih terbuka: login sebagai staf sah, simpan tahap 1 dari HP dengan foto dan lokasi, pastikan satu record Supabase dan satu baris Sheet serta foto di folder Drive akun, lalu lengkapi tahap 2 dan pastikan ID/baris yang sama diperbarui. Uji lebar 320/390 px dan pesan gagal jaringan. Jangan memakai calon klien fiktif di production tanpa persetujuan.

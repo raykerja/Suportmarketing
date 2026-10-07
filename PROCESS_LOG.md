@@ -1,3 +1,12 @@
+## 2026-10-07 — Audit privasi dan kesiapan AI
+
+- Memeriksa konfigurasi Supabase produksi secara read-only: tujuh tabel Marketing sudah memakai RLS dan role anonim tidak memiliki izin baca/tulis. Uji API anonim mengembalikan HTTP 401 untuk seluruh tabel; bucket foto privat, signup publik nonaktif, dan tabel Marketing tidak masuk publikasi Realtime.
+- Menemukan izin bawaan untuk tabel baru masih luas. Tidak ada data Marketing saat ini yang terbuka lewat API anonim, tetapi izin tabel baru perlu dikunci saat database klien aktif dibuat. Grant tulis beberapa tabel lama juga lebih luas daripada operasi browser yang dipakai, sementara policy RLS saat ini menolak tulis yang tidak diizinkan. Tidak ada perubahan produksi dalam audit ini.
+- Setelah pengguna menyimpan API key, memeriksa hanya keberadaan secret `OPENAI_API_KEY`, tanpa membaca nilainya. Edge Function `marketing` versi 12 aktif; source produksi diunduh ke direktori sementara di luar repository dan cocok dengan source Git. Model `gpt-6-luna`, `reasoning_effort: none`, batas output 400 token. Permintaan tanpa login dan token salah ditolak HTTP 401.
+- Kuota AI pada hari audit masih 0. Akses computer use ke Safari ditolak; uji jawaban AI setelah login belum dapat dinyatakan lulus. Tidak ada data, secret, atau kode produksi yang diubah.
+- Membuat memori proyek dan skill khusus supaya pekerjaan berikutnya membaca status terbaru, memisahkan fitur aktif dari pratinjau, dan memverifikasi produksi sebelum revisi.
+- Validator skill lulus. Pemasangan symlink ke folder skill global Codex ditolak izin lingkungan (`Operation not permitted`); `AGENTS.md` repository menunjuk langsung ke skill yang dilacak Git.
+
 ## 2026-10-06 — Penamaan ulang dua menu utama
 
 - Memastikan `main` lokal bersih dan sama dengan remote `2de53e4` sebelum revisi.

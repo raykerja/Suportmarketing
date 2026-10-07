@@ -1,3 +1,12 @@
+VERSION: 0.7.0 (catatan operasional; tanpa perubahan kode aplikasi)
+DATE: 2026-10-07
+
+ADDED: `PROJECT_MEMORY.md` dan skill `rmp-marketing-portal` untuk kelanjutan proyek.
+CHANGED: README, handoff, dan hasil uji disesuaikan dengan status Supabase terbaru.
+FIXED: Keterangan lama yang menyebut secret AI belum terpasang.
+REMOVED: Tidak ada.
+NOTES: Secret `OPENAI_API_KEY` kini tercatat di Supabase; nilai key tidak disimpan di repository. Edge Function versi 12 aktif dan source produksi cocok dengan repository. Audit read-only menemukan tujuh tabel Marketing memakai RLS dan tidak memberi akses `anon`; bucket foto privat. Jawaban AI setelah login dan isolasi dua akun masih belum diuji. Tidak ada perubahan database, Edge Function, n8n, atau frontend dalam pembaruan dokumentasi ini.
+
 VERSION: 0.7.0 (pencarian Marketing dan akun staf tanpa kolom email)
 DATE: 2026-10-06
 

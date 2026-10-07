@@ -1,3 +1,16 @@
+## Audit Supabase dan AI — 2026-10-07
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Akses tabel Marketing tanpa login | Data tidak terbaca | Tujuh tabel `marketing_*` memakai RLS; role `anon` tanpa izin baca/tulis; API anonim untuk ketujuh tabel menjawab HTTP 401 | PASS | Pemeriksaan katalog dan API produksi, tanpa mengambil isi data |
+| Foto kunjungan | Bucket tidak publik | `marketing-visit-photos` berstatus privat; policy baca dan unggah hanya untuk anggota aktif pada folder miliknya | PASS | Pemeriksaan metadata dan policy produksi |
+| Akun baru dan Realtime | Tidak membuka akses data | Signup publik nonaktif; tidak ada tabel Marketing dalam publikasi `supabase_realtime` | PASS | Pemeriksaan pengaturan Auth dan katalog produksi |
+| Secret dan fungsi AI | Secret tersedia tanpa masuk source | `OPENAI_API_KEY` tercatat 7 Oktober 2026; fungsi `marketing` versi 12 ACTIVE, source produksi sama dengan repository; tanpa login dan token salah HTTP 401 | PASS | Tidak membaca nilai key |
+| Model AI | Luna dengan pengaturan hemat | Source produksi memakai `gpt-6-luna`, `reasoning_effort: none`, `max_completion_tokens: 400` | PASS | Pemeriksaan source produksi hasil download ke direktori sementara |
+| Jawaban AI setelah login | Sumber dan ringkasan sesuai data yang boleh diakses | Belum ada permintaan AI tercatat pada hari audit; sesi website yang sah tidak tersedia untuk uji | NOT TESTED | Keberadaan secret bukan bukti API key berhasil membuat jawaban |
+| Isolasi dua akun | Staf hanya melihat data sendiri | Policy diperiksa; uji dengan dua akun staf belum dilakukan | PARTIAL | Perlu dua akun sah atau lingkungan uji |
+| Tabel klien aktif | Data klien privat di Supabase | Belum ada tabel klien aktif; fitur masih pratinjau di browser | NOT TESTED | Rancang RLS saat fitur diaktifkan |
+
 ## Rilis pencarian Marketing, akun staf, dan template Excel 0.7.0 — 2026-10-06
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
