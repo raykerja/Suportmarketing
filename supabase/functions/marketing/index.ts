@@ -398,8 +398,11 @@ Deno.serve(async (request) => {
     }
     await admin.from('marketing_visits').update({ sheet_status: 'processing', sheet_error: null,
       updated_at: new Date().toISOString() }).eq('id', id);
+    const { data: progressEvents } = await admin.from('marketing_progress_events')
+      .select('stage,activity_date,note,next_follow_up,attachment_url,created_at').eq('visit_id', id)
+      .order('created_at', { ascending: true }).limit(500);
     try {
-      const ack = await callWorkflow(visitWebhookUrl, { visit_id: id, visit: visit.data,
+      const ack = await callWorkflow(visitWebhookUrl, { visit_id: id, visit: visit.data, progress_events: progressEvents || [],
         sheet_row: visit.sheet_row, email: membership.email, drive_folder_id: membership.drive_folder_id,
         photo_url: photoUrl, photo_drive_file_id: visit.photo_drive_file_id,
         backup_drive_file_id: visit.backup_drive_file_id });

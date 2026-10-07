@@ -253,3 +253,9 @@ NOTES: Migration, workflow n8n, secret, dan Edge Function sudah diterapkan. Pena
 - Jalur cadangan data Sales Visit ke folder Drive masing-masing staf: file `Backup_Kunjungan_<id>.json` dibuat sekali, lalu diperbarui di tempat pada sinkron berikutnya.
 - Migration `20261007_visit_backup.sql` (kolom `backup_*`), Edge Function menyimpan hasil cadangan dari callback n8n, daftar kunjungan menampilkan tautan cadangan.
 - Template `n8n/visit-to-sheet.template.json` ditambah 6 node (dibuat oleh `scripts/prepare_visit_backup_n8n.py` dari workflow aktif). Logika node kode diuji lokal; belum ada eksekusi n8n/Drive nyata.
+
+## 0.8.0 — 2026-10-07 (Tahap 2: progres aktif)
+- Migration `20261004_marketing_progress.sql` dipasang di produksi (RLS aktif, browser hanya SELECT, tulis lewat Edge Function). `progressEnabled: true`.
+- Uji isolasi di database (transaksi dibatalkan): staf hanya melihat progres miliknya, tidak bisa menulis ke kunjungan staf lain atau insert langsung, anon ditolak, admin melihat semua.
+- Edge Function versi 14 mengirim riwayat progres ke n8n; file backup Drive staf memuat `riwayat_progres`.
+- Kolom Sheet baru untuk progres (AJ–AM pada draf lama) sengaja tidak dipakai; follow up/respons memakai kolom yang sudah ada.

@@ -27,7 +27,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nif ((input.headers || {})['x-ray-secret'] !== \"SET_MARKETING_WEBHOOK_SECRET\") throw new Error('Unauthorized');\nconst b = input.body || {};\nif (!/^[0-9a-f-]{36}$/i.test(String(b.visit_id || '')) || !b.visit ||\n    (b.photo_url && !/^https:\\/\\/ewicmiekwzmxkkokmpzf\\.supabase\\.co\\//.test(String(b.photo_url))) ||\n    (b.drive_folder_id && !/^[A-Za-z0-9_-]{10,200}$/.test(String(b.drive_folder_id))))\n  throw new Error('Data laporan tidak valid');\nreturn [{json:{visit_id:String(b.visit_id), visit:b.visit, email:String(b.email || ''),\n  photo_url:b.photo_url || null, photo_drive_file_id:b.photo_drive_file_id || null,\n  drive_folder_id:b.drive_folder_id || null,\n  backup_drive_file_id:b.backup_drive_file_id || null}}];\n"
+        "jsCode": "const input = $input.first().json;\nif ((input.headers || {})['x-ray-secret'] !== \"SET_MARKETING_WEBHOOK_SECRET\") throw new Error('Unauthorized');\nconst b = input.body || {};\nif (!/^[0-9a-f-]{36}$/i.test(String(b.visit_id || '')) || !b.visit ||\n    (b.photo_url && !/^https:\\/\\/ewicmiekwzmxkkokmpzf\\.supabase\\.co\\//.test(String(b.photo_url))) ||\n    (b.drive_folder_id && !/^[A-Za-z0-9_-]{10,200}$/.test(String(b.drive_folder_id))))\n  throw new Error('Data laporan tidak valid');\nreturn [{json:{visit_id:String(b.visit_id), visit:b.visit, email:String(b.email || ''),\n  photo_url:b.photo_url || null, photo_drive_file_id:b.photo_drive_file_id || null,\n  drive_folder_id:b.drive_folder_id || null,\n  backup_drive_file_id:b.backup_drive_file_id || null,\n  progress_events:Array.isArray(b.progress_events) ? b.progress_events.slice(0, 500) : []}}];\n"
       }
     },
     {
@@ -575,7 +575,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const base = $('Validasi Kunjungan').first().json;\nconst sheet = $input.first().json;\nconst photoId = $('Susun Baris Sheet').first().json.photo_drive_file_id || null;\nconst existing = base.backup_drive_file_id && /^[A-Za-z0-9_-]{10,200}$/.test(base.backup_drive_file_id) ? base.backup_drive_file_id : null;\nif (!base.drive_folder_id && !existing) return [{json: {mode: 'skip', visit_id: base.visit_id}}];\nconst body = {backup_versi: 1, id_laporan: base.visit_id, email_marketing: base.email,\n  dicadangkan_pada: new Date().toISOString(), baris_sheet: sheet.row_number || null,\n  foto_drive_url: photoId ? `https://drive.google.com/file/d/${photoId}/view` : null, data_kunjungan: base.visit};\nconst binary = await this.helpers.prepareBinaryData(Buffer.from(JSON.stringify(body, null, 2), 'utf8'),\n  `Backup_Kunjungan_${base.visit_id}.json`, 'application/json');\nreturn [{json: {mode: existing ? 'update' : 'create', visit_id: base.visit_id, file_id: existing}, binary: {data: binary}}];\n"
+        "jsCode": "const base = $('Validasi Kunjungan').first().json;\nconst sheet = $input.first().json;\nconst photoId = $('Susun Baris Sheet').first().json.photo_drive_file_id || null;\nconst existing = base.backup_drive_file_id && /^[A-Za-z0-9_-]{10,200}$/.test(base.backup_drive_file_id) ? base.backup_drive_file_id : null;\nif (!base.drive_folder_id && !existing) return [{json: {mode: 'skip', visit_id: base.visit_id}}];\nconst body = {backup_versi: 1, id_laporan: base.visit_id, email_marketing: base.email,\n  dicadangkan_pada: new Date().toISOString(), baris_sheet: sheet.row_number || null,\n  foto_drive_url: photoId ? `https://drive.google.com/file/d/${photoId}/view` : null, data_kunjungan: base.visit, riwayat_progres: base.progress_events || []};\nconst binary = await this.helpers.prepareBinaryData(Buffer.from(JSON.stringify(body, null, 2), 'utf8'),\n  `Backup_Kunjungan_${base.visit_id}.json`, 'application/json');\nreturn [{json: {mode: existing ? 'update' : 'create', visit_id: base.visit_id, file_id: existing}, binary: {data: binary}}];\n"
       }
     },
     {
@@ -649,6 +649,7 @@
       "name": "Perbarui Backup di Drive",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
+      "onError": "continueRegularOutput",
       "position": [
         2420,
         0
@@ -664,14 +665,14 @@
         "options": {
           "timeout": 30000
         }
-      },
-      "onError": "continueRegularOutput"
+      }
     },
     {
       "id": "e12003fb-a3fc-4a18-b6fa-7a6eb42996ec",
       "name": "Unggah Backup ke Drive Akun",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
+      "onError": "continueRegularOutput",
       "position": [
         2420,
         200
@@ -692,8 +693,7 @@
           "mode": "id"
         },
         "options": {}
-      },
-      "onError": "continueRegularOutput"
+      }
     },
     {
       "id": "f23f1d7c-49dc-445b-ad06-1affb0ab70ca",
