@@ -27,7 +27,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const input = $input.first().json;\nif ((input.headers || {})['x-ray-secret'] !== \"SET_MARKETING_WEBHOOK_SECRET\") throw new Error('Unauthorized');\nconst b = input.body || {};\nif (!/^[0-9a-f-]{36}$/i.test(String(b.visit_id || '')) || !b.visit ||\n    (b.photo_url && !/^https:\\/\\/ewicmiekwzmxkkokmpzf\\.supabase\\.co\\//.test(String(b.photo_url))) ||\n    (b.drive_folder_id && !/^[A-Za-z0-9_-]{10,200}$/.test(String(b.drive_folder_id))))\n  throw new Error('Data laporan tidak valid');\nreturn [{json:{visit_id:String(b.visit_id), visit:b.visit, email:String(b.email || ''),\n  photo_url:b.photo_url || null, photo_drive_file_id:b.photo_drive_file_id || null,\n  drive_folder_id:b.drive_folder_id || null,\n  backup_drive_file_id:b.backup_drive_file_id || null,\n  progress_events:Array.isArray(b.progress_events) ? b.progress_events.slice(0, 500) : []}}];\n"
+        "jsCode": "const input = $input.first().json;\nif ((input.headers || {})['x-ray-secret'] !== \"SET_MARKETING_WEBHOOK_SECRET\") throw new Error('Unauthorized');\nconst b = input.body || {};\nif (!/^[0-9a-f-]{36}$/i.test(String(b.visit_id || '')) || !b.visit ||\n    (b.photo_url && !/^https:\\/\\/ewicmiekwzmxkkokmpzf\\.supabase\\.co\\//.test(String(b.photo_url))) ||\n    (b.drive_folder_id && !/^[A-Za-z0-9_-]{10,200}$/.test(String(b.drive_folder_id))))\n  throw new Error('Data laporan tidak valid');\nreturn [{json:{visit_id:String(b.visit_id), visit:b.visit, email:String(b.email || ''),\n  photo_url:b.photo_url || null, photo_drive_file_id:b.photo_drive_file_id || null,\n  drive_folder_id:b.drive_folder_id || null}}];\n"
       }
     },
     {
@@ -140,7 +140,7 @@
         0
       ],
       "parameters": {
-        "jsCode": "const base = $('Validasi Kunjungan').first().json;\nconst photoId = $json.id || base.photo_drive_file_id || null;\nconst photoUrl = photoId ? `https://drive.google.com/file/d/${photoId}/view` : '';\nconst v = base.visit;\nconst safe = (x) => { const s = String(x ?? '').trim(); return /^[=+@]/.test(s) ? \"'\" + s : s; };\nconst date = (x) => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(x || '')) ? String(x).split('-').reverse().join('/') : '';\nconst fields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_input',\n  'tanggal_janji_kunjungan','jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2',\n  'nomor_kontak_pic','foto_kunjungan','tanggal_realisasi_kunjungan','respon','tanggal_follow_up',\n  'catatan','titik_lokasi_laporan','koordinat_target','tanggal_follow_up_aktual',\n  'catatan_hasil_follow_up','nama_marketing','plotting_area','informasi_penting',\n  'tenaga_kerja_saat_ini','bagian_kerja_outsourcing','jumlah_calon_tenaga_kerja',\n  'petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing'];\nconst dates = new Set(['tanggal_input','tanggal_janji_kunjungan','tanggal_realisasi_kunjungan',\n  'tanggal_follow_up','tanggal_follow_up_aktual','tanggal_menghubungi']);\nconst sheet = {};\nfor (const key of fields) sheet[key] = key === 'foto_kunjungan' ? photoUrl : dates.has(key) ? date(v[key]) : safe(v[key]);\nsheet.visit_stage = safe(v.visit_stage === 'initial' ? 'Tahap 1' : 'Lengkap');\nsheet.waktu_realisasi_kunjungan = v.waktu_realisasi_kunjungan && !isNaN(Date.parse(v.waktu_realisasi_kunjungan))\n  ? new Intl.DateTimeFormat('id-ID', {timeZone:'Asia/Jakarta', day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(v.waktu_realisasi_kunjungan)) : '';\nsheet.status_marketing = safe(v.status_marketing);\nreturn [{json:{visit_id:base.visit_id, photo_drive_file_id:photoId,\n  photo_expected:!!base.photo_url, sheet, email:base.email}}];\n"
+        "jsCode": "const base = $('Validasi Kunjungan').first().json;\nconst photoId = $json.id || base.photo_drive_file_id || null;\nconst photoUrl = photoId ? `https://drive.google.com/file/d/${photoId}/view` : '';\nconst v = base.visit;\nconst safe = (x) => { const s = String(x ?? '').trim(); return /^[=+@]/.test(s) ? \"'\" + s : s; };\nconst date = (x) => /^\\d{4}-\\d{2}-\\d{2}$/.test(String(x || '')) ? String(x).split('-').reverse().join('/') : '';\nconst fields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_input',\n  'tanggal_janji_kunjungan','jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2',\n  'nomor_kontak_pic','foto_kunjungan','tanggal_realisasi_kunjungan','respon','tanggal_follow_up',\n  'catatan','titik_lokasi_laporan','koordinat_target','tanggal_follow_up_aktual',\n  'catatan_hasil_follow_up','nama_marketing','plotting_area','informasi_penting',\n  'tenaga_kerja_saat_ini','bagian_kerja_outsourcing','jumlah_calon_tenaga_kerja',\n  'petugas_telemarketing','status_telemarketing','tanggal_menghubungi','catatan_telemarketing'];\nconst dates = new Set(['tanggal_input','tanggal_janji_kunjungan','tanggal_realisasi_kunjungan',\n  'tanggal_follow_up','tanggal_follow_up_aktual','tanggal_menghubungi']);\nconst sheet = {};\nconst waktu = v.waktu_realisasi_kunjungan && !isNaN(Date.parse(v.waktu_realisasi_kunjungan))\n  ? new Intl.DateTimeFormat('id-ID', {timeZone:'Asia/Jakarta', day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',hour12:false}).format(new Date(v.waktu_realisasi_kunjungan)) : '';\n\nfor (const key of fields) sheet[key] = key === 'foto_kunjungan' ? photoUrl : dates.has(key) ? date(v[key]) : safe(v[key]);\nsheet.visit_stage = safe(v.visit_stage === 'initial' ? 'Tahap 1' : 'Lengkap');\nsheet.waktu_realisasi_kunjungan = waktu;\nsheet.status_marketing = safe(v.status_marketing);\nreturn [{json:{visit_id:base.visit_id, photo_drive_file_id:photoId,\n  photo_expected:!!base.photo_url, sheet, email:base.email}}];\n"
       }
     },
     {
@@ -538,7 +538,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        2860,
+        1760,
         0
       ],
       "parameters": {
@@ -559,153 +559,10 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {kind:'visit', visit_id:$('Validasi Kunjungan').first().json.visit_id, ok:$('Sinkron DataMarketing').first().json['ID LAPORAN']===$('Validasi Kunjungan').first().json.visit_id && (!$('Susun Baris Sheet').first().json.photo_expected || !!$('Susun Baris Sheet').first().json.photo_drive_file_id), sheet_row:$('Sinkron DataMarketing').first().json.row_number || null, photo_drive_file_id:$('Susun Baris Sheet').first().json.photo_drive_file_id, error:$('Sinkron DataMarketing').first().json.error?.message || ($('Sinkron DataMarketing').first().json['ID LAPORAN'] ? 'Foto gagal disimpan di Drive' : 'Sheet tidak mengembalikan ID laporan'), backup_status:$json.backup_status, backup_drive_file_id:$json.backup_drive_file_id, backup_error:$json.backup_error} }}",
+        "jsonBody": "={{ {kind:'visit', visit_id:$('Validasi Kunjungan').first().json.visit_id, ok:$json['ID LAPORAN']===$('Validasi Kunjungan').first().json.visit_id && (!$('Susun Baris Sheet').first().json.photo_expected || !!$('Susun Baris Sheet').first().json.photo_drive_file_id), sheet_row:$json.row_number || null, photo_drive_file_id:$('Susun Baris Sheet').first().json.photo_drive_file_id, error:$json.error?.message || ($json['ID LAPORAN'] ? 'Foto gagal disimpan di Drive' : 'Sheet tidak mengembalikan ID laporan')} }}",
         "options": {
           "timeout": 15000
         }
-      }
-    },
-    {
-      "id": "86d46109-5e06-48f5-9f69-76df8ad13934",
-      "name": "Susun Backup JSON",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        1760,
-        0
-      ],
-      "parameters": {
-        "jsCode": "const base = $('Validasi Kunjungan').first().json;\nconst sheet = $input.first().json;\nconst photoId = $('Susun Baris Sheet').first().json.photo_drive_file_id || null;\nconst existing = base.backup_drive_file_id && /^[A-Za-z0-9_-]{10,200}$/.test(base.backup_drive_file_id) ? base.backup_drive_file_id : null;\nif (!base.drive_folder_id && !existing) return [{json: {mode: 'skip', visit_id: base.visit_id}}];\nconst body = {backup_versi: 1, id_laporan: base.visit_id, email_marketing: base.email,\n  dicadangkan_pada: new Date().toISOString(), baris_sheet: sheet.row_number || null,\n  foto_drive_url: photoId ? `https://drive.google.com/file/d/${photoId}/view` : null, data_kunjungan: base.visit, riwayat_progres: base.progress_events || []};\nconst binary = await this.helpers.prepareBinaryData(Buffer.from(JSON.stringify(body, null, 2), 'utf8'),\n  `Backup_Kunjungan_${base.visit_id}.json`, 'application/json');\nreturn [{json: {mode: existing ? 'update' : 'create', visit_id: base.visit_id, file_id: existing}, binary: {data: binary}}];\n"
-      }
-    },
-    {
-      "id": "d2d11fff-1d52-4f0d-8f35-50b7808c0c32",
-      "name": "Lewati Backup?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        1980,
-        0
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "09735508-737b-4ae8-af8c-c38a1b8176e2",
-              "leftValue": "={{ $json.mode }}",
-              "rightValue": "skip",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "ea638d9f-b957-4298-a57f-c6fa0f54b5a0",
-      "name": "Backup Sudah Ada?",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        2200,
-        100
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "50d28b39-9bb6-4b69-bee7-cee177d465e2",
-              "leftValue": "={{ $json.mode }}",
-              "rightValue": "update",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "12dccb48-adb2-47a0-ad61-909c0304049e",
-      "name": "Perbarui Backup di Drive",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "onError": "continueRegularOutput",
-      "position": [
-        2420,
-        0
-      ],
-      "parameters": {
-        "method": "PATCH",
-        "url": "={{ 'https://www.googleapis.com/upload/drive/v3/files/' + $json.file_id + '?uploadType=media&supportsAllDrives=true&fields=id' }}",
-        "authentication": "predefinedCredentialType",
-        "nodeCredentialType": "googleDriveOAuth2Api",
-        "sendBody": true,
-        "contentType": "binaryData",
-        "inputDataFieldName": "data",
-        "options": {
-          "timeout": 30000
-        }
-      }
-    },
-    {
-      "id": "e12003fb-a3fc-4a18-b6fa-7a6eb42996ec",
-      "name": "Unggah Backup ke Drive Akun",
-      "type": "n8n-nodes-base.googleDrive",
-      "typeVersion": 3,
-      "onError": "continueRegularOutput",
-      "position": [
-        2420,
-        200
-      ],
-      "parameters": {
-        "operation": "upload",
-        "inputDataFieldName": "data",
-        "name": "={{ 'Backup_Kunjungan_' + $json.visit_id + '.json' }}",
-        "driveId": {
-          "__rl": true,
-          "value": "My Drive",
-          "mode": "list",
-          "cachedResultName": "My Drive"
-        },
-        "folderId": {
-          "__rl": true,
-          "value": "={{ $('Validasi Kunjungan').first().json.drive_folder_id }}",
-          "mode": "id"
-        },
-        "options": {}
-      }
-    },
-    {
-      "id": "f23f1d7c-49dc-445b-ad06-1affb0ab70ca",
-      "name": "Hasil Backup",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2640,
-        100
-      ],
-      "parameters": {
-        "jsCode": "const plan = $('Susun Backup JSON').first().json;\nif (plan.mode === 'skip') return [{json: {backup_status: 'skipped', backup_drive_file_id: null, backup_error: null}}];\nconst fileId = $json.id || null;\nreturn [{json: fileId ? {backup_status: 'done', backup_drive_file_id: fileId, backup_error: null}\n  : {backup_status: 'error', backup_drive_file_id: plan.file_id || null,\n     backup_error: String($json.error?.message || 'Cadangan ke Drive gagal').slice(0, 250)}}];\n"
       }
     }
   ],
@@ -795,86 +652,6 @@
       ]
     },
     "Sinkron DataMarketing": {
-      "main": [
-        [
-          {
-            "node": "Susun Backup JSON",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Susun Backup JSON": {
-      "main": [
-        [
-          {
-            "node": "Lewati Backup?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Lewati Backup?": {
-      "main": [
-        [
-          {
-            "node": "Hasil Backup",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Backup Sudah Ada?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Backup Sudah Ada?": {
-      "main": [
-        [
-          {
-            "node": "Perbarui Backup di Drive",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Unggah Backup ke Drive Akun",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Perbarui Backup di Drive": {
-      "main": [
-        [
-          {
-            "node": "Hasil Backup",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Unggah Backup ke Drive Akun": {
-      "main": [
-        [
-          {
-            "node": "Hasil Backup",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Hasil Backup": {
       "main": [
         [
           {

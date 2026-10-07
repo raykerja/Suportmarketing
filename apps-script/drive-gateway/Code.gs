@@ -45,7 +45,9 @@ function writeTab(ss, title, headers, rows) {
   const sh = ss.getSheetByName(title) || ss.insertSheet(title);
   sh.clear();
   const matrix = [headers.map((h) => h[1])].concat(rows.map((r) => headers.map((h) => safe(r[h[0]]))));
-  sh.getRange(1, 1, matrix.length, headers.length).setValues(matrix);
+  const range = sh.getRange(1, 1, matrix.length, headers.length);
+  range.setNumberFormat('@'); // teks polos: nomor telepon tidak kehilangan angka 0 di depan
+  range.setValues(matrix);
   sh.getRange(1, 1, 1, headers.length).setFontWeight('bold').setBackground('#e8f0fe');
   sh.setFrozenRows(1);
   return sh;
