@@ -248,3 +248,8 @@ CHANGED: Workflow riset memakai SiRUP langsung dengan parameter dan header lengk
 FIXED: Perpindahan dari Review Hasil ke penawaran menunggu opsi target selesai dimuat.
 REMOVED: Tidak ada fitur production yang dihapus.
 NOTES: Migration, workflow n8n, secret, dan Edge Function sudah diterapkan. Penawaran web lulus uji webhook sampai file Drive. Pembacaan SiRUP di server n8n masih HTTP 403 sehingga riset anggaran pemerintah belum lulus. GitHub Pages telah diperbarui dan diverifikasi. Tombol setelah login belum diuji.
+
+## 0.7.1 — 2026-10-07 (source saja, belum diterapkan ke produksi)
+- Jalur cadangan data Sales Visit ke folder Drive masing-masing staf: file `Backup_Kunjungan_<id>.json` dibuat sekali, lalu diperbarui di tempat pada sinkron berikutnya.
+- Migration `20261007_visit_backup.sql` (kolom `backup_*`), Edge Function menyimpan hasil cadangan dari callback n8n, daftar kunjungan menampilkan tautan cadangan.
+- Template `n8n/visit-to-sheet.template.json` ditambah 6 node (dibuat oleh `scripts/prepare_visit_backup_n8n.py` dari workflow aktif). Logika node kode diuji lokal; belum ada eksekusi n8n/Drive nyata.

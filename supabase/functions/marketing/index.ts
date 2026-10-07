@@ -139,11 +139,15 @@ Deno.serve(async (request) => {
       const synced = data.ok === true;
       const sheetRow = data.sheet_row == null ? null : Number(data.sheet_row);
       const photoId = /^[A-Za-z0-9_-]{10,200}$/.test(String(data.photo_drive_file_id || '')) ? String(data.photo_drive_file_id) : null;
+      const backupId = /^[A-Za-z0-9_-]{10,200}$/.test(String(data.backup_drive_file_id || '')) ? String(data.backup_drive_file_id) : null;
+      const backupStatus = ['done', 'skipped', 'error'].includes(String(data.backup_status)) ? String(data.backup_status) : null;
       const { error } = await admin.from('marketing_visits').update({ sheet_status: synced ? 'synced' : 'error',
         sheet_row: synced && sheetRow !== null && Number.isInteger(sheetRow) && sheetRow >= 2 ? sheetRow : null,
         sheet_error: synced ? null : String(data.error || 'Sinkronisasi Sheet gagal').slice(0, 300),
         photo_drive_file_id: photoId,
         photo_drive_url: photoId ? `https://drive.google.com/file/d/${photoId}/view` : null,
+        ...(backupStatus ? { backup_status: backupStatus, backup_error: backupStatus === 'error' ? String(data.backup_error || 'Cadangan Drive gagal').slice(0, 300) : null,
+          ...(backupId ? { backup_drive_file_id: backupId, backup_drive_url: `https://drive.google.com/file/d/${backupId}/view`, backup_at: new Date().toISOString() } : {}) } : {}),
         updated_at: new Date().toISOString() }).eq('id', visitId);
       return error ? response({ error: 'Database gagal diperbarui' }, 500, origin) : response({ ok: true }, 200, origin);
     }
@@ -397,7 +401,8 @@ Deno.serve(async (request) => {
     try {
       const ack = await callWorkflow(visitWebhookUrl, { visit_id: id, visit: visit.data,
         sheet_row: visit.sheet_row, email: membership.email, drive_folder_id: membership.drive_folder_id,
-        photo_url: photoUrl, photo_drive_file_id: visit.photo_drive_file_id });
+        photo_url: photoUrl, photo_drive_file_id: visit.photo_drive_file_id,
+        backup_drive_file_id: visit.backup_drive_file_id });
       if (String(ack.visit_id || '') !== id) throw new Error('ID laporan dari n8n berbeda');
     } catch (e) {
       await admin.from('marketing_visits').update({ sheet_status: 'error', sheet_error: String(e).slice(0, 300) }).eq('id', id);

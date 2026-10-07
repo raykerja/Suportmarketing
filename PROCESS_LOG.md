@@ -238,3 +238,7 @@ Atas permintaan pengguna, tiga bagian utama form kunjungan diganti menjadi tombo
 7. Migration `20261006_marketing_ai_usage.sql` diterapkan. Tabel baru memiliki RLS; fungsi kuota hanya dapat dieksekusi `service_role`. Jumlah record lama sebelum dan sesudah sama: 1 anggota, 1 kunjungan, 7 penawaran, 66 target, 1 surat.
 8. Edge Function `marketing` versi 11 aktif dengan `verify_jwt=false` seperti versi lama. Permintaan tanpa login dan webhook dengan secret salah masing-masing ditolak HTTP 401. Secret `OPENAI_API_KEY` belum ada; pencarian sumber tetap berjalan, tetapi ringkasan AI belum aktif.
 9. Commit `04e46a2` dipush ke `main` memakai askpass proyek setelah kredensial GitHub default ditolak 403. GitHub Pages sukses; HTML, JavaScript, CSS, dan template Excel cocok byte per byte dengan domain live. Uji akun staf sah, isolasi dua akun, kuota hari ke-31, dan ringkasan AI end-to-end masih terbuka.
+
+## 2026-10-07 — Jalur cadangan kunjungan per staf (source)
+- Cakupan: fitur aktif saja (Sales Visit). Riset, surat, dan penawaran sudah tercatat ke folder Drive staf lewat `drive_status`. Progres/Client Active masih pratinjau dan tidak disentuh.
+- Menunggu persetujuan: migration, deploy Edge Function `marketing`, update workflow n8n `m12aJ6zFGhfgCjqP`, push ke `main`.
