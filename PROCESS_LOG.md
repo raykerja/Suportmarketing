@@ -242,3 +242,10 @@ Atas permintaan pengguna, tiga bagian utama form kunjungan diganti menjadi tombo
 ## 2026-10-07 — Jalur cadangan kunjungan per staf (source)
 - Cakupan: fitur aktif saja (Sales Visit). Riset, surat, dan penawaran sudah tercatat ke folder Drive staf lewat `drive_status`. Progres/Client Active masih pratinjau dan tidak disentuh.
 - Menunggu persetujuan: migration, deploy Edge Function `marketing`, update workflow n8n `m12aJ6zFGhfgCjqP`, push ke `main`.
+
+## 2026-10-07 — Backup Drive lewat Apps Script
+- Akun pemilik skrip: yasir@raykerja.cloud (Workspace). Deployment web app: jalankan sebagai pemilik, akses "Siapa saja"; kebenaran diperiksa oleh secret di badan permintaan.
+- Perubahan skrip memerlukan **Deployment versi baru** di Apps Script; URL tetap sama.
+- Catatan: panggilan POST ke `/exec` mengikuti pengalihan Google; uji dengan `curl -L -d ...` tanpa `-X POST`.
+- Belum dibuat: jalur Drive → Supabase (versi hasil edit + tombol Terapkan/Abaikan). Surat/riset/penawaran masih lewat n8n.
+- Baris `[UJI SISTEM]` tertinggal di tab DataMarketing (Google Sheet) dari uji ini; hapus manual.

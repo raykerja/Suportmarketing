@@ -259,3 +259,10 @@ NOTES: Migration, workflow n8n, secret, dan Edge Function sudah diterapkan. Pena
 - Uji isolasi di database (transaksi dibatalkan): staf hanya melihat progres miliknya, tidak bisa menulis ke kunjungan staf lain atau insert langsung, anon ditolak, admin melihat semua.
 - Edge Function versi 14 mengirim riwayat progres ke n8n; file backup Drive staf memuat `riwayat_progres`.
 - Kolom Sheet baru untuk progres (AJ–AM pada draf lama) sengaja tidak dipakai; follow up/respons memakai kolom yang sudah ada.
+
+## 0.8.1 — 2026-10-07 (backup Drive tanpa n8n)
+- Backup kunjungan + progres ke Drive staf kini lewat **Apps Script "Drive Gateway"** (`apps-script/drive-gateway/`), dipanggil Edge Function `marketing` (versi 18) dengan secret `DRIVE_GATEWAY_SECRET`/`DRIVE_GATEWAY_URL`. Tanpa n8n dan tanpa kunci JSON Google.
+- Hasil: Google Sheet "Riwayat Kunjungan - <nama>" (tab Kunjungan, Riwayat Progres, Petunjuk; salinan baca) di folder staf, ditambah JSON mesin di subfolder `_backup_mesin`. Diperbarui di tempat, tidak membuat file baru.
+- Edge Function mengulang panggilan sampai 3 kali bila Apps Script membalas error sementara.
+- Workflow n8n kunjungan kembali ke 9 node asli (Sheet DataMarketing + foto). Template n8n dikembalikan.
+- Uji: 28 akun aktif x (kunjungan + progres fiktif) lewat `sync_visit` dengan sesi tiap akun: 28/28 `done`; folder induk setiap Sheet diverifikasi di Drive. Data uji dibersihkan.

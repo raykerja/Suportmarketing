@@ -22,13 +22,24 @@ async function backupOwnerToDrive(admin: ReturnType<typeof createClient>, ownerI
       .select('visit_id,stage,activity_date,note,next_follow_up,attachment_url,created_at')
       .eq('owner_id', ownerId).order('created_at', { ascending: true }).limit(5000);
     const names = new Map((visits || []).map((v: { id: string; data: Record<string, unknown> }) => [v.id, String(v.data?.nama_perusahaan || '')]));
-    const result = await fetch(driveGatewayUrl, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ secret: driveGatewaySecret, action: 'backup_visits', folder_id: folderId, owner_name: ownerName,
-        visits: (visits || []).map((v: { id: string; data: Record<string, unknown>; photo_drive_url: string | null }) => ({ ...v.data, id: v.id, foto: v.photo_drive_url || '' })),
-        events: (events || []).map((e: { visit_id: string }) => ({ ...e, perusahaan: names.get(e.visit_id) || '' })) }),
-      signal: AbortSignal.timeout(50000) });
-    const out = await result.json().catch(() => ({}));
-    if (!result.ok || out.ok !== true) throw new Error(String(out.error || 'HTTP ' + result.status).slice(0, 250));
+    const payload = JSON.stringify({ secret: driveGatewaySecret, action: 'backup_visits', folder_id: folderId, owner_name: ownerName,
+      visits: (visits || []).map((v: { id: string; data: Record<string, unknown>; photo_drive_url: string | null }) => ({ ...v.data, id: v.id, foto: v.photo_drive_url || '' })),
+      events: (events || []).map((e: { visit_id: string }) => ({ ...e, perusahaan: names.get(e.visit_id) || '' })) });
+    // Apps Script kadang membalas error sementara saat panggilan beruntun; ulangi sampai 3 kali.
+    let out: Record<string, unknown> = {};
+    let lastError = '';
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt) await new Promise((resolve) => setTimeout(resolve, attempt * 4000));
+      try {
+        const result = await fetch(driveGatewayUrl, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain' },
+          body: payload, signal: AbortSignal.timeout(40000) });
+        out = await result.json().catch(() => ({}));
+        if (result.ok && out.ok === true) { lastError = ''; break; }
+        lastError = String(out.error || 'HTTP ' + result.status);
+        if (/unauthorized|folder_id tidak valid/.test(lastError)) break;
+      } catch (e) { lastError = String(e); }
+    }
+    if (lastError) throw new Error(lastError.slice(0, 250));
     await mark({ backup_status: 'done', backup_error: null, backup_drive_file_id: String(out.sheet_id || ''),
       backup_drive_url: String(out.sheet_url || ''), backup_at: new Date().toISOString() });
   } catch (e) {
