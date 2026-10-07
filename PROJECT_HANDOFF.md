@@ -4,7 +4,7 @@ Dokumen ini adalah titik awal bila proyek dibuka dari laptop, IDE, atau platform
 
 **Status 0.7.0 per 7 Oktober 2026:** Akun staf username/kata sandi/folder Drive tanpa kolom email, pencarian data Marketing, dan template Excel kosong sudah terbit. Migration batas AI aktif; Edge Function `marketing` versi 12 berstatus aktif dan source produksi cocok dengan repository. Secret `OPENAI_API_KEY` sudah tercatat di Supabase, tanpa nilainya di Git. Kode produksi memakai `gpt-6-luna`, `reasoning_effort: none`, dan batas jawaban 400 token. Pencarian sumber tersedia, tetapi jawaban AI dengan akun login sah belum diuji end-to-end. Akun admin lama masih memakai identitas login lama. Pencarian Drive hanya memakai tautan file yang sudah tercatat di Supabase; belum mencakup seluruh folder Drive.
 
-**Draft lokal 0.7.1:** Form upload Excel akun staf sudah disiapkan di Pengaturan admin, memakai template `.xlsx` yang ada dan aksi server `create_staff` per baris. Pratinjau tidak menampilkan kata sandi; file penuh tetap di browser. Belum dipush atau dideploy ke produksi, dan alur login admin → impor akun nyata belum diuji. Jangan menganggap menu upload sudah tampil di website live sebelum rilis terverifikasi.
+**Rilis frontend 0.7.1:** Form upload Excel akun staf sudah terbit di Pengaturan admin melalui commit `cea2994`, memakai template `.xlsx` yang ada dan aksi server `create_staff` per baris. Pratinjau tidak menampilkan kata sandi; file penuh tetap di browser. GitHub Pages sukses dan aset live cocok dengan source. Alur login admin → impor akun nyata dan tampilan setelah login belum diuji.
 
 ## Peta sistem
 

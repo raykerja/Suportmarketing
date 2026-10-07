@@ -1,4 +1,4 @@
-## Upload Excel akun staf 0.7.1 — draft lokal 2026-10-07
+## Upload Excel akun staf 0.7.1 — rilis produksi 2026-10-07
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
 | --- | --- | --- | --- | --- |
@@ -8,7 +8,7 @@
 | Syntax | JS dan vendor dapat diparse | `node --check` pada `app.js`, `staff-import.mjs`, dan vendor lulus; `git diff --check` lulus | PASS | Lokal |
 | Impor akun nyata | Admin dapat membuat akun dan melihat hasil per baris | Belum dijalankan karena akun produksi tidak boleh dibuat untuk uji tanpa instruksi | NOT TESTED | Aksi `create_staff` backend yang sudah ada dipakai ulang |
 | Tampilan HP 320/390 px | Menu upload dan tombol tidak bertumpuk | CSS mobile disiapkan; browser setelah login tidak tersedia | NOT TESTED | Perlu pemeriksaan visual sebelum/ketika rilis |
-| Website produksi | Menu upload terlihat di Pengaturan admin | Draft lokal belum dipush/deploy | NOT TESTED | Memerlukan izin produksi tersendiri |
+| Website produksi | Aset fitur upload terbit dan dapat dibaca | GitHub Pages build/deploy commit `cea2994` sukses; enam aset fitur HTTP 200 dan identik dengan source | PASS | Tampilan menu setelah login admin masih NOT TESTED |
 
 ## Audit Supabase dan AI — 2026-10-07
 
