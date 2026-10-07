@@ -9,7 +9,9 @@ Gunakan repository `raykerja/Suportmarketing` branch `main` sebagai source resmi
 
 Pertahankan HTML/CSS/JavaScript statis di GitHub Pages, Supabase sebagai database utama, dan alur n8n → Google Sheet/Drive yang sudah berjalan. Periksa `git status`, remote, source, schema/policy, Edge Function, serta workflow yang relevan sebelum revisi. Ubah sesedikit mungkin dan cek hasil pada sistem tujuan.
 
-Bedakan data aktif dari pratinjau. Sales Visit, target, riset, surat, dan penawaran sudah memakai Supabase. Client Active, PIC Visit, dan progres/tindak lanjut masih pratinjau; `progressEnabled` belum aktif. Jangan mengklaim data pratinjau tersimpan atau mengaktifkannya hanya karena UI sudah ada.
+Bedakan data aktif dari pratinjau. Sales Visit, target, riset, surat, dan penawaran sudah memakai Supabase. Progres/tindak lanjut aktif sejak 7 Oktober 2026 (`progressEnabled: true`, tabel `marketing_progress*` dengan RLS, tulis hanya lewat Edge Function). Client Active dan PIC Visit masih pratinjau sampai tabelnya dibuat; jangan mengklaim data pratinjau tersimpan hanya karena UI sudah ada.
+
+Backup kunjungan + progres ke folder Drive staf berjalan tanpa n8n: Edge Function `backupOwnerToDrive` memanggil Apps Script `apps-script/drive-gateway/` (secret `DRIVE_GATEWAY_URL`/`DRIVE_GATEWAY_SECRET`, ulang 3x). Uji dengan `curl -L -d ...` tanpa `-X POST`; perubahan skrip butuh Deployment versi baru. Surat, riset, dan penawaran masih lewat n8n.
 
 Untuk keamanan, periksa RLS **dan** grant pada setiap tabel baru, akses anonim, isolasi pemilik/staf lain/admin, bucket Storage, serta jalur Edge Function yang memakai service key. Pencarian AI memakai secret server `OPENAI_API_KEY`; periksa keberadaannya tanpa mencetak nilainya. Status secret dan source yang benar belum sama dengan uji jawaban AI setelah login.
 
