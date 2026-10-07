@@ -1,3 +1,11 @@
+## 2026-10-07 — Draft upload Excel akun staf
+
+- Permintaan pengguna mengungkap bahwa rilis 0.7.0 hanya menyediakan tombol unduh template dan form satu akun; tidak ada parser atau tombol upload. Ini penyebab menu upload tidak ditemukan di Pengaturan produksi.
+- Menyiapkan menu upload admin yang membaca `.xlsx` lokal, memeriksa header baris 5 serta isi mulai baris 6, menolak file di luar template/lebih dari 2 MB/lebih dari 50 akun, dan memperlihatkan pratinjau nama, username, serta folder tanpa kata sandi.
+- Menggunakan library `read-excel-file` versi 9.3.10 yang dipin dan disimpan bersama lisensi MIT. Akun dibuat satu per satu melalui Edge Function `create_staff` yang sudah ada; keberhasilan dan username yang sudah terdaftar dicatat per baris. Jika terjadi kesalahan lain, proses berhenti agar admin bisa memeriksa daftar akun sebelum mencoba lagi.
+- File Excel tidak diunggah sebagai berkas; browser mengirim data setiap akun hanya setelah admin menekan tombol pembuatan. Password dari pratinjau dihapus saat berganti file, keluar Pengaturan, logout, atau proses selesai. Tidak ada backend/SQL/secret produksi yang diubah.
+- Uji pembacaan template asli, validasi data sintetis, syntax, dan struktur HTML lokal lulus. Uji visual setelah login serta pembuatan akun nyata masih terbuka. Draft belum dipush atau dideploy.
+
 ## 2026-10-07 — Audit privasi dan kesiapan AI
 
 - Memeriksa konfigurasi Supabase produksi secara read-only: tujuh tabel Marketing sudah memakai RLS dan role anonim tidak memiliki izin baca/tulis. Uji API anonim mengembalikan HTTP 401 untuk seluruh tabel; bucket foto privat, signup publik nonaktif, dan tabel Marketing tidak masuk publikasi Realtime.

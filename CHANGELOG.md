@@ -1,3 +1,12 @@
+VERSION: 0.7.1 (draft lokal upload Excel akun staf)
+DATE: 2026-10-07
+
+ADDED: Menu upload `.xlsx` pada Pengaturan admin, pratinjau baris tanpa kata sandi, validasi maksimal 50 akun dan 2 MB, serta laporan hasil per username.
+CHANGED: Template Excel yang sudah tersedia kini dapat dipakai sebagai masukan; pembuatan akun tetap melalui aksi `create_staff` satu per satu.
+FIXED: Ketiadaan langkah upload setelah admin mengunduh dan mengisi template.
+REMOVED: Tidak ada fitur lama yang dihapus.
+NOTES: Hanya draft frontend lokal; tidak ada migration atau perubahan Edge Function. Pembaca Excel MIT versi 9.3.10 disimpan lokal bersama lisensinya. Proses berhenti pada kegagalan selain username yang sudah ada; akun yang berhasil dibuat sebelumnya tetap ada. Belum ada akun nyata dibuat dalam pengujian, dan belum ada push/deploy produksi.
+
 VERSION: 0.7.0 (catatan operasional; tanpa perubahan kode aplikasi)
 DATE: 2026-10-07
 

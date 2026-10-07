@@ -1,4 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+import { validateStaffWorkbook } from './staff-import.mjs';
 
 const cfg = window.RAY_CONFIG || {};
 const progressPreviewMode = cfg.progressEnabled !== true;
@@ -12,6 +13,9 @@ const client = cfg.supabaseUrl && cfg.supabasePublishableKey
   ? createClient(cfg.supabaseUrl, cfg.supabasePublishableKey) : null;
 let currentUser = null;
 let currentMember = null;
+let staffImportRows = [];
+let existingStaffUsernames = [];
+let staffImportBusy = false;
 let pollTimer = null;
 let letterPollTimer = null;
 let offerPollTimer = null;
@@ -33,6 +37,12 @@ let editingLetterId = null;
 
 function status(id, message, error = false) {
   const el = $(id); el.textContent = message; el.style.color = error ? '#b73729' : '#0a4fa6';
+}
+function clearStaffImportPreview() {
+  staffImportRows.forEach((row) => { row.password = ''; });
+  staffImportRows = [];
+  $('#staff-import-preview').hidden = true;
+  $('#staff-import-create').disabled = true;
 }
 function publishVisitSnapshot(error = '') {
   const visits = error ? [] : visitCache.map((row) => ({
@@ -67,6 +77,9 @@ function showWorkspace(user) {
     status('#ai-search-status', '');
     $('#account-info').textContent = ''; $('#folder-url').value = '';
     $('#member-list').textContent = ''; $('#admin-settings').hidden = true;
+    clearStaffImportPreview(); existingStaffUsernames = [];
+    $('#staff-import-file').value = '';
+    $('#staff-import-results').textContent = ''; status('#staff-import-status', '');
     activateTab('visits', false);
   }
   $('#login-panel').hidden = !!user;
@@ -123,6 +136,11 @@ const pipelineTabs = new Set(['research', 'review', 'letters', 'leads']);
 function activateTab(tab, record = true) {
   if (!$('#' + tab)?.classList.contains('panel')) tab = 'visits';
   const current = document.querySelector('.panel:not([hidden])')?.id;
+  if (current === 'settings' && tab !== 'settings') {
+    if (staffImportBusy && currentUser) { status('#staff-import-status', 'Tunggu sampai pembuatan akun selesai sebelum pindah menu.', true); return; }
+    clearStaffImportPreview();
+    $('#staff-import-file').value = '';
+  }
   if (record && current !== tab) {
     if (!history.state?.marketingTab) history.replaceState({ ...history.state, marketingTab: current || 'visits' }, '');
     history.pushState({ ...history.state, marketingTab: tab }, '');
@@ -691,6 +709,8 @@ async function loadSettings() {
   const { data, error } = await client.functions.invoke('marketing', { body: { action: 'settings' } });
   if (error || !data?.ok) { status('#folder-status', data?.error || error?.message || 'Pengaturan gagal dibaca', true); return; }
   currentMember = data.self;
+  existingStaffUsernames = (data.members || []).filter((member) => member.email?.endsWith(`@${staffLoginDomain}`))
+    .map((member) => member.email.split('@')[0]);
   $('#account-info').textContent = `${memberLabel(data.self)} · ${data.self.role === 'admin' ? 'Admin' : 'Staf'}`;
   $('#folder-url').value = data.self.drive_folder_url || '';
   $('#admin-settings').hidden = data.self.role !== 'admin';
@@ -717,6 +737,92 @@ $('#invite-form').addEventListener('submit', async (event) => {
   submit.disabled = false;
   status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Akun gagal dibuat' : `Akun ${data.username} siap digunakan. Berikan username dan kata sandi secara privat kepada staf.`, !!error || !data?.ok);
   if (data?.ok) { $('#invite-form').reset(); $('#invite-password').type = 'password'; $('#toggle-invite-password').textContent = 'Tampilkan'; loadSettings(); }
+});
+$('#staff-import-file').addEventListener('change', () => {
+  clearStaffImportPreview();
+  $('#staff-import-results').textContent = '';
+  status('#staff-import-status', $('#staff-import-file').files?.length ? 'Klik Periksa file Excel untuk melihat daftar akun.' : '');
+});
+$('#staff-import-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (currentMember?.role !== 'admin') return;
+  const file = $('#staff-import-file').files?.[0];
+  clearStaffImportPreview();
+  $('#staff-import-results').textContent = '';
+  if (!file || !/\.xlsx$/i.test(file.name) || file.size > 2 * 1024 * 1024) {
+    status('#staff-import-status', 'Pilih file .xlsx dari template, maksimal 2 MB.', true); return;
+  }
+  if (typeof window.readXlsxFile !== 'function') {
+    status('#staff-import-status', 'Pembaca Excel belum tersedia. Muat ulang halaman lalu coba lagi.', true); return;
+  }
+  const checkButton = $('#staff-import-form button[type="submit"]');
+  checkButton.disabled = true;
+  status('#staff-import-status', 'Memeriksa isi Excel…');
+  try {
+    const sheets = await window.readXlsxFile(file);
+    const { entries, errors } = validateStaffWorkbook(sheets, existingStaffUsernames);
+    if (errors.length) {
+      status('#staff-import-status', `File belum siap: ${errors.length} masalah ditemukan. Perbaiki Excel lalu periksa lagi.`, true);
+      $('#staff-import-results').textContent = errors.slice(0, 8).join('\n') + (errors.length > 8 ? `\n...dan ${errors.length - 8} masalah lainnya.` : '');
+      return;
+    }
+    staffImportRows = entries;
+    $('#staff-import-summary').textContent = `${entries.length} akun siap dibuat. Periksa nama, username, dan folder sebelum melanjutkan.`;
+    $('#staff-import-list').textContent = entries.map((row) => `Baris ${row.row}: ${row.displayName} (${row.username})\nFolder: ${row.driveFolderUrl}`).join('\n\n');
+    $('#staff-import-create').textContent = `Buat ${entries.length} akun staf`;
+    $('#staff-import-create').disabled = false;
+    $('#staff-import-preview').hidden = false;
+    status('#staff-import-status', 'File valid. Kata sandi tidak ditampilkan.');
+  } catch {
+    status('#staff-import-status', 'File Excel tidak dapat dibaca. Gunakan template .xlsx yang tersedia di halaman ini.', true);
+  } finally {
+    checkButton.disabled = false;
+  }
+});
+$('#staff-import-create').addEventListener('click', async () => {
+  if (!client || !currentUser || currentMember?.role !== 'admin' || !staffImportRows.length) return;
+  const rows = staffImportRows;
+  staffImportRows = [];
+  staffImportBusy = true;
+  const createButton = $('#staff-import-create');
+  const checkButton = $('#staff-import-form button[type="submit"]');
+  createButton.disabled = true;
+  checkButton.disabled = true;
+  $('#staff-import-file').disabled = true;
+  let created = 0;
+  let skipped = 0;
+  const report = [];
+  let stopped = false;
+  try {
+    for (const [index, row] of rows.entries()) {
+      if (!currentUser || currentMember?.role !== 'admin') { stopped = true; break; }
+      status('#staff-import-status', `Membuat akun ${index + 1} dari ${rows.length}…`);
+      let data;
+      let error;
+      try {
+        ({ data, error } = await client.functions.invoke('marketing', { body: { action: 'create_staff',
+          username: row.username, password: row.password, display_name: row.displayName, drive_folder_url: row.driveFolderUrl } }));
+      } catch (caught) { error = caught; }
+      if (data?.ok) { created++; report.push(`${row.username}: berhasil`); continue; }
+      if (error?.context?.status === 409 || data?.error === 'Username sudah digunakan') {
+        skipped++; report.push(`${row.username}: sudah terdaftar`); continue;
+      }
+      stopped = true;
+      report.push(`${row.username}: gagal; periksa daftar akun sebelum mencoba lagi.`);
+      break;
+    }
+    $('#staff-import-results').textContent = report.join('\n');
+    status('#staff-import-status', `${created} akun dibuat, ${skipped} sudah ada.${stopped ? ' Proses berhenti sebelum semua baris selesai.' : ' Selesai.'}`, stopped);
+  } finally {
+    staffImportBusy = false;
+    rows.forEach((row) => { row.password = ''; });
+    rows.length = 0;
+    $('#staff-import-file').value = '';
+    $('#staff-import-file').disabled = false;
+    $('#staff-import-preview').hidden = true;
+    checkButton.disabled = false;
+    loadSettings();
+  }
 });
 $('#toggle-invite-password').addEventListener('click', () => {
   const input = $('#invite-password');

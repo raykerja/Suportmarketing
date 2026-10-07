@@ -1,3 +1,15 @@
+## Upload Excel akun staf 0.7.1 — draft lokal 2026-10-07
+
+| TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |
+| --- | --- | --- | --- | --- |
+| Pembacaan template asli | Sheet dan header terdeteksi; belum ada akun | Pembaca `.xlsx` lokal membaca sheet `Akun staf`; validator menolak template kosong dengan pesan yang jelas | PASS | Tidak memakai data staf nyata |
+| Validasi baris | Baris valid diterima; username lama, duplikat, kata sandi pendek, dan folder salah ditolak | Uji data sintetis lulus untuk kelima kondisi | PASS | Kata sandi sintetis tidak masuk repo |
+| Struktur halaman | ID unik dan asset pembaca Excel tersedia | Parser HTML menemukan ID unik dan semua script lokal ada | PASS | Belum uji klik setelah login |
+| Syntax | JS dan vendor dapat diparse | `node --check` pada `app.js`, `staff-import.mjs`, dan vendor lulus; `git diff --check` lulus | PASS | Lokal |
+| Impor akun nyata | Admin dapat membuat akun dan melihat hasil per baris | Belum dijalankan karena akun produksi tidak boleh dibuat untuk uji tanpa instruksi | NOT TESTED | Aksi `create_staff` backend yang sudah ada dipakai ulang |
+| Tampilan HP 320/390 px | Menu upload dan tombol tidak bertumpuk | CSS mobile disiapkan; browser setelah login tidak tersedia | NOT TESTED | Perlu pemeriksaan visual sebelum/ketika rilis |
+| Website produksi | Menu upload terlihat di Pengaturan admin | Draft lokal belum dipush/deploy | NOT TESTED | Memerlukan izin produksi tersendiri |
+
 ## Audit Supabase dan AI — 2026-10-07
 
 | TEST | EXPECTED RESULT | ACTUAL RESULT | STATUS | NOTES |

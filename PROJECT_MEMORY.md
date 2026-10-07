@@ -24,6 +24,8 @@
 
 ## Lanjutkan dari sini
 
+**Draft lokal 7 Oktober 2026:** Menu upload Excel akun staf di Pengaturan admin sudah disiapkan, tetapi belum dipush/deploy. Parser memakai file vendor lokal `read-excel-file` MIT versi 9.3.10, validasi ada di `staff-import.mjs`, dan pembuatan akun memakai `create_staff` per baris. Jangan menganggapnya tampil di website live sebelum rilis.
+
 1. Periksa `git status`, `origin/main`, dokumen handoff, changelog, log proses, dan hasil uji; cocokkan lagi dengan produksi sebelum menyunting.
 2. Uji satu pencarian nyata setelah login sah. Pastikan tombol **Cari dengan AI**, sumber sesuai hak akun, jawaban merujuk sumber, dan kegagalan provider terlihat jelas. Hindari data uji calon klien fiktif di produksi.
 3. Sebelum membangun data Client Active, rancang kepemilikan PIC, grant minimum, RLS, policy Storage, dan uji isolasi dua akun. Pertahankan Sales Visit dan preview yang ada sampai pengganti tervalidasi.

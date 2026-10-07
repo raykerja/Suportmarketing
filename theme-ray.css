@@ -31,6 +31,15 @@ header { background: linear-gradient(115deg, #14204a, #071c45); }
 .ai-sources .item p { margin: 8px 0; }
 .ai-key-help { border-top: 1px solid var(--ray-line); margin: 20px 0; padding-top: 16px; }
 .ai-key-help h3 { margin: 0 0 8px; font-size: 16px; }
+.staff-import { border-top: 1px solid var(--ray-line); margin: 18px 0; padding-top: 18px; }
+.staff-import h3 { margin: 0 0 8px; font-size: 16px; }
+.staff-import .hint { margin: 0 0 12px; }
+#staff-import-status, #staff-import-results { min-height: 20px; white-space: pre-line; overflow-wrap: anywhere; }
+#staff-import-preview { border: 1px solid var(--ray-line); border-radius: 10px; padding: 12px; margin: 12px 0; }
+#staff-import-summary { margin: 0 0 10px; font-weight: 700; }
+.staff-import-list { max-height: 180px; overflow: auto; overflow-wrap: anywhere; white-space: pre-line; font-size: 13px; line-height: 1.6; }
+#staff-import-create { margin-top: 12px; }
+@media (max-width: 760px) { .staff-import button { width: 100%; min-height: 48px; } }
 @media (max-width: 760px) { .ai-search-input { grid-template-columns: 1fr; } .ai-search-input button { min-height: 48px; width: 100%; } }
 @media (max-width: 760px) { .hero p:last-child { display: block; } }
 .tabs .active, .visit-step-nav button.active, .progress-steps span.current { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
