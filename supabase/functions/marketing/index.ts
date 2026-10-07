@@ -7,6 +7,34 @@ const webhookUrl = Deno.env.get('MARKETING_N8N_WEBHOOK')!;
 const letterWebhookUrl = Deno.env.get('MARKETING_N8N_LETTER_WEBHOOK')!;
 const offerWebhookUrl = Deno.env.get('MARKETING_N8N_OFFER_WEBHOOK')!;
 const visitWebhookUrl = webhookUrl.replace(/raykerja-target$/, 'raykerja-visit');
+const driveGatewayUrl = Deno.env.get('DRIVE_GATEWAY_URL') || '';
+const driveGatewaySecret = Deno.env.get('DRIVE_GATEWAY_SECRET') || '';
+// Salinan baca per staf ke Drive lewat Apps Script; Supabase tetap sumber data resmi.
+async function backupOwnerToDrive(admin: ReturnType<typeof createClient>, ownerId: string, folderId: string | null, ownerName: string) {
+  if (!driveGatewayUrl || !driveGatewaySecret) return;
+  const mark = (fields: Record<string, unknown>) => admin.from('marketing_visits').update(fields).eq('owner_id', ownerId);
+  if (!folderId) { await mark({ backup_status: 'skipped', backup_error: 'Folder Drive belum diatur' }); return; }
+  try {
+    const { data: visits, error } = await admin.from('marketing_visits').select('id,data,photo_drive_url,created_at')
+      .eq('owner_id', ownerId).order('created_at', { ascending: false }).limit(1000);
+    if (error) throw new Error('baca kunjungan gagal');
+    const { data: events } = await admin.from('marketing_progress_events')
+      .select('visit_id,stage,activity_date,note,next_follow_up,attachment_url,created_at')
+      .eq('owner_id', ownerId).order('created_at', { ascending: true }).limit(5000);
+    const names = new Map((visits || []).map((v: { id: string; data: Record<string, unknown> }) => [v.id, String(v.data?.nama_perusahaan || '')]));
+    const result = await fetch(driveGatewayUrl, { method: 'POST', redirect: 'follow', headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ secret: driveGatewaySecret, action: 'backup_visits', folder_id: folderId, owner_name: ownerName,
+        visits: (visits || []).map((v: { id: string; data: Record<string, unknown>; photo_drive_url: string | null }) => ({ ...v.data, id: v.id, foto: v.photo_drive_url || '' })),
+        events: (events || []).map((e: { visit_id: string }) => ({ ...e, perusahaan: names.get(e.visit_id) || '' })) }),
+      signal: AbortSignal.timeout(50000) });
+    const out = await result.json().catch(() => ({}));
+    if (!result.ok || out.ok !== true) throw new Error(String(out.error || 'HTTP ' + result.status).slice(0, 250));
+    await mark({ backup_status: 'done', backup_error: null, backup_drive_file_id: String(out.sheet_id || ''),
+      backup_drive_url: String(out.sheet_url || ''), backup_at: new Date().toISOString() });
+  } catch (e) {
+    await mark({ backup_status: 'error', backup_error: String(e).slice(0, 280) });
+  }
+}
 const webhookSecret = Deno.env.get('MARKETING_WEBHOOK_SECRET')!;
 const aiApiKey = Deno.env.get('OPENAI_API_KEY') || '';
 const staffLoginDomain = 'staff.marketing.raykerja.cloud';
@@ -411,6 +439,9 @@ Deno.serve(async (request) => {
       await admin.from('marketing_visits').update({ sheet_status: 'error', sheet_error: String(e).slice(0, 300) }).eq('id', id);
       return response({ error: 'Sinkronisasi gagal dimulai: ' + String(e).slice(0, 120) }, 502, origin);
     }
+    const driveBackup = backupOwnerToDrive(admin, authData.user.id, membership.drive_folder_id, membership.display_name || membership.email);
+    // @ts-ignore EdgeRuntime tersedia di Supabase Edge Functions
+    if (typeof EdgeRuntime !== 'undefined' && EdgeRuntime.waitUntil) EdgeRuntime.waitUntil(driveBackup); else await driveBackup;
     return response({ ok: true, visit_id: id }, 200, origin);
   }
   if (data.action === 'save_letter') {
