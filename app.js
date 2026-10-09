@@ -134,7 +134,7 @@ $('#setup-form').addEventListener('submit', async (event) => {
 
 const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress']);
 const salesTabs = new Set(['visits', 'progress']);
-const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'leads']);
+const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation', 'leads']);
 function activateTab(tab, record = true) {
   if (!$('#' + tab)?.classList.contains('panel')) tab = 'visits';
   const current = document.querySelector('.panel:not([hidden])')?.id;
@@ -164,6 +164,7 @@ function activateTab(tab, record = true) {
   if (tab === 'review') loadLeads();
   if (tab === 'letters') { loadLeads(); loadOffers(); }
   if (tab === 'manual-offer') loadOffers();
+  if (tab === 'price-simulation') { if (!priceLoaded) loadPrices(); else renderSimTable(); }
 }
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
 $('#active-client-menu').addEventListener('click', () => activateTab('clients'));
@@ -550,6 +551,7 @@ async function loadPrices() {
   priceError = error ? 'Daftar harga belum dapat dimuat: ' + error.message : '';
   priceRows = error ? [] : data || [];
   renderPrices();
+  renderSimTable();
 }
 function showDbView(view) {
   priceView = view;
@@ -634,6 +636,59 @@ $('#price-form-cancel').addEventListener('click', () => $('#price-dialog').close
 $('#price-table').addEventListener('click', (event) => {
   const edit = event.target.closest('[data-price-edit]');
   if (edit) { const row = priceRows.find((r) => r.id === edit.dataset.priceEdit); if (row) openPriceForm(row); }
+});
+
+// Simulasi Harga Seragam & Peralatan: hitung estimasi belanja, tidak mengubah data mana pun.
+let simView = 'seragam';
+const simSelections = { seragam: new Map(), peralatan: new Map() }; // itemId -> jumlah, hanya ada bila dicentang
+function renderSimTable() {
+  const all = priceRows.filter((r) => r.kategori === simView && r.active !== false);
+  const q = $('#sim-query').value.trim().toLocaleLowerCase('id');
+  const rows = all.filter((r) => !q || [r.item, r.grup].some((v) => (v || '').toLocaleLowerCase('id').includes(q)));
+  $('#sim-title').textContent = simView === 'seragam' ? 'Simulasi Harga Seragam' : 'Simulasi Harga Peralatan';
+  const selected = simSelections[simView];
+  let totalItem = 0; let totalRp = 0;
+  for (const r of all) {
+    if (!selected.has(r.id)) continue;
+    totalItem += 1;
+    if (r.harga_jual !== null) totalRp += Number(r.harga_jual) * Number(selected.get(r.id) || 0);
+  }
+  $('#sim-summary').innerHTML = `<div><strong>${totalItem}</strong><small>Item dipilih</small></div><div><strong>${rupiah(totalRp)}</strong><small>Total estimasi</small></div>`;
+  $('#sim-status').textContent = priceLoaded ? `Menampilkan ${rows.length} dari ${all.length} item.` : 'Memuat…';
+  let lastGroup = null;
+  const body = rows.map((r) => {
+    const groupRow = simView === 'seragam' && r.grup !== lastGroup ? `<tr class="group-row"><td colspan="6">${esc(r.grup)}</td></tr>` : '';
+    lastGroup = r.grup;
+    const checked = selected.has(r.id);
+    const qty = selected.get(r.id) || 1;
+    const unavailable = r.harga_jual === null;
+    const subtotal = unavailable ? '<span class="badge processing">Sedang diverifikasi</span>' : rupiah(Number(r.harga_jual) * Number(qty));
+    return groupRow + `<tr class="${checked ? 'sim-selected' : ''}"><td class="check"><input type="checkbox" data-sim-check="${esc(r.id)}" ${checked ? 'checked' : ''} ${unavailable ? 'disabled' : ''}></td><td class="num">${esc(r.no)}</td><td><strong>${esc(r.item)}</strong></td><td class="qty"><input type="number" min="1" max="100000" step="1" inputmode="numeric" value="${esc(qty)}" data-sim-qty="${esc(r.id)}" ${unavailable ? 'disabled' : ''}></td><td class="money">${unavailable ? '<span class="badge processing">Sedang diverifikasi</span>' : rupiah(r.harga_jual)}</td><td class="money">${subtotal}</td></tr>`;
+  }).join('');
+  $('#sim-table').innerHTML = `<thead><tr><th>Pilih</th><th>No</th><th>Item</th><th>Jumlah</th><th class="money">Harga jual</th><th class="money">Subtotal</th></tr></thead><tbody>${body || `<tr><td colspan="6" class="hint">${priceLoaded ? 'Belum ada item yang cocok.' : ''}</td></tr>`}</tbody>`;
+}
+function showSimView(view) {
+  simView = view;
+  document.querySelectorAll('[data-sim-view]').forEach((b) => b.classList.toggle('active', b.dataset.simView === view));
+  if (!priceLoaded) loadPrices(); else renderSimTable();
+}
+document.querySelectorAll('[data-sim-view]').forEach((b) => b.addEventListener('click', () => showSimView(b.dataset.simView)));
+$('#sim-query').addEventListener('input', renderSimTable);
+$('#sim-refresh').addEventListener('click', loadPrices);
+$('#sim-table').addEventListener('change', (event) => {
+  const check = event.target.closest('[data-sim-check]');
+  const qtyInput = event.target.closest('[data-sim-qty]');
+  const selected = simSelections[simView];
+  if (check) {
+    const id = check.dataset.simCheck;
+    if (check.checked) selected.set(id, Number($(`[data-sim-qty="${id}"]`)?.value) || 1); else selected.delete(id);
+    renderSimTable();
+  } else if (qtyInput) {
+    const id = qtyInput.dataset.simQty;
+    const qty = Math.max(1, Math.min(100000, Number(qtyInput.value) || 1));
+    if (selected.has(id)) selected.set(id, qty);
+    renderSimTable();
+  }
 });
 
 // PIC Visit ke client aktif (data produksi, RLS: staf hanya miliknya, admin membaca semua).

@@ -21,11 +21,11 @@
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
   <link rel="stylesheet" href="style.css?v=20261009-9">
-  <link rel="stylesheet" href="theme-ray.css?v=20261009-4">
+  <link rel="stylesheet" href="theme-ray.css?v=20261009-5">
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-2"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261009-15"></script>
+  <script type="module" src="app.js?v=20261009-16"></script>
 </head>
 <body>
   <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><div class="settings-menu-wrap"><button id="open-settings" type="button" aria-haspopup="true" aria-expanded="false" hidden>Pengaturan</button><ul id="settings-menu" class="settings-dropdown" role="menu" hidden><li role="menuitem" tabindex="0" data-tab="research">Cari Target</li><li role="menuitem" tabindex="0" data-tab="manual-offer">Buat Penawaran Manual</li><li role="menuitem" tabindex="0" data-tab="change-password">Ganti Kata Sandi</li><li role="menuitem" tabindex="0" data-tab="settings">Pengaturan Akun</li></ul></div></header>
@@ -40,7 +40,7 @@
       <nav class="tabs" aria-label="Menu Marketing"><button id="active-client-menu" type="button" aria-controls="active-client-tabs" aria-expanded="false">Active Client,Repitching & Progress</button><button id="sales-menu" class="active" type="button" aria-controls="sales-tabs" aria-expanded="true">New Client,Visit & Progress</button><button id="pipeline-menu" type="button" aria-controls="pipeline-tabs" aria-expanded="false">Target, Penawaran & Database</button></nav>
       <nav id="active-client-tabs" class="tabs sub-tabs" aria-label="Tahapan klien aktif dan penawaran ulang" hidden><button data-tab="clients">1. Database Client Active</button><button data-tab="pic-visits">2. PIC Visit</button><button data-tab="client-progress">3. Monitoring &amp; Tindaklanjut</button></nav>
       <nav id="sales-tabs" class="tabs sub-tabs" aria-label="Tahapan Sales Visit dan Progres"><button data-tab="visits" class="active">1. Sales Visit</button><button data-tab="progress">2. Monitoring &amp; Tindaklanjut</button></nav>
-      <nav id="pipeline-tabs" class="tabs sub-tabs" aria-label="Tahapan target, penawaran, dan database" hidden><button data-tab="research">1. Cari Target</button><button data-tab="review">2. Review Hasil</button><button data-tab="letters">3. Buat Penawaran</button><button data-tab="manual-offer">4. Buat Penawaran Manual</button><button data-tab="leads">5. Database (Target &amp; Harga)</button></nav>
+      <nav id="pipeline-tabs" class="tabs sub-tabs" aria-label="Tahapan target, penawaran, dan database" hidden><button data-tab="research">1. Cari Target</button><button data-tab="review">2. Review Hasil</button><button data-tab="letters">3. Buat Penawaran</button><button data-tab="manual-offer">4. Buat Penawaran Manual</button><button data-tab="price-simulation">5. Simulasi Harga Seragam dan Peralatan</button><button data-tab="leads">6. Database (Target &amp; Harga)</button></nav>
       <section id="visits" class="panel">
         <button id="visit-reminder-banner" class="reminder-banner" type="button" hidden></button>
         <div class="visit-layout">
@@ -185,6 +185,16 @@
         <div class="card result" id="research-result" hidden></div>
       </section>
       <section id="review" class="panel" hidden><div class="card"><div class="section-head"><div><p class="eyebrow">HASIL RISET N8N</p><h2>Review target market</h2><p class="hint">Periksa perusahaan, kontak, dan sumbernya. Setujui target yang layak untuk dibuatkan dokumen penawaran.</p></div><button id="refresh-review" type="button">Muat ulang</button></div><div id="review-summary" class="review-summary"></div><div id="review-list" class="list" aria-live="polite"></div><p id="review-status" role="status"></p></div></section>
+      <section id="price-simulation" class="panel" hidden>
+        <div class="card">
+          <div class="section-head"><div><p class="eyebrow">SIMULASI</p><h2 id="sim-title">Simulasi Harga Seragam</h2><p class="hint">Pilih item dan tentukan jumlah untuk menghitung estimasi total belanja. Tidak mengubah data penawaran mana pun.</p></div><button id="sim-refresh" type="button">Muat ulang</button></div>
+          <nav class="tabs db-switch" aria-label="Pilih kategori simulasi"><button type="button" class="active" data-sim-view="seragam">Seragam</button><button type="button" data-sim-view="peralatan">Peralatan</button></nav>
+          <div id="sim-summary" class="progress-summary"></div>
+          <label class="search">Cari item<input id="sim-query" type="search" placeholder="Ketik nama item atau kelompok"></label>
+          <p id="sim-status" class="hint" role="status"></p>
+          <div class="table-wrap sim-table-wrap"><table id="sim-table" class="sim-table"></table></div>
+        </div>
+      </section>
       <section id="leads" class="panel" hidden>
         <nav class="tabs db-switch" aria-label="Isi database"><button type="button" class="active" data-db-view="target">Database Target</button><button type="button" data-db-view="seragam">Harga Seragam</button><button type="button" data-db-view="peralatan">Harga Peralatan</button></nav>
         <div id="db-target"><div class="card"><div class="section-head"><div><h2>Database target</h2><p class="hint">Data historis dan hasil riset baru yang tersimpan di Supabase.</p></div><button id="refresh-leads">Muat ulang</button></div><label class="search">Cari nama atau wilayah<input id="lead-query" type="search" placeholder="Ketik nama perusahaan, instansi, atau kota"></label><div id="lead-list" class="table-wrap"></div></div></div>

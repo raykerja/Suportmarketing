@@ -144,8 +144,25 @@ th { color: var(--ray-muted); background: #f7faff; }
 .member-name-form, .member-folder-form { margin-top: 8px; }
 
 .db-switch { margin-bottom: 14px; }
+.price-table { min-width: 0; width: 100%; table-layout: auto; }
 .price-table td.money, .price-table th.money { text-align: right; white-space: nowrap; }
 .price-table .group-row td { background: #eef5ff; font-weight: 800; color: #123b37; }
+.sim-table-wrap { max-height: 70vh; overflow: auto; }
+.sim-table { min-width: 0; width: 100%; border-collapse: collapse; font-size: 13px; }
+.sim-table th, .sim-table td { text-align: left; border-bottom: 1px solid var(--ray-line); padding: 10px; vertical-align: middle; }
+.sim-table thead th { position: sticky; top: 0; z-index: 1; white-space: nowrap; background: #f6faf7; color: #5b7065; }
+.sim-table td.money, .sim-table th.money { text-align: right; white-space: nowrap; }
+.sim-table td.check { width: 36px; text-align: center; }
+.sim-table td.check input { width: auto; }
+.sim-table td.qty input { width: 72px; text-align: right; }
+.sim-table .group-row td { background: #eef5ff; font-weight: 800; color: #123b37; }
+.sim-table tr.sim-selected { background: #f3f8ff; }
+@media (max-width: 480px) {
+  .sim-table th, .sim-table td { padding: 6px 4px; font-size: 12px; }
+  .sim-table td.qty input { width: 38px; padding: 3px; font-size: 12px; }
+  .sim-table th:nth-child(2), .sim-table td:nth-child(2),
+  .sim-table th:nth-child(6), .sim-table td:nth-child(6) { display: none; }
+}
 .ac-check { display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .ac-check input { width: auto; }
 #price-dialog { width: min(560px, calc(100vw - 24px)); border: 1px solid #cbd8d0; border-radius: 16px; padding: 22px; }
