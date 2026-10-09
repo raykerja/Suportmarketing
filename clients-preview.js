@@ -52,20 +52,20 @@
   }
   function renderActivityDashboard() {
     const picSummary = `
-      <div><strong>${picVisits.length}</strong><small>PIC Visit tercatat</small></div>
-      <div><strong>${picVisits.filter((row) => row.visitStage === 'initial').length}</strong><small>PIC Visit perlu detail</small></div>`;
+      <div><strong>${picVisits.length}</strong><small>Kunjungan PIC tercatat</small></div>
+      <div><strong>${picVisits.filter((row) => row.visitStage === 'initial').length}</strong><small>Kunjungan PIC perlu detail</small></div>`;
     const salesSummary = `
-      <div><strong>${salesVisits.length}</strong><small>Sales Visit terbaca</small></div>
-      <div><strong>${salesVisits.filter((row) => row.visitStage === 'initial').length}</strong><small>Sales Visit perlu detail</small></div>`;
+      <div><strong>${salesVisits.length}</strong><small>Kunjungan Marketing terbaca</small></div>
+      <div><strong>${salesVisits.filter((row) => row.visitStage === 'initial').length}</strong><small>Kunjungan Marketing perlu detail</small></div>`;
     const picList = picVisits.length ? picVisits.map((row) => {
       const client = visitClient(row.clientId);
       return renderActivityItem({ ...row, name: client?.name, owner: client?.owner });
-    }).join('') : `<p class="hint">${picVisitsError || 'Belum ada PIC Visit yang tercatat.'}</p>`;
+    }).join('') : `<p class="hint">${picVisitsError || 'Belum ada Kunjungan PIC yang tercatat.'}</p>`;
     const salesStatus = salesVisitError || (salesVisitsLoaded
       ? `Menampilkan ${salesVisits.length} laporan terbaru yang dapat diakses akun ini (maksimal 100).`
-      : 'Memuat Sales Visit…');
+      : 'Memuat Kunjungan Marketing…');
     const salesList = salesVisits.length ? salesVisits.map(renderActivityItem).join('')
-      : `<p class="hint">${salesVisitError ? 'Data Sales Visit belum dapat ditampilkan.' : salesVisitsLoaded ? 'Belum ada Sales Visit yang dapat ditampilkan.' : 'Menunggu data Sales Visit.'}</p>`;
+      : `<p class="hint">${salesVisitError ? 'Data Kunjungan Marketing belum dapat ditampilkan.' : salesVisitsLoaded ? 'Belum ada Kunjungan Marketing yang dapat ditampilkan.' : 'Menunggu data Kunjungan Marketing.'}</p>`;
     for (const prefix of ['activity-', 'new-activity-']) {
       $(`#${prefix}dashboard-summary`).innerHTML = prefix === 'new-activity-' ? salesSummary + picSummary : picSummary + salesSummary;
       $(`#${prefix}pic-list`).innerHTML = picList;
@@ -143,7 +143,7 @@
     $('#pic-visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>' + picVisits.map((row) => `<option value="${escapeHtml(row.id)}">${escapeHtml(label(row))} · ${escapeHtml(new Date(row.at).toLocaleString('id-ID'))}</option>`).join('');
     if (picVisits.some((row) => row.id === savedValue)) $('#pic-visit-saved').value = savedValue;
     $('#pic-visit-list').innerHTML = picVisits.length ? picVisits.map((row) => `
-      <div class="item"><strong>${escapeHtml(label(row))}</strong><small>${escapeHtml(new Date(row.at).toLocaleString('id-ID'))} · ${escapeHtml(row.contact)} · ${escapeHtml(visitClient(row.clientId)?.owner || '')}</small><p>${escapeHtml(row.note || 'Detail belum dilengkapi.')}</p><span class="badge ${row.visitStage === 'initial' ? 'processing' : ''}">${row.visitStage === 'initial' ? 'Tahap 1 · perlu detail' : 'Detail terisi'}</span>${row.mine === false ? '' : `<div><button type="button" data-open-pic-visit="${escapeHtml(row.id)}">${row.visitStage === 'initial' ? 'Lengkapi detail' : 'Buka / ubah'}</button></div>`}</div>`).join('') : `<p class="hint">${picVisitsError || 'Belum ada PIC Visit. Catat tahap 1 setelah bertemu PIC client.'}</p>`;
+      <div class="item"><strong>${escapeHtml(label(row))}</strong><small>${escapeHtml(new Date(row.at).toLocaleString('id-ID'))} · ${escapeHtml(row.contact)} · ${escapeHtml(visitClient(row.clientId)?.owner || '')}</small><p>${escapeHtml(row.note || 'Detail belum dilengkapi.')}</p><span class="badge ${row.visitStage === 'initial' ? 'processing' : ''}">${row.visitStage === 'initial' ? 'Tahap 1 · perlu detail' : 'Detail terisi'}</span>${row.mine === false ? '' : `<div><button type="button" data-open-pic-visit="${escapeHtml(row.id)}">${row.visitStage === 'initial' ? 'Lengkapi detail' : 'Buka / ubah'}</button></div>`}</div>`).join('') : `<p class="hint">${picVisitsError || 'Belum ada Kunjungan PIC. Catat tahap 1 setelah bertemu PIC client.'}</p>`;
   }
   function renderAll() {
     renderPicVisits();
@@ -194,7 +194,7 @@
     $('#pic-visit-next').value = row.next || '';
     $('#pic-visit-services').replaceChildren();
     (row.services?.length ? row.services : [{ name: '', count: '' }]).forEach((service) => addPicVisitService(service.name, service.count));
-    $('#pic-visit-title').textContent = 'Lengkapi PIC Visit';
+    $('#pic-visit-title').textContent = 'Lengkapi Kunjungan PIC';
     $('#new-pic-visit').hidden = false;
     $('#pic-visit-timestamp').textContent = `Tercatat: ${new Date(row.at).toLocaleString('id-ID')}`;
     openPicVisitStep('2');
@@ -206,7 +206,7 @@
     $('#pic-visit-saved').value = '';
     $('#pic-visit-services').replaceChildren();
     addPicVisitService();
-    $('#pic-visit-title').textContent = 'Catat PIC Visit';
+    $('#pic-visit-title').textContent = 'Catat Kunjungan PIC';
     $('#new-pic-visit').hidden = true;
     $('#pic-visit-timestamp').textContent = 'Waktu dicatat saat tombol Simpan ditekan.';
     $('#pic-visit-photo-note').textContent = '';
@@ -301,7 +301,7 @@
       payload = { id: existing?.id, clientId: $('#pic-visit-client').value, visitStage: existing?.visitStage || 'initial', data: { ...(existing?.data || {}), ...base() } };
     } else {
       const existing = picVisits.find((item) => item.id === $('#pic-visit-saved').value);
-      if (!existing) { setStatus('#pic-visit-status', 'Pilih PIC Visit yang sudah dicatat.', true); return; }
+      if (!existing) { setStatus('#pic-visit-status', 'Pilih Kunjungan PIC yang sudah dicatat.', true); return; }
       const response = $('#pic-visit-response').value;
       const note = $('#pic-visit-note').value.trim();
       if (!response || !note) { setStatus('#pic-visit-status', 'Isi respons dan catatan hasil kunjungan.', true); return; }
@@ -335,13 +335,13 @@
       openPicVisitStep('2');
       setStatus('#pic-visit-status', 'Tahap 1 tersimpan. Lengkapi detail pada record yang sama.');
     } else {
-      setStatus('#pic-visit-status', 'Detail PIC Visit tersimpan.');
+      setStatus('#pic-visit-status', 'Detail Kunjungan PIC tersimpan.');
       const d = payload.data;
       const current = offers.get(payload.clientId);
-      const changed = d.offerStage && !(current && current.stage === d.offerStage && (current.next_follow_up || '') === (d.next || '') && current.last_note === `PIC Visit: ${d.note}`);
+      const changed = d.offerStage && !(current && current.stage === d.offerStage && (current.next_follow_up || '') === (d.next || '') && current.last_note === `Kunjungan PIC: ${d.note}`);
       if (changed && window.marketingApi?.saveOffer) {
-        const linked = await window.marketingApi.saveOffer({ clientId: payload.clientId, stage: d.offerStage, offerType: current?.offer_type || 'Perpanjangan kontrak', activityDate: today, note: `PIC Visit: ${d.note}`, next: isOpen({ stage: d.offerStage }) ? d.next : null });
-        setStatus('#pic-visit-status', linked.error ? `Detail PIC Visit tersimpan, tetapi penawaran belum tercatat di Monitoring: ${linked.error}` : 'Detail PIC Visit tersimpan dan tahap penawaran tercatat di Monitoring.', !!linked.error);
+        const linked = await window.marketingApi.saveOffer({ clientId: payload.clientId, stage: d.offerStage, offerType: current?.offer_type || 'Perpanjangan kontrak', activityDate: today, note: `Kunjungan PIC: ${d.note}`, next: isOpen({ stage: d.offerStage }) ? d.next : null });
+        setStatus('#pic-visit-status', linked.error ? `Detail Kunjungan PIC tersimpan, tetapi penawaran belum tercatat di Monitoring: ${linked.error}` : 'Detail Kunjungan PIC tersimpan dan tahap penawaran tercatat di Monitoring.', !!linked.error);
       }
     }
   });

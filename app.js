@@ -404,7 +404,7 @@ function renderDashboard(live) {
   }).filter((k) => k.total).sort((a, b) => (b.total - b.visited) - (a.total - a.visited));
   $('#ac-dash-body').innerHTML = `<div class="progress-summary"><div><strong>${never}</strong><small>Belum pernah dikunjungi</small></div><div><strong>${recent.length}</strong><small>Kunjungan 30 hari</small></div><div><strong>${noDate}</strong><small>Tanggal kontrak belum diisi</small></div></div>
     <div class="table-wrap"><table><thead><tr><th>PIC Korlap</th><th>Akun</th><th>Client</th><th>Sudah dikunjungi</th><th>Belum</th><th>Kunjungan 30 hari</th></tr></thead><tbody>${korlaps.map((k) => `<tr><td><strong>${esc(k.alias)}</strong></td><td>${esc(k.member)}</td><td>${k.total}</td><td>${k.visited}</td><td>${k.total - k.visited}</td><td>${k.month}</td></tr>`).join('')}</tbody></table></div>
-    <p class="hint">Dihitung dari PIC Visit yang tercatat di portal sejak fitur ini aktif; kunjungan sebelumnya tidak ikut terhitung.</p>`;
+    <p class="hint">Dihitung dari Kunjungan PIC yang tercatat di portal sejak fitur ini aktif; kunjungan sebelumnya tidak ikut terhitung.</p>`;
 }
 function renderAliasTable() {
   const count = (alias, role) => activeClients.filter((r) => r.status === 'aktif' && picTokens({ [role + '_raw']: r[role + '_raw'] }).includes(alias)).length;
@@ -723,7 +723,7 @@ async function loadPicVisits() {
   const requestedUserId = currentUser.id;
   const { data, error } = await client.from('marketing_pic_visits').select('*').order('created_at', { ascending: false }).limit(200);
   if (currentUser?.id !== requestedUserId) return;
-  if (error) { picVisitRows = []; publishPicVisits('PIC Visit belum dapat dimuat: ' + error.message); return; }
+  if (error) { picVisitRows = []; publishPicVisits('Kunjungan PIC belum dapat dimuat: ' + error.message); return; }
   picVisitRows = data || [];
   publishPicVisits();
 }
@@ -766,7 +766,7 @@ async function loadVisits() {
   const requestedUserId = currentUser.id;
   const { data, error } = await client.from('marketing_visits').select('*').order('created_at', { ascending: false }).limit(100);
   if (currentUser?.id !== requestedUserId) return;
-  if (error) { $('#visit-list').textContent = 'Laporan belum dapat dibaca: ' + error.message; publishVisitSnapshot('Sales Visit belum dapat dimuat. Coba Muat ulang pada menu Sales Visit.'); return; }
+  if (error) { $('#visit-list').textContent = 'Laporan belum dapat dibaca: ' + error.message; publishVisitSnapshot('Kunjungan Marketing belum dapat dimuat. Coba Muat ulang pada menu Kunjungan Marketing.'); return; }
   visitCache = data || [];
   publishVisitSnapshot();
   renderSavedVisits();
