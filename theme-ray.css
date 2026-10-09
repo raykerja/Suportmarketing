@@ -6,6 +6,8 @@
   --ray-muted: #5b6b80;
   --ray-line: #dbe3ee;
   --ray-gold: #d9b15e;
+  --ray-blue-pale: #dde9fb;
+  --ray-blue-mid: #4a7fcc;
 }
 header { background: linear-gradient(115deg, #14204a, #071c45); }
 .brand { min-width: 0; }
@@ -48,7 +50,9 @@ header { background: linear-gradient(115deg, #14204a, #071c45); }
 @media (max-width: 760px) { .staff-import button { width: 100%; min-height: 48px; } }
 @media (max-width: 760px) { .ai-search-input { grid-template-columns: 1fr; } .ai-search-input button { min-height: 48px; width: 100%; } }
 @media (max-width: 760px) { .hero p:last-child { display: block; } }
-.tabs .active, .visit-step-nav button.active, .progress-steps span.current { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
+.tabs-main button { background: var(--ray-blue-pale); border-color: var(--ray-blue-pale); color: var(--ray-blue); }
+.tabs-main .active, .visit-step-nav button.active, .progress-steps span.current { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
+.sub-tabs .active, .db-switch .active { background: var(--ray-blue-mid); border-color: var(--ray-blue-mid); color: #fff; }
 .card { border-color: var(--ray-line); box-shadow: 0 1px 2px rgba(14,27,46,.06), 0 6px 20px rgba(14,27,46,.06); }
 input, select, textarea { display: block; width: 100%; min-width: 0; border-color: #c6d3e3; color: var(--ray-navy); }
 input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]), select,
@@ -58,6 +62,12 @@ form, form label, .columns > *, .form-grid > * { min-width: 0; }
 form label, .client-filters label { width: 100%; }
 .sub-tabs { margin-top: -6px; }
 .sub-tabs button { font-size: 13px; }
+@media (max-width: 760px) {
+  .tabs-main { flex-direction: column; flex-wrap: nowrap; }
+  .tabs-main button { width: 100%; text-align: center; }
+  .sub-tabs, .db-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sub-tabs button, .db-switch button { width: 100%; text-align: center; white-space: normal; }
+}
 #active-client-menu.active, #sales-menu.active, #pipeline-menu.active { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
 .legacy-letter-layout summary { cursor: pointer; color: var(--ray-blue); font-weight: 700; padding: 12px 0; }
 .legacy-letter-layout .columns { margin-top: 8px; }
