@@ -34,7 +34,11 @@
       offerType: 'Perpanjangan + perluasan', stage: 'follow_up', next: day(0),
       history: [{ date: day(-3), stage: 'follow_up', note: 'Menunggu jadwal pembahasan penyesuaian kebutuhan.' }] }
   ];
-  const picVisits = [];
+  let picVisits = [];
+  let picVisitsError = '';
+  let realClients = [];
+  let picClientId = '';
+  const visitClient = (id) => realClients.find((row) => row.id === id);
   let salesVisits = [];
   let salesVisitError = '';
   let salesVisitsLoaded = false;
@@ -107,15 +111,15 @@
   }
   function renderActivityDashboard() {
     const picSummary = `
-      <div><strong>${picVisits.length}</strong><small>PIC Visit simulasi</small></div>
+      <div><strong>${picVisits.length}</strong><small>PIC Visit tercatat</small></div>
       <div><strong>${picVisits.filter((row) => row.visitStage === 'initial').length}</strong><small>PIC Visit perlu detail</small></div>`;
     const salesSummary = `
       <div><strong>${salesVisits.length}</strong><small>Sales Visit terbaca</small></div>
       <div><strong>${salesVisits.filter((row) => row.visitStage === 'initial').length}</strong><small>Sales Visit perlu detail</small></div>`;
     const picList = picVisits.length ? picVisits.map((row) => {
-      const client = clients.find((item) => item.id === row.clientId);
+      const client = visitClient(row.clientId);
       return renderActivityItem({ ...row, name: client?.name, owner: client?.owner });
-    }).join('') : '<p class="hint">Belum ada PIC Visit simulasi yang diinput pada sesi ini.</p>';
+    }).join('') : `<p class="hint">${picVisitsError || 'Belum ada PIC Visit yang tercatat.'}</p>`;
     const salesStatus = salesVisitError || (salesVisitsLoaded
       ? `Menampilkan ${salesVisits.length} laporan terbaru yang dapat diakses akun ini (maksimal 100).`
       : 'Memuat Sales Visit…');
@@ -170,28 +174,37 @@
       $(`#pic-visit-step-button-${number}`).classList.toggle('active', active);
       $(`#pic-visit-step-button-${number}`).setAttribute('aria-expanded', String(active));
     }
-    $('#save-pic-visit').textContent = step === '1' ? 'Simulasikan tahap 1' : 'Simulasikan detail';
+    $('#save-pic-visit').textContent = step === '1' ? 'Simpan tahap 1' : 'Simpan detail';
   }
   function renderPicVisits() {
-    const clientValue = $('#pic-visit-client').value || selectedId;
+    const clientValue = $('#pic-visit-client').value || picClientId;
     const savedValue = $('#pic-visit-saved').value;
-    $('#pic-visit-client').innerHTML = '<option value="">Pilih klien aktif</option>' + clients.map((row) => `<option value="${row.id}">${escapeHtml(row.name)}</option>`).join('');
-    $('#pic-visit-client').value = clientValue;
-    const owner = clients.find((row) => row.id === clientValue)?.owner;
+    $('#pic-visit-client').innerHTML = '<option value="">Pilih klien aktif</option>' + realClients.map((row) => `<option value="${escapeHtml(row.id)}">${escapeHtml(row.name)}</option>`).join('');
+    $('#pic-visit-client').value = realClients.some((row) => row.id === clientValue) ? clientValue : '';
+    const owner = visitClient($('#pic-visit-client').value)?.owner;
     $('#pic-visit-owner').textContent = owner ? `PIC RMP: ${owner}` : '';
-    $('#pic-visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>' + picVisits.map((row) => `<option value="${row.id}">${escapeHtml(clients.find((client) => client.id === row.clientId)?.name)} · ${escapeHtml(new Date(row.at).toLocaleString('id-ID'))}</option>`).join('');
+    const label = (row) => visitClient(row.clientId)?.name || 'Client tidak ditemukan';
+    $('#pic-visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>' + picVisits.map((row) => `<option value="${escapeHtml(row.id)}">${escapeHtml(label(row))} · ${escapeHtml(new Date(row.at).toLocaleString('id-ID'))}</option>`).join('');
     if (picVisits.some((row) => row.id === savedValue)) $('#pic-visit-saved').value = savedValue;
     $('#pic-visit-list').innerHTML = picVisits.length ? picVisits.map((row) => `
-      <div class="item"><strong>${escapeHtml(clients.find((client) => client.id === row.clientId)?.name)}</strong><small>${escapeHtml(new Date(row.at).toLocaleString('id-ID'))} · ${escapeHtml(row.contact)} · ${escapeHtml(clients.find((client) => client.id === row.clientId)?.owner)}</small><p>${escapeHtml(row.note || 'Detail belum dilengkapi.')}</p><span class="badge ${row.visitStage === 'initial' ? 'processing' : ''}">${row.visitStage === 'initial' ? 'Tahap 1 · perlu detail' : 'Detail terisi'}</span><div><button type="button" data-open-pic-visit="${row.id}">${row.visitStage === 'initial' ? 'Lengkapi detail' : 'Buka / ubah'}</button></div></div>`).join('') : '<p class="hint">Belum ada PIC Visit simulasi. Catat tahap 1 untuk melihat contoh alurnya.</p>';
+      <div class="item"><strong>${escapeHtml(label(row))}</strong><small>${escapeHtml(new Date(row.at).toLocaleString('id-ID'))} · ${escapeHtml(row.contact)} · ${escapeHtml(visitClient(row.clientId)?.owner || '')}</small><p>${escapeHtml(row.note || 'Detail belum dilengkapi.')}</p><span class="badge ${row.visitStage === 'initial' ? 'processing' : ''}">${row.visitStage === 'initial' ? 'Tahap 1 · perlu detail' : 'Detail terisi'}</span>${row.mine === false ? '' : `<div><button type="button" data-open-pic-visit="${escapeHtml(row.id)}">${row.visitStage === 'initial' ? 'Lengkapi detail' : 'Buka / ubah'}</button></div>`}</div>`).join('') : `<p class="hint">${picVisitsError || 'Belum ada PIC Visit. Catat tahap 1 setelah bertemu PIC client.'}</p>`;
   }
   function renderAll() {
-    const previousId = selectedId;
     render();
-    if (previousId !== selectedId) $('#pic-visit-client').value = selectedId;
     renderProgress();
     renderPicVisits();
     renderActivityDashboard();
   }
+  window.addEventListener('marketing:clients-snapshot', (event) => {
+    realClients = Array.isArray(event.detail?.clients) ? event.detail.clients : [];
+    renderPicVisits(); renderActivityDashboard();
+  });
+  window.addEventListener('marketing:picvisits-snapshot', (event) => {
+    picVisits = Array.isArray(event.detail?.visits) ? event.detail.visits : [];
+    picVisitsError = event.detail?.error || '';
+    renderPicVisits(); renderActivityDashboard();
+  });
+  window.marketingPicVisit = { open(clientId) { picClientId = clientId; resetPicVisit(); document.querySelector('[data-tab="pic-visits"]').click(); } };
   window.addEventListener('marketing:visits-snapshot', (event) => {
     salesVisits = Array.isArray(event.detail?.visits) ? event.detail.visits : [];
     salesVisitError = event.detail?.error || '';
@@ -199,7 +212,7 @@
     renderActivityDashboard();
   });
   function fillPicVisit(row) {
-    selectedId = row.clientId;
+    picClientId = row.clientId;
     renderAll();
     $('#pic-visit-saved').value = row.id;
     $('#pic-visit-client').value = row.clientId;
@@ -221,19 +234,19 @@
     (row.services?.length ? row.services : [{ name: '', count: '' }]).forEach((service) => addPicVisitService(service.name, service.count));
     $('#pic-visit-title').textContent = 'Lengkapi PIC Visit';
     $('#new-pic-visit').hidden = false;
-    $('#pic-visit-timestamp').textContent = `Tercatat (simulasi): ${new Date(row.at).toLocaleString('id-ID')}`;
+    $('#pic-visit-timestamp').textContent = `Tercatat: ${new Date(row.at).toLocaleString('id-ID')}`;
     openPicVisitStep('2');
     document.querySelector('[data-tab="pic-visits"]').click();
   }
   function resetPicVisit() {
     $('#pic-visit-form').reset();
-    $('#pic-visit-client').value = selectedId;
+    $('#pic-visit-client').value = picClientId;
     $('#pic-visit-saved').value = '';
     $('#pic-visit-services').replaceChildren();
     addPicVisitService();
     $('#pic-visit-title').textContent = 'Catat PIC Visit';
     $('#new-pic-visit').hidden = true;
-    $('#pic-visit-timestamp').textContent = 'Waktu simulasi dicatat saat tombol Simpan ditekan.';
+    $('#pic-visit-timestamp').textContent = 'Waktu dicatat saat tombol Simpan ditekan.';
     $('#pic-visit-photo-note').textContent = '';
     $('#pic-visit-location-status').textContent = '';
     setStatus('#pic-visit-status', '');
@@ -295,7 +308,8 @@
     setStatus('#client-progress-status', 'Simulasi diperbarui di browser. Muat ulang halaman untuk mengembalikan data contoh.');
   });
   $('#pic-visit-client').addEventListener('change', () => {
-    const client = clients.find((row) => row.id === $('#pic-visit-client').value);
+    picClientId = $('#pic-visit-client').value;
+    const client = visitClient(picClientId);
     $('#pic-visit-owner').textContent = client ? `PIC RMP: ${client.owner}` : '';
   });
   $('#get-pic-visit-location').addEventListener('click', () => {
@@ -306,7 +320,7 @@
     $('#pic-visit-location-status').textContent = 'Meminta lokasi perangkat…';
     navigator.geolocation.getCurrentPosition(({ coords }) => {
       $('#pic-visit-coordinates').value = `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`;
-      $('#pic-visit-location-status').textContent = 'Koordinat terisi untuk simulasi; belum dikirim atau disimpan.';
+      $('#pic-visit-location-status').textContent = 'Koordinat terisi. Tekan Simpan untuk menyimpannya.';
     }, () => {
       $('#pic-visit-location-status').textContent = 'Lokasi tidak tersedia. Isi koordinat manual jika perlu.';
     }, { enableHighAccuracy: true, timeout: 10000 });
@@ -327,67 +341,55 @@
     event.target.closest('.visit-service').remove();
     if (!$('#pic-visit-services').children.length) addPicVisitService();
   });
-  $('#pic-visit-form').addEventListener('submit', (event) => {
+  let picVisitSaving = false;
+  $('#pic-visit-form').addEventListener('submit', async (event) => {
     event.preventDefault();
+    if (picVisitSaving) return;
+    if (!window.marketingApi?.savePicVisit) { setStatus('#pic-visit-status', 'Aplikasi belum siap. Muat ulang halaman.', true); return; }
+    const base = (existing) => ({ category: $('#pic-visit-category').value, contact: $('#pic-visit-contact').value.trim(), role: $('#pic-visit-role').value.trim(), coordinates: $('#pic-visit-coordinates').value.trim(), ...(existing || {}) });
+    let payload;
     if (activePicVisitStep === '1') {
       const fields = ['#pic-visit-client', '#pic-visit-category', '#pic-visit-contact', '#pic-visit-role'].map($);
       const invalid = fields.find((field) => !field.reportValidity());
       if (invalid) { invalid.focus(); return; }
-      const row = {
-        id: crypto.randomUUID(), clientId: $('#pic-visit-client').value,
-        category: $('#pic-visit-category').value,
-        contact: $('#pic-visit-contact').value.trim(), role: $('#pic-visit-role').value.trim(),
-        coordinates: $('#pic-visit-coordinates').value.trim(), at: new Date().toISOString(),
-        hasPhoto: !!$('#pic-visit-photo').files.length, visitStage: 'initial'
-      };
-      picVisits.unshift(row);
-      selectedId = row.clientId;
-      renderAll();
-      $('#pic-visit-saved').value = row.id;
-      $('#pic-visit-photo').value = '';
-      $('#pic-visit-photo-note').textContent = row.hasPhoto ? 'Foto dipilih untuk simulasi, tetapi tidak diunggah atau disimpan.' : '';
-      $('#pic-visit-timestamp').textContent = `Tercatat (simulasi): ${new Date(row.at).toLocaleString('id-ID')}`;
-      $('#new-pic-visit').hidden = false;
-      openPicVisitStep('2');
-      setStatus('#pic-visit-status', 'Tahap 1 tersimpan sementara di browser. Lengkapi detail pada record yang sama.');
-      return;
-    }
-    const row = picVisits.find((item) => item.id === $('#pic-visit-saved').value);
-    if (!row) { setStatus('#pic-visit-status', 'Pilih PIC Visit yang sudah dicatat.', true); return; }
-    const response = $('#pic-visit-response').value;
-    const note = $('#pic-visit-note').value.trim();
-    if (!response || !note) { setStatus('#pic-visit-status', 'Isi respons dan catatan hasil kunjungan.', true); return; }
-    if ($('#pic-visit-workforce').value && !$('#pic-visit-workforce').reportValidity()) return;
-    const offerStage = $('#pic-visit-stage').value;
-    const next = $('#pic-visit-next').value;
-    if (offerStage && isOpen({ stage: offerStage }) && (!next || next < today)) {
-      setStatus('#pic-visit-status', 'Status penawaran terbuka memerlukan jadwal follow up hari ini atau setelahnya.', true); return;
-    }
-    const services = [...document.querySelectorAll('#pic-visit-services .visit-service')].map((item) => ({
-      name: item.querySelector('[data-pic-service-name]').value.trim(), count: item.querySelector('[data-pic-service-count]').value.trim()
-    })).filter((item) => item.name || item.count);
-    if (services.some((item) => !item.name || !item.count)) { setStatus('#pic-visit-status', 'Lengkapi nama bagian kerja dan jumlahnya.', true); return; }
-    const previousNote = row.note;
-    Object.assign(row, {
-      address: $('#pic-visit-address').value.trim(), phone: $('#pic-visit-phone').value.trim(),
-      companyPhone: $('#pic-visit-company-phone').value.trim(),
-      response, workforce: $('#pic-visit-workforce').value,
-      need: $('#pic-visit-need').value.trim(), services, note,
-      important: $('#pic-visit-important').value.trim(), offerStage,
-      next: offerStage && isOpen({ stage: offerStage }) ? next : '', visitStage: 'detail'
-    });
-    const client = clients.find((item) => item.id === row.clientId);
-    if (offerStage && client) {
-      const changed = previousNote !== note || client.stage !== offerStage || client.next !== row.next;
-      client.stage = offerStage;
-      client.next = row.next;
-      if (changed) {
-        client.history.push({ date: day(0), stage: offerStage, note: `PIC Visit: ${note}` });
+      const existing = picVisits.find((item) => item.id === $('#pic-visit-saved').value);
+      payload = { id: existing?.id, clientId: $('#pic-visit-client').value, visitStage: existing?.visitStage || 'initial', data: { ...(existing?.data || {}), ...base() } };
+    } else {
+      const existing = picVisits.find((item) => item.id === $('#pic-visit-saved').value);
+      if (!existing) { setStatus('#pic-visit-status', 'Pilih PIC Visit yang sudah dicatat.', true); return; }
+      const response = $('#pic-visit-response').value;
+      const note = $('#pic-visit-note').value.trim();
+      if (!response || !note) { setStatus('#pic-visit-status', 'Isi respons dan catatan hasil kunjungan.', true); return; }
+      if ($('#pic-visit-workforce').value && !$('#pic-visit-workforce').reportValidity()) return;
+      const offerStage = $('#pic-visit-stage').value;
+      const next = $('#pic-visit-next').value;
+      if (offerStage && isOpen({ stage: offerStage }) && (!next || next < today)) {
+        setStatus('#pic-visit-status', 'Status penawaran terbuka memerlukan jadwal follow up hari ini atau setelahnya.', true); return;
       }
+      const services = [...document.querySelectorAll('#pic-visit-services .visit-service')].map((item) => ({
+        name: item.querySelector('[data-pic-service-name]').value.trim(), count: item.querySelector('[data-pic-service-count]').value.trim()
+      })).filter((item) => item.name || item.count);
+      if (services.some((item) => !item.name || !item.count)) { setStatus('#pic-visit-status', 'Lengkapi nama bagian kerja dan jumlahnya.', true); return; }
+      payload = { id: existing.id, clientId: existing.clientId, visitStage: 'detail', data: { ...existing.data, ...base(), address: $('#pic-visit-address').value.trim(), phone: $('#pic-visit-phone').value.trim(),
+        companyPhone: $('#pic-visit-company-phone').value.trim(), response, workforce: $('#pic-visit-workforce').value,
+        need: $('#pic-visit-need').value.trim(), services, note, important: $('#pic-visit-important').value.trim(),
+        offerStage, next: offerStage && isOpen({ stage: offerStage }) ? next : '' } };
     }
+    picVisitSaving = true;
+    setStatus('#pic-visit-status', 'Menyimpan…');
+    const result = await window.marketingApi.savePicVisit(payload);
+    picVisitSaving = false;
+    if (result.error) { setStatus('#pic-visit-status', 'Gagal menyimpan: ' + result.error, true); return; }
+    picClientId = payload.clientId;
     renderAll();
-    $('#pic-visit-saved').value = row.id;
-    setStatus('#pic-visit-status', 'Detail PIC Visit diperbarui pada record simulasi yang sama. Muat ulang halaman untuk mengembalikan data contoh.');
+    $('#pic-visit-saved').value = result.id;
+    $('#pic-visit-timestamp').textContent = `Tercatat: ${new Date(result.at).toLocaleString('id-ID')}`;
+    $('#new-pic-visit').hidden = false;
+    if (activePicVisitStep === '1') {
+      $('#pic-visit-photo').value = '';
+      openPicVisitStep('2');
+      setStatus('#pic-visit-status', 'Tahap 1 tersimpan. Lengkapi detail pada record yang sama.');
+    } else setStatus('#pic-visit-status', 'Detail PIC Visit tersimpan.');
   });
   addPicVisitService();
   renderAll();

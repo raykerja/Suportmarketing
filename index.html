@@ -23,9 +23,9 @@
   <link rel="stylesheet" href="style.css?v=20261005-8">
   <link rel="stylesheet" href="theme-ray.css?v=20261007-1">
   <script src="config.js"></script>
-  <script defer src="clients-preview.js?v=20261006-3"></script>
+  <script defer src="clients-preview.js?v=20261009-1"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261009-1"></script>
+  <script type="module" src="app.js?v=20261009-2"></script>
 </head>
 <body>
   <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="open-settings" type="button" data-tab="settings" hidden>Pengaturan</button></header>
@@ -78,7 +78,7 @@
         <div class="card activity-dashboard"><div class="section-head"><div><p class="eyebrow">AKTIVITAS KUNJUNGAN</p><h2>Dashboard Sales Visit &amp; PIC Visit</h2><p class="hint">Pantau input kunjungan sebelum mencatat tindak lanjut. Sales Visit berasal dari laporan tersimpan; PIC Visit masih simulasi.</p></div></div>
           <div id="new-activity-dashboard-summary" class="progress-summary" aria-label="Ringkasan input kunjungan New Client"></div>
           <div class="activity-dashboard-grid"><div><div class="section-head"><h3>Sales Visit <small>(tersimpan)</small></h3><div class="actions"><button id="refresh-new-activity-sales" type="button">Muat ulang</button><button type="button" data-tab="visits">Buka Sales Visit</button></div></div><p id="new-activity-sales-status" class="hint" role="status">Memuat Sales Visit…</p><div id="new-activity-sales-list" class="list activity-dashboard-list" aria-live="polite"></div></div>
-            <div><div class="section-head"><h3>PIC Visit <small>(simulasi)</small></h3><button type="button" data-tab="pic-visits">Buka PIC Visit</button></div><div id="new-activity-pic-list" class="list activity-dashboard-list" aria-live="polite"></div></div></div>
+            <div><div class="section-head"><h3>PIC Visit</h3><button type="button" data-tab="pic-visits">Buka PIC Visit</button></div><div id="new-activity-pic-list" class="list activity-dashboard-list" aria-live="polite"></div></div></div>
         </div>
         <div class="card"><div class="section-head"><div><p class="eyebrow">TINDAK LANJUT</p><h2>Monitoring &amp; Tindaklanjut Target</h2><p class="hint">Buka target dari daftar jatuh tempo atau pilih kunjungan untuk mencatat langkah berikutnya.</p></div><button id="refresh-progress" type="button">Muat ulang</button></div>
           <div id="progress-summary" class="progress-summary"></div><div id="progress-due" class="progress-due"></div>
@@ -114,17 +114,17 @@
         </div>
       </section>
       <section id="pic-visits" class="panel" hidden>
-        <div class="preview-note"><strong>PRATINJAU PIC VISIT</strong><span>Form mengikuti alur dua tahap Sales Visit untuk klien aktif. Simulasi hanya tersimpan sementara di browser; foto tidak diunggah dan data hilang saat halaman dimuat ulang.</span></div>
+        <div class="preview-note"><strong>DATA PRODUKSI</strong><span>PIC Visit tersimpan di database untuk client yang PIC-nya akun ini. Foto belum didukung. Monitoring &amp; Tindaklanjut (menu 3) masih simulasi.</span></div>
         <div class="visit-layout">
           <div class="card"><div class="section-head"><div><p class="eyebrow">KUNJUNGAN PIC RMP</p><h2 id="pic-visit-title">Catat PIC Visit</h2></div><button id="new-pic-visit" type="button" hidden>Entri baru</button></div><p class="hint">Pilih klien aktif, catat pertemuan di lokasi, lalu lengkapi respons dan peluang penawaran ulang.</p>
             <form id="pic-visit-form" novalidate>
               <div class="visit-step-nav" role="group" aria-label="Tahap PIC Visit"><button id="pic-visit-step-button-1" class="active" type="button" data-pic-visit-step="1" aria-controls="pic-visit-step-1" aria-expanded="true">1. CATAT DI LOKASI</button><button id="pic-visit-step-button-2" type="button" data-pic-visit-step="2" aria-controls="pic-visit-step-2" aria-expanded="false">2. LENGKAPI DETAIL</button></div>
               <section id="pic-visit-step-1" class="visit-step" data-pic-visit-panel="1"><fieldset><legend class="sr-only">Catat PIC Visit di lokasi</legend>
-                <p id="pic-visit-timestamp" class="visit-timestamp">Waktu simulasi dicatat saat tombol Simpan ditekan.</p>
+                <p id="pic-visit-timestamp" class="visit-timestamp">Waktu dicatat saat tombol Simpan ditekan.</p>
                 <label>Klien aktif <span class="required">*</span><select id="pic-visit-client" required><option value="">Pilih klien aktif</option></select></label><p id="pic-visit-owner" class="hint"></p>
                 <label>Kategori <span class="required">*</span><select id="pic-visit-category" required><option value="">Pilih kategori</option><option>Swasta</option><option>Pemerintah</option><option>Hotel</option><option>Pabrik</option><option>Rumah Sakit</option><option>Pendidikan</option><option>Lainnya</option></select></label>
                 <div class="form-grid"><label>Nama PIC klien yang ditemui <span class="required">*</span><input id="pic-visit-contact" maxlength="150" required></label><label>Jabatan PIC klien <span class="required">*</span><input id="pic-visit-role" maxlength="100" required></label></div>
-                <label>Foto kunjungan <small>Opsional; file tidak diunggah dalam pratinjau</small><input id="pic-visit-photo" type="file" accept="image/*" capture="environment"></label><p id="pic-visit-photo-note" class="hint"></p>
+                <label hidden>Foto kunjungan <small>Belum didukung</small><input id="pic-visit-photo" type="file" accept="image/*" capture="environment"></label><p id="pic-visit-photo-note" class="hint"></p>
                 <label>Koordinat kunjungan <small>Opsional; dapat diisi manual</small><input id="pic-visit-coordinates" maxlength="100" placeholder="Contoh: -6.9667, 110.4167"></label><button id="get-pic-visit-location" type="button">Ambil lokasi HP</button><p id="pic-visit-location-status" class="hint" role="status"></p>
               </fieldset></section>
               <section id="pic-visit-step-2" class="visit-step" data-pic-visit-panel="2" hidden><fieldset><legend class="sr-only">Lengkapi detail PIC Visit</legend>
@@ -140,7 +140,7 @@
                 <label>Status penawaran ulang<select id="pic-visit-stage"><option value="">Pilih status</option><option value="review">Perlu review</option><option value="proposal">Menyiapkan penawaran</option><option value="sent">Penawaran terkirim</option><option value="follow_up">Negosiasi / follow up</option><option value="won">Disetujui</option><option value="lost">Tidak lanjut</option></select></label>
                 <label>Jadwal follow up berikutnya<input id="pic-visit-next" type="date"></label>
               </fieldset></section>
-              <div class="save-bar"><button class="primary" id="save-pic-visit" type="submit">Simulasikan tahap 1</button></div><p id="pic-visit-status" role="status"></p>
+              <div class="save-bar"><button class="primary" id="save-pic-visit" type="submit">Simpan tahap 1</button></div><p id="pic-visit-status" role="status"></p>
             </form>
           </div>
           <div class="card"><h2>Riwayat PIC Visit</h2><div id="pic-visit-list" class="list"></div></div>
@@ -150,7 +150,7 @@
         <div class="preview-note"><strong>PRATINJAU MONITORING KLIEN AKTIF</strong><span>PIC Visit dan riwayat penawaran ulang masih simulasi di browser. Sales Visit di dashboard dibaca dari laporan yang tersedia untuk akun Anda; dashboard tidak mengubah data tersebut.</span></div>
         <div class="card activity-dashboard"><div class="section-head"><div><p class="eyebrow">AKTIVITAS KUNJUNGAN</p><h2>Dashboard PIC Visit &amp; Sales Visit</h2><p class="hint">Pantau input kunjungan sebelum mencatat perkembangan penawaran ulang. PIC Visit adalah simulasi; Sales Visit berasal dari laporan tersimpan.</p></div></div>
           <div id="activity-dashboard-summary" class="progress-summary" aria-label="Ringkasan input kunjungan"></div>
-          <div class="activity-dashboard-grid"><div><div class="section-head"><h3>PIC Visit <small>(simulasi)</small></h3><button type="button" data-tab="pic-visits">Buka PIC Visit</button></div><div id="activity-pic-list" class="list activity-dashboard-list" aria-live="polite"></div></div>
+          <div class="activity-dashboard-grid"><div><div class="section-head"><h3>PIC Visit</h3><button type="button" data-tab="pic-visits">Buka PIC Visit</button></div><div id="activity-pic-list" class="list activity-dashboard-list" aria-live="polite"></div></div>
             <div><div class="section-head"><h3>Sales Visit <small>(tersimpan)</small></h3><div class="actions"><button id="refresh-activity-sales" type="button">Muat ulang</button><button type="button" data-tab="visits">Buka Sales Visit</button></div></div><p id="activity-sales-status" class="hint" role="status">Memuat Sales Visit…</p><div id="activity-sales-list" class="list activity-dashboard-list" aria-live="polite"></div></div></div>
         </div>
         <div class="card"><div class="section-head"><div><p class="eyebrow">TINDAK LANJUT KLIEN AKTIF</p><h2>Monitoring &amp; Tindaklanjut Penawaran Ulang</h2><p class="hint">Pantau tahap penawaran ulang, respons klien, dan jadwal follow up per PIC RMP.</p></div></div><div id="client-progress-summary" class="progress-summary"></div><div id="client-progress-due" class="progress-due"></div></div>
