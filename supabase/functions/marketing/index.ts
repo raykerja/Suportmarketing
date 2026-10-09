@@ -594,11 +594,13 @@ Deno.serve(async (request) => {
     const kota = String(data.kabupaten_kota || '').trim().slice(0, 100);
     const provinsi = String(data.provinsi || '').trim().slice(0, 100);
     const umk = Number(data.umk);
+    const gaji = data.gaji_pokok === undefined || data.gaji_pokok === null || data.gaji_pokok === '' ? null : Number(data.gaji_pokok);
     const rawCounts = data.jumlah_personel && typeof data.jumlah_personel === 'object' ? data.jumlah_personel as Record<string, unknown> : {};
     const counts = ['security', 'cleaning', 'pramubakti', 'driver'].map((name) => Number(rawCounts[name]));
     if (!/^[0-9a-f-]{36}$/i.test(requestId) || !Number.isFinite(dateValue.getTime()) ||
         dateValue.toISOString().slice(0, 10) !== tanggal || !recipient || !clientName || !alamat || !kota || !provinsi ||
         !Number.isSafeInteger(umk) || umk < 1 || umk > 1000000000 ||
+        (gaji !== null && (!Number.isSafeInteger(gaji) || gaji < 1 || gaji > 1000000000)) ||
         counts.some((count) => !Number.isSafeInteger(count) || count < 0 || count > 5000) ||
         counts.every((count) => count === 0))
       return response({ error: 'Lengkapi tanggal, penerima, alamat, UMK, dan jumlah personel RAB dengan benar' }, 400, origin);
@@ -608,7 +610,7 @@ Deno.serve(async (request) => {
       } };
     const { data: created, error: insertError } = await admin.from('marketing_offers').insert({
       request_id: requestId, owner_id: authData.user.id, lead_id: null, manual_input: manualInput,
-      umk, client_name: clientName, drive_folder_id: membership.drive_folder_id,
+      umk, gaji_pokok: gaji, client_name: clientName, drive_folder_id: membership.drive_folder_id,
     }).select('id').single();
     if (insertError) {
       if (insertError.code === '23505') {
@@ -623,7 +625,7 @@ Deno.serve(async (request) => {
     try {
       const ack = await callWorkflow(offerWebhookUrl, {
         offer_id: created.id, mode: 'manual', drive_folder_id: membership.drive_folder_id,
-        ...manualInput, umk,
+        ...manualInput, umk, ...(gaji ? { gaji_pokok: gaji } : {}),
       });
       if (String(ack.offer_id || '') !== created.id) throw new Error('ID penawaran dari n8n berbeda');
     } catch (e) {
@@ -642,16 +644,18 @@ Deno.serve(async (request) => {
     const leadId = String(data.lead_id || '');
     const requestId = String(data.request_id || '');
     const umk = Number(data.umk);
+    const gaji = data.gaji_pokok === undefined || data.gaji_pokok === null || data.gaji_pokok === '' ? null : Number(data.gaji_pokok);
     if (!/^[0-9a-f-]{36}$/i.test(leadId) || !/^[0-9a-f-]{36}$/i.test(requestId) ||
-        !Number.isSafeInteger(umk) || umk < 1 || umk > 1000000000)
-      return response({ error: 'Target, ID permintaan, atau nilai UMK tidak valid' }, 400, origin);
+        !Number.isSafeInteger(umk) || umk < 1 || umk > 1000000000 ||
+        (gaji !== null && (!Number.isSafeInteger(gaji) || gaji < 1 || gaji > 1000000000)))
+      return response({ error: 'Target, ID permintaan, nilai UMK, atau gaji pokok tidak valid' }, 400, origin);
     const { data: lead } = await admin.from('marketing_leads')
       .select('id,owner_id,nama_target,kabupaten_kota,provinsi,data,review_status')
       .eq('id', leadId).eq('owner_id', authData.user.id).maybeSingle();
     if (!lead) return response({ error: 'Target tidak ditemukan atau bukan milik akun ini' }, 404, origin);
     if (lead.review_status !== 'approved') return response({ error: 'Target harus disetujui di menu Review sebelum dibuatkan penawaran' }, 409, origin);
     const { data: created, error: insertError } = await admin.from('marketing_offers').insert({
-      request_id: requestId, owner_id: authData.user.id, lead_id: leadId, umk,
+      request_id: requestId, owner_id: authData.user.id, lead_id: leadId, umk, gaji_pokok: gaji,
       client_name: lead.nama_target, drive_folder_id: membership.drive_folder_id,
     }).select('id').single();
     if (insertError) {
@@ -669,7 +673,7 @@ Deno.serve(async (request) => {
         offer_id: created.id, lead_id: leadId, drive_folder_id: membership.drive_folder_id,
         nama_target: lead.nama_target, alamat: String(lead.data?.alamat || '').slice(0, 500),
         kecamatan: String(lead.data?.kecamatan || '').slice(0, 100),
-        kabupaten_kota: lead.kabupaten_kota || '', provinsi: lead.provinsi || '', umk,
+        kabupaten_kota: lead.kabupaten_kota || '', provinsi: lead.provinsi || '', umk, ...(gaji ? { gaji_pokok: gaji } : {}),
       });
       if (String(ack.offer_id || '') !== created.id) throw new Error('ID penawaran dari n8n berbeda');
     } catch (e) {

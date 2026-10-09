@@ -69,7 +69,7 @@ Arti penanda:
 | Fitur | Status | Catatan |
 | --- | --- | --- |
 | RAB hasil generator web: Kompensasi dan JP dikosongkan + keterangan "Sesuai Kebijakan Client" | ✅ | Diuji dengan salinan template sementara di Drive (dibuang) memakai ekspresi yang sama dengan produksi; rumus subtotal menyesuaikan |
-| BPJS dihitung dari UMK Setempat kota/kabupaten lokasi (isian UMK pada form) + keterangan | ✅ | Rumus template memang `UMK × persentase`; yang ditambah adalah label/keterangan |
+| Gaji Pokok **terpisah** dari UMK Setempat (isian opsional; kosong = sama dengan UMK). BPJS (JKK, JKM, JHT, Kesehatan) dihitung dari **UMK Setempat**, THR dari Gaji Pokok | ✅ | Edge Function v22 + n8n + kolom `marketing_offers.gaji_pokok`. Diuji pada salinan sementara: gaji 2,5 jt vs UMK 2,8 jt → gaji 2.500.000, THR 208.333, BPJS dari 2.800.000 |
 | Berlaku untuk penawaran dari target (lead) **dan** penawaran manual | ✅ | Satu workflow n8n `R7kXoTLBk8X0d4cy`, node `Isi Data RAB` |
 | Tombol di web setelah login nyata → RAB baru | 🟡 | Belum dicoba manusia; coba satu penawaran dan periksa baris Kompensasi, JP, dan Keterangan |
 | Template RAB di Drive & generator Telegram lama | ⬜ tidak diubah | Bila ingin sama, ubah template atau workflow Telegram |

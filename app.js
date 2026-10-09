@@ -1007,15 +1007,17 @@ function showOfferTarget() {
 }
 $('#offer-lead').addEventListener('change', () => { offerRequestId = null; showOfferTarget(); });
 $('#offer-umk').addEventListener('input', () => { offerRequestId = null; });
+$('#offer-gaji').addEventListener('input', () => { offerRequestId = null; });
 $('#offer-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = $('#offer-submit'); button.disabled = true;
   const leadId = $('#offer-lead').value; const umk = Number($('#offer-umk').value);
-  if (!leadId || !Number.isSafeInteger(umk) || umk < 1) { status('#offer-status', 'Pilih target dan isi UMK yang valid.', true); button.disabled = false; return; }
+  const gajiText = $('#offer-gaji').value.trim(); const gaji = gajiText === '' ? null : Number(gajiText);
+  if (!leadId || !Number.isSafeInteger(umk) || umk < 1 || (gaji !== null && (!Number.isSafeInteger(gaji) || gaji < 1))) { status('#offer-status', 'Pilih target dan isi UMK Setempat (serta gaji pokok bila diisi) dengan angka yang valid.', true); button.disabled = false; return; }
   offerRequestId ||= crypto.randomUUID();
   status('#offer-status', 'Mengirim permintaan dokumen ke n8n…');
   try {
-    const { data, error } = await client.functions.invoke('marketing', { body: { action: 'generate_offer', lead_id: leadId, umk, request_id: offerRequestId } });
+    const { data, error } = await client.functions.invoke('marketing', { body: { action: 'generate_offer', lead_id: leadId, umk, gaji_pokok: gaji, request_id: offerRequestId } });
     if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Generator gagal dimulai');
     offerRequestId = null;
     status('#offer-status', `Penawaran ${data.offer_id} diterima. Dokumen akan muncul di daftar setelah selesai.`);
@@ -1025,11 +1027,11 @@ $('#offer-form').addEventListener('submit', async (event) => {
 });
 async function loadOffers() {
   if (!client || !currentUser) return;
-  const { data, error } = await client.from('marketing_offers').select('id,owner_id,client_name,umk,status,nomor_surat,doc_file_url,rab_file_url,error,created_at,updated_at').order('created_at', { ascending: false }).limit(100);
+  const { data, error } = await client.from('marketing_offers').select('id,owner_id,client_name,umk,gaji_pokok,status,nomor_surat,doc_file_url,rab_file_url,error,created_at,updated_at').order('created_at', { ascending: false }).limit(100);
   if (error) { $('#offer-list').textContent = 'Dokumen belum dapat dibaca: ' + error.message; return; }
   offerCache = data || [];
   const recent = (row) => row.status === 'processing' && Date.now() - new Date(row.updated_at).getTime() < 600000;
-  $('#offer-list').innerHTML = offerCache.length ? offerCache.map((row) => `<div class="item"><strong>${esc(row.client_name)}</strong><small>${esc(date(row.created_at))} · UMK Rp${Number(row.umk).toLocaleString('id-ID')} · ${esc(row.nomor_surat || 'Nomor diproses')}</small><div><span class="badge ${row.status === 'error' ? 'error' : row.status === 'processing' || row.status === 'partial' ? 'processing' : ''}">${esc(row.status.toUpperCase())}</span></div><div class="offer-links">${row.doc_file_url ? `<a href="${esc(row.doc_file_url)}" target="_blank" rel="noopener noreferrer">Google Docs surat pengantar</a>` : ''}${row.rab_file_url ? `<a href="${esc(row.rab_file_url)}" target="_blank" rel="noopener noreferrer">Google Sheets RAB</a>` : ''}</div>${row.error ? `<small class="error">${esc(row.error)}</small>` : row.status === 'processing' && !recent(row) ? '<small class="error">Proses lebih dari 10 menit. Muat ulang atau minta admin memeriksa eksekusi n8n.</small>' : ''}</div>`).join('') : '<p class="hint">Belum ada dokumen penawaran.</p>';
+  $('#offer-list').innerHTML = offerCache.length ? offerCache.map((row) => `<div class="item"><strong>${esc(row.client_name)}</strong><small>${esc(date(row.created_at))} · UMK Rp${Number(row.umk).toLocaleString('id-ID')}${row.gaji_pokok ? ` · Gaji pokok Rp${Number(row.gaji_pokok).toLocaleString('id-ID')}` : ''} · ${esc(row.nomor_surat || 'Nomor diproses')}</small><div><span class="badge ${row.status === 'error' ? 'error' : row.status === 'processing' || row.status === 'partial' ? 'processing' : ''}">${esc(row.status.toUpperCase())}</span></div><div class="offer-links">${row.doc_file_url ? `<a href="${esc(row.doc_file_url)}" target="_blank" rel="noopener noreferrer">Google Docs surat pengantar</a>` : ''}${row.rab_file_url ? `<a href="${esc(row.rab_file_url)}" target="_blank" rel="noopener noreferrer">Google Sheets RAB</a>` : ''}</div>${row.error ? `<small class="error">${esc(row.error)}</small>` : row.status === 'processing' && !recent(row) ? '<small class="error">Proses lebih dari 10 menit. Muat ulang atau minta admin memeriksa eksekusi n8n.</small>' : ''}</div>`).join('') : '<p class="hint">Belum ada dokumen penawaran.</p>';
   if (offerCache.some(recent) && !offerPollTimer) offerPollTimer = setInterval(loadOffers, 5000);
   if (!offerCache.some(recent) && offerPollTimer) { clearInterval(offerPollTimer); offerPollTimer = null; }
 }
@@ -1050,7 +1052,8 @@ $('#manual-offer-form').addEventListener('submit', async (event) => {
   const counts = ['security', 'cleaning', 'pramubakti', 'driver']
     .map((name) => Number($(`#manual-offer-${name}`).value));
   const umk = Number($('#manual-offer-umk').value);
-  if (!Number.isSafeInteger(umk) || umk < 1 || umk > 1000000000 ||
+  const gajiText = $('#manual-offer-gaji').value.trim(); const gaji = gajiText === '' ? null : Number(gajiText);
+  if (!Number.isSafeInteger(umk) || umk < 1 || umk > 1000000000 || (gaji !== null && (!Number.isSafeInteger(gaji) || gaji < 1 || gaji > 1000000000)) ||
       counts.some((count) => !Number.isSafeInteger(count) || count < 0 || count > 5000) ||
       counts.every((count) => count === 0)) {
     status('#manual-offer-status', 'Periksa UMK dan isi minimal satu personel pada RAB.', true);
@@ -1069,7 +1072,7 @@ $('#manual-offer-form').addEventListener('submit', async (event) => {
       alamat: $('#manual-offer-address').value.trim(),
       kecamatan: $('#manual-offer-district').value.trim(),
       kabupaten_kota: $('#manual-offer-city').value.trim(),
-      provinsi: $('#manual-offer-province').value.trim(), umk,
+      provinsi: $('#manual-offer-province').value.trim(), umk, gaji_pokok: gaji,
       jumlah_personel: { security: counts[0], cleaning: counts[1], pramubakti: counts[2], driver: counts[3] },
     } });
     if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Generator manual gagal dimulai');

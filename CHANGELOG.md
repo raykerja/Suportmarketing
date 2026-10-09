@@ -1,3 +1,10 @@
+VERSION: 0.8.3 (Gaji Pokok terpisah dari UMK Setempat di RAB)
+DATE: 2026-10-09
+
+ADDED: Isian opsional "Gaji Pokok" pada form penawaran (target dan manual); kolom marketing_offers.gaji_pokok (NULL = sama dengan UMK). RAB: G10 = Gaji Pokok, THR mengikuti Gaji Pokok, sedangkan JKK/JKM/JHT/BPJS Kesehatan dihitung dari UMK Setempat (rumus `=UMK*persentase` ditulis langsung per sel) dengan keterangan "Dihitung dari UMK Setempat <kota> <tahun> (Rp ...)". Label baris gaji: "Gaji Pokok (UMK ...)" bila sama dengan UMK, "Gaji Pokok" bila berbeda.
+CHANGED: Edge Function marketing v22; workflow n8n R7kXoTLBk8X0d4cy (node Validasi Penawaran Web dan Isi Data RAB); template n8n diperbarui.
+MIGRATIONS: 20261009_offers_gaji_pokok.
+
 VERSION: 0.8.2 (penyesuaian RAB)
 DATE: 2026-10-09
 
