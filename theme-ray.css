@@ -164,14 +164,28 @@ th { color: var(--ray-muted); background: #f7faff; }
 .sim-table td.money, .sim-table th.money { text-align: right; white-space: nowrap; }
 .sim-table td.check { width: 36px; text-align: center; }
 .sim-table td.check input { width: auto; }
-.sim-table td.qty input { width: 72px; text-align: right; }
+.sim-table td.qty input { width: 48px; text-align: center; }
+.sim-table td.name { font-weight: 700; }
 .sim-table .group-row td { background: #eef5ff; font-weight: 800; color: #123b37; }
 .sim-table tr.sim-selected { background: #f3f8ff; }
-@media (max-width: 480px) {
-  .sim-table th, .sim-table td { padding: 6px 4px; font-size: 12px; }
-  .sim-table td.qty input { width: 38px; padding: 3px; font-size: 12px; }
-  .sim-table th:nth-child(2), .sim-table td:nth-child(2),
-  .sim-table th:nth-child(6), .sim-table td:nth-child(6) { display: none; }
+.qty-stepper { display: inline-flex; align-items: center; gap: 4px; }
+.qty-stepper button { width: 28px; height: 28px; min-height: 0; padding: 0; line-height: 1; border-radius: 7px; font-weight: 800; font-size: 16px; flex: none; }
+.qty-stepper input::-webkit-outer-spin-button, .qty-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.qty-stepper input { -moz-appearance: textfield; appearance: textfield; }
+@media (max-width: 680px) {
+  .sim-table, .sim-table thead, .sim-table tbody, .sim-table th, .sim-table td, .sim-table tr { display: block; }
+  .sim-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .sim-table tbody tr { border: 1px solid var(--ray-line); border-radius: 12px; padding: 10px 12px; margin-bottom: 10px; background: #fff; }
+  .sim-table tbody tr.group-row { border: none; background: none; padding: 6px 2px 2px; margin-bottom: 0; font-size: 12px; }
+  .sim-table tbody tr.sim-selected { background: #f3f8ff; }
+  .sim-table td { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed var(--ray-line); padding: 7px 0; text-align: right; white-space: normal; }
+  .sim-table tr.group-row td { display: block; border: none; padding: 0; }
+  .sim-table td:last-child { border-bottom: none; }
+  .sim-table td[data-label]::before { content: attr(data-label); font-weight: 700; color: var(--ray-muted); font-size: 12px; text-align: left; }
+  .sim-table td.check { justify-content: flex-start; gap: 10px; border-bottom: 1px dashed var(--ray-line); }
+  .sim-table td.check input { width: 20px; height: 20px; }
+  .sim-table td.name { display: block; text-align: left; font-size: 14px; }
+  .sim-table td.num { display: none; }
 }
 .ac-check { display: flex; align-items: center; gap: 8px; font-weight: 600; }
 .ac-check input { width: auto; }

@@ -663,7 +663,9 @@ function renderSimTable() {
     const qty = selected.get(r.id) || 1;
     const unavailable = r.harga_jual === null;
     const subtotal = unavailable ? '<span class="badge processing">Sedang diverifikasi</span>' : rupiah(Number(r.harga_jual) * Number(qty));
-    return groupRow + `<tr class="${checked ? 'sim-selected' : ''}"><td class="check"><input type="checkbox" data-sim-check="${esc(r.id)}" ${checked ? 'checked' : ''} ${unavailable ? 'disabled' : ''}></td><td class="num">${esc(r.no)}</td><td><strong>${esc(r.item)}</strong></td><td class="qty"><input type="number" min="1" max="100000" step="1" inputmode="numeric" value="${esc(qty)}" data-sim-qty="${esc(r.id)}" ${unavailable ? 'disabled' : ''}></td><td class="money">${unavailable ? '<span class="badge processing">Sedang diverifikasi</span>' : rupiah(r.harga_jual)}</td><td class="money">${subtotal}</td></tr>`;
+    const dis = unavailable ? 'disabled' : '';
+    const stepper = `<div class="qty-stepper"><button type="button" class="qty-dec" data-sim-qty-dec="${esc(r.id)}" ${dis} aria-label="Kurangi">−</button><input type="number" min="1" max="100000" step="1" inputmode="numeric" value="${esc(qty)}" data-sim-qty="${esc(r.id)}" ${dis}><button type="button" class="qty-inc" data-sim-qty-inc="${esc(r.id)}" ${dis} aria-label="Tambah">+</button></div>`;
+    return groupRow + `<tr class="${checked ? 'sim-selected' : ''}"><td class="check"><input type="checkbox" data-sim-check="${esc(r.id)}" ${checked ? 'checked' : ''} ${dis}></td><td class="num">${esc(r.no)}</td><td class="name">${esc(r.item)}</td><td class="qty" data-label="Jumlah">${stepper}</td><td class="money" data-label="Harga jual">${unavailable ? '<span class="badge processing">Sedang diverifikasi</span>' : rupiah(r.harga_jual)}</td><td class="money" data-label="Subtotal">${subtotal}</td></tr>`;
   }).join('');
   $('#sim-table').innerHTML = `<thead><tr><th>Pilih</th><th>No</th><th>Item</th><th>Jumlah</th><th class="money">Harga jual</th><th class="money">Subtotal</th></tr></thead><tbody>${body || `<tr><td colspan="6" class="hint">${priceLoaded ? 'Belum ada item yang cocok.' : ''}</td></tr>`}</tbody>`;
 }
@@ -675,6 +677,12 @@ function showSimView(view) {
 document.querySelectorAll('[data-sim-view]').forEach((b) => b.addEventListener('click', () => showSimView(b.dataset.simView)));
 $('#sim-query').addEventListener('input', renderSimTable);
 $('#sim-refresh').addEventListener('click', loadPrices);
+function setSimQty(id, qty) {
+  const selected = simSelections[simView];
+  const clamped = Math.max(1, Math.min(100000, Number(qty) || 1));
+  if (selected.has(id)) selected.set(id, clamped);
+  renderSimTable();
+}
 $('#sim-table').addEventListener('change', (event) => {
   const check = event.target.closest('[data-sim-check]');
   const qtyInput = event.target.closest('[data-sim-qty]');
@@ -684,11 +692,20 @@ $('#sim-table').addEventListener('change', (event) => {
     if (check.checked) selected.set(id, Number($(`[data-sim-qty="${id}"]`)?.value) || 1); else selected.delete(id);
     renderSimTable();
   } else if (qtyInput) {
-    const id = qtyInput.dataset.simQty;
-    const qty = Math.max(1, Math.min(100000, Number(qtyInput.value) || 1));
-    if (selected.has(id)) selected.set(id, qty);
-    renderSimTable();
+    setSimQty(qtyInput.dataset.simQty, qtyInput.value);
   }
+});
+$('#sim-table').addEventListener('click', (event) => {
+  const dec = event.target.closest('[data-sim-qty-dec]');
+  const inc = event.target.closest('[data-sim-qty-inc]');
+  if (!dec && !inc) return;
+  const id = (dec || inc).dataset.simQtyDec || (dec || inc).dataset.simQtyInc;
+  const current = Number($(`[data-sim-qty="${id}"]`)?.value) || 1;
+  const selected = simSelections[simView];
+  if (!selected.has(id)) selected.set(id, current); // menekan stepper otomatis mencentang item
+  const checkbox = $(`[data-sim-check="${id}"]`);
+  if (checkbox) checkbox.checked = true;
+  setSimQty(id, current + (inc ? 1 : -1));
 });
 
 // PIC Visit ke client aktif (data produksi, RLS: staf hanya miliknya, admin membaca semua).
