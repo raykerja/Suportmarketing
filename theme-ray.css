@@ -61,8 +61,8 @@ select { appearance: none; padding-right: 38px; background-image: url("data:imag
 form, form label, .columns > *, .form-grid > * { min-width: 0; }
 form label, .client-filters label { width: 100%; }
 .sub-tabs { margin-top: -6px; }
-.sub-tabs button, .db-switch button { font-size: clamp(13px, 0.5vw + 11px, 15px); }
-.tabs-main button { font-size: clamp(15px, 1vw + 11px, 20px); }
+.sub-tabs button, .db-switch button { font-size: 15px; }
+.tabs-main button { font-size: 20px; }
 @media (max-width: 760px) {
   .tabs-main { flex-direction: column; flex-wrap: nowrap; }
   .tabs-main button { width: 100%; text-align: center; }
