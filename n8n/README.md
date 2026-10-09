@@ -10,6 +10,10 @@ Untuk lingkungan baru: impor template sebagai workflow **nonaktif**, pilih ulang
 
 Workflow production saat ini sudah aktif dengan ID pada `PROJECT_HANDOFF.md`. Template ini merupakan bahan pemulihan/migrasi, bukan backup credential atau export execution history. Script `scripts/export_portable_workflows.py` dapat membuat ulang template dari draft privat bila draft tersebut tersedia secara lokal.
 
+## Penyesuaian RAB (2026-10-09)
+
+Node `Isi Data RAB` pada `offer-documents.template.json` kini juga: mengosongkan `I13:L13` (Kompensasi) dan `G19`, `I19:L19` (JP, persentase dan nilai), mengisi `M13`/`M19` dengan "Sesuai Kebijakan Client", dan `M16:M18`, `M20` dengan "Dihitung dari UMK Setempat <kota> <tahun>". Rumus template (`G10` = UMK Setempat; BPJS = `G10 × persentase`; subtotal memakai `SUM`) tidak diubah, sehingga subtotal A/B dan persentase subtotal menyesuaikan otomatis.
+
 ## Revisi pencarian RUP pemerintah (2026-10-04)
 
 `target-research.template.json` memakai `sirup_search` langsung ke endpoint publik SiRUP/INAPROC. Permintaan harus menyertakan parameter DataTables lengkap (`columns[1..11][data]`, `draw`, `start`, `length`, `order`, `search[value]`) dan header `User-Agent`, `X-Requested-With`, `Accept`, `Referer`; tanpa ini server dapat mengembalikan 403 atau HTTP 200 dengan isi kosong. Tahun anggaran dihitung `tahun riset - 1`. `sirup_detail` membaca halaman resmi paket untuk T.A., pagu, volume, uraian, dan spesifikasi. `rup_document_search` memakai credential Serper sebagai cadangan untuk ekspor RUP/SiRUP di domain `go.id`. Workflow aktif sudah diperbarui; webhook, Drive, dan callback lama tetap digunakan. **Uji dari server n8n menunjukkan HTTP 403 pada `sirup_search`**, sehingga pagu/personel belum otomatis terisi. Endpoint yang sama berhasil dari komputer lokal dengan paket TA 2025, tetapi akses dari IP n8n dan Supabase Edge ditolak. Fallback dokumen resmi belum menemukan paket yang cocok pada tiga uji.

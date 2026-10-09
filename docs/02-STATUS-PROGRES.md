@@ -64,6 +64,16 @@ Arti penanda:
 | **6 item seragam ditandai "perlu diverifikasi"** (harga jual disembunyikan dari staf) | ⬜ butuh pemilik | Item no. 20, 22, 24, 25, 26, 27: harga jual di Excel tidak konsisten (mis. jual lebih rendah dari beli, atau angka manual tidak sama dengan lama + kenaikan). Admin memeriksa lalu mencentang "Perlu diverifikasi" dimatikan |
 | Harga dipakai otomatis di pembuatan penawaran/RAB | ⬜ | Belum tersambung; daftar hanya referensi |
 
+## D3. Penyesuaian RAB (9 Oktober 2026)
+
+| Fitur | Status | Catatan |
+| --- | --- | --- |
+| RAB hasil generator web: Kompensasi dan JP dikosongkan + keterangan "Sesuai Kebijakan Client" | ✅ | Diuji dengan salinan template sementara di Drive (dibuang) memakai ekspresi yang sama dengan produksi; rumus subtotal menyesuaikan |
+| BPJS dihitung dari UMK Setempat kota/kabupaten lokasi (isian UMK pada form) + keterangan | ✅ | Rumus template memang `UMK × persentase`; yang ditambah adalah label/keterangan |
+| Berlaku untuk penawaran dari target (lead) **dan** penawaran manual | ✅ | Satu workflow n8n `R7kXoTLBk8X0d4cy`, node `Isi Data RAB` |
+| Tombol di web setelah login nyata → RAB baru | 🟡 | Belum dicoba manusia; coba satu penawaran dan periksa baris Kompensasi, JP, dan Keterangan |
+| Template RAB di Drive & generator Telegram lama | ⬜ tidak diubah | Bila ingin sama, ubah template atau workflow Telegram |
+
 ## E. Belum dibangun (ringkas; rinci di [05](05-BACKLOG-DAN-TINDAK-LANJUT.md))
 
 ⬜ Impor massal tanggal kontrak · ⬜ Cadangan Drive untuk PIC Visit/penawaran · ⬜ Foto di PIC Visit · ⬜ Jalur Drive → Supabase (edit di Sheet staf sebagai versi terpisah) · ⬜ Retry otomatis terjadwal untuk cadangan yang gagal · ⬜ Tingkat super admin berbeda dari admin · ⬜ Pengingat otomatis (Telegram/WhatsApp) untuk follow-up dan kontrak · ⬜ AI bisa menyebut daftar nama client menurut kriteria · ⬜ Pemindahan surat/riset/penawaran dari n8n (hanya bila diminta pemilik).

@@ -1,3 +1,9 @@
+VERSION: 0.8.2 (penyesuaian RAB)
+DATE: 2026-10-09
+
+CHANGED: Google Sheet RAB hasil generator web: baris Kompensasi dikosongkan (nilai), baris JP dikosongkan (nilai dan persentase; subtotal persentase menjadi 8,24%) dengan keterangan "Sesuai Kebijakan Client"; komponen BPJS (JKK, JKM, JHT, Kesehatan) diberi keterangan "Dihitung dari UMK Setempat <kota/kab> <tahun>"; isian UMK pada form kini berlabel "UMK Setempat" dan menjadi acuan Gaji Pokok + BPJS. Dipasang di workflow n8n R7kXoTLBk8X0d4cy (node Isi Data RAB), template di n8n/offer-documents.template.json diperbarui. Cadangan workflow lama: ~/.n8n_backups/offer-R7kXoTLBk8X0d4cy-sebelum-ubah-RAB-20261009.json (mesin pemilik).
+NOT AFFECTED: template RAB asli di Drive dan workflow Telegram lama tidak diubah.
+
 VERSION: 0.8.1 (daftar harga seragam & peralatan)
 DATE: 2026-10-09
 
