@@ -304,12 +304,13 @@ function renderActiveClients() {
   $('#ac-summary').innerHTML = `<div><strong>${rows.length}</strong><small>Client aktif</small></div><div><strong>${rows.filter((r) => r.kategori === 'PEMERINTAHAN').length}</strong><small>Pemerintahan</small></div><div><strong>${rows.filter((r) => r.kategori === 'SWASTA').length}</strong><small>Swasta</small></div><div><strong>${new Set(rows.map((r) => r.cabang).filter(Boolean)).size}</strong><small>Cabang</small></div>`;
   $('#ac-status').textContent = activeClientError || (activeClientLoaded ? `Menampilkan ${visible.length} dari ${rows.length} client.` : '');
   $('#ac-status').classList.toggle('error', !!activeClientError);
-  const maps = (r) => 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(r.google_maps || r.nama_client);
-  const head = ['No', 'Nama client', 'Cabang', 'Kategori', 'PIC user', 'No. HP', 'PIC Korlap', 'PIC Admin', 'Masa kontrak', 'Aksi'];
+  const maps = (r) => (/^https?:\/\//i.test(r.google_maps || '') ? r.google_maps : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(r.google_maps || r.nama_client));
+  const head = ['No', 'Nama client', 'Cabang', 'Kategori', 'PIC user', 'No. HP', 'PIC Korlap', 'PIC Admin', 'Masa kontrak', 'Google Maps', 'Aksi'];
   $('#ac-table').innerHTML = `<thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${visible.length ? visible.map((r) => `<tr>
     <td class="num">${esc(r.source_no)}</td><td><strong>${esc(r.nama_client)}</strong></td><td>${esc(r.cabang)}</td><td>${esc(r.kategori)}</td><td>${esc(r.pic_user)}</td><td>${esc(r.nomor_hp)}</td>
     <td>${esc(r.korlap_raw)}</td><td>${esc(r.admin_raw)}</td><td>${esc(r.masa_kontrak)}</td>
-    <td class="act">${admin ? `<button type="button" data-ac-edit="${esc(r.id)}">Ubah</button>` : ''}<button type="button" data-ac-visit="${esc(r.id)}">Catat Visit</button><a href="${esc(maps(r))}" target="_blank" rel="noopener noreferrer">Maps</a></td></tr>`).join('')
+    <td>${r.google_maps ? `<a href="${esc(maps(r))}" target="_blank" rel="noopener noreferrer">${esc(/^https?:\/\//i.test(r.google_maps) ? 'Buka link' : r.google_maps)}</a>` : `<a href="${esc(maps(r))}" target="_blank" rel="noopener noreferrer"><small>Cari di Maps</small></a>`}</td>
+    <td class="act">${admin ? `<button type="button" data-ac-edit="${esc(r.id)}">Ubah</button>` : ''}<button type="button" data-ac-visit="${esc(r.id)}">Catat Visit</button></td></tr>`).join('')
     : `<tr><td colspan="${head.length}" class="hint">${activeClientLoaded ? 'Belum ada client yang cocok. Jika akun ini seharusnya punya client, hubungi admin untuk memeriksa pemetaan PIC.' : ''}</td></tr>`}</tbody>`;
   if (admin) renderAliasTable();
 }

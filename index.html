@@ -25,7 +25,7 @@
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-1"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261009-3"></script>
+  <script type="module" src="app.js?v=20261009-4"></script>
 </head>
 <body>
   <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="open-settings" type="button" data-tab="settings" hidden>Pengaturan</button></header>
@@ -111,7 +111,7 @@
           <div class="form-grid"><label>Cabang<input id="ac-f-cabang" maxlength="100" list="ac-branches"></label><label>Kategori<select id="ac-f-kategori"><option value="">-</option><option>PEMERINTAHAN</option><option>SWASTA</option></select></label></div>
           <datalist id="ac-branches"></datalist>
           <div class="form-grid"><label>PIC user (di client)<input id="ac-f-picuser" maxlength="200"></label><label>Nomor HP PIC user<input id="ac-f-hp" maxlength="100" inputmode="tel"></label></div>
-          <div class="form-grid"><label>Masa kontrak<input id="ac-f-kontrak" maxlength="200" placeholder="Contoh: 1 JAN 2026 - 31 DES 2026"></label><label>Nama di Google Maps<input id="ac-f-maps" maxlength="500"></label></div>
+          <div class="form-grid"><label>Masa kontrak<input id="ac-f-kontrak" maxlength="200" placeholder="Contoh: 1 JAN 2026 - 31 DES 2026"></label><label>Google Maps <small>nama tempat atau tempel link</small><input id="ac-f-maps" maxlength="500" placeholder="Nama tempat atau https://maps.app.goo.gl/…"></label></div>
           <fieldset><legend>PIC Korlap</legend><div id="ac-f-korlap" class="ac-checks"></div></fieldset>
           <fieldset><legend>PIC Admin</legend><div id="ac-f-admin" class="ac-checks"></div></fieldset>
           <p id="ac-form-status" class="hint" role="status"></p>
