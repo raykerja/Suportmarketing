@@ -1,3 +1,11 @@
+VERSION: 0.8.0 (Client Active produksi, alat admin, panduan serah terima)
+DATE: 2026-10-09
+
+ADDED: Database Client Active (274 client, 551 relasi PIC) di Supabase dengan RLS per PIC; tabel Client Active dengan filter, tautan WhatsApp, kolom Google Maps, tanggal kontrak + sisa hari; admin: ubah/tambah/arsipkan client, centang PIC Korlap/Admin, pemetaan PIC→akun, riwayat perubahan, ekspor Excel, dasbor kunjungan per PIC Korlap; PIC Visit dan Monitoring & Tindaklanjut tersimpan ke database (menggantikan simulasi); Edge Function: set_member_active, reset_member_password; admin ganti nama staf; asisten AI membaca client aktif, PIC Visit, Monitoring; skrip scripts/status_check.py, apply_migration.py, deploy_function.py; folder docs/ + CLAUDE.md.
+CHANGED: Role admin dipegang 4 akun (super admin). Edge Function marketing versi 21. Seluruh data contoh/pratinjau di clients-preview.js dan index.html dihapus.
+MIGRATIONS: 20261009_marketing_clients_pic, _pic_visits, _client_admin, _member_name, _client_lifecycle, _client_offers (urutan diterapkan sesuai kronologi 9 Okt).
+NOT TESTED: login admin/staf asli untuk menu 2, 3, tombol nonaktifkan/reset sandi; lihat docs/02-STATUS-PROGRES.md.
+
 VERSION: 0.7.1 (upload Excel akun staf)
 DATE: 2026-10-07
 

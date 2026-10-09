@@ -1,5 +1,7 @@
 # Raykerja Marketing
 
+> **Mulai dari [`docs/00-MULAI-DI-SINI.md`](docs/00-MULAI-DI-SINI.md)** — panduan lengkap sistem, status progres, pengaturan, pengujian, dan backlog (diperbarui 9 Oktober 2026). Bagian README di bawah ini adalah riwayat per versi dan sebagian sudah usang.
+
 Portal Marketing PT Ray Mitra Perkasa untuk `marketing.raykerja.cloud`. Source halaman berada di GitHub Pages; data terstruktur dan pengaturan akun berada di Supabase. Hasil riset dan surat yang dibuat pengguna disalin ke folder Google Drive milik pengguna melalui n8n.
 
 ### Versi 0.7.0 — Pencarian Marketing dan akun staf
