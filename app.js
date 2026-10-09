@@ -70,6 +70,7 @@ function showWorkspace(user) {
   if (!user) {
     currentMember = null;
     researchCache = []; leadCache = []; letterCache = []; offerCache = []; offerRequestId = null; manualOfferRequestId = null;
+    activeClients = []; renderActiveClients();
     visitCache = []; $('#visit-list').textContent = ''; $('#visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>';
     publishVisitSnapshot();
     $('#review-list').textContent = ''; $('#offer-list').textContent = ''; $('#lead-list').textContent = '';
@@ -89,7 +90,7 @@ function showWorkspace(user) {
   $('#logout').hidden = !user || invitePending;
   if (user && !invitePending) {
     activateTab(history.state?.marketingTab || 'visits', false);
-    loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress();
+    loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); loadActiveClients();
   }
   else {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
@@ -250,6 +251,60 @@ function fillVisitForm(row, step = '2') {
   document.querySelector('[data-tab="visits"]').click();
   $('#visit-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+// Database Client Active (data produksi): RLS membatasi staf pada client yang PIC Korlap/Admin-nya adalah dirinya.
+let activeClients = [];
+let activeClientId = null;
+let activeClientLoaded = false;
+let activeClientError = '';
+const picTokens = (row) => [...new Set([...(row.admin_raw === 'PAK TOHAR' ? ['PAK TOHAR'] : (row.admin_raw || '').split(/[ ,]+/)), ...(row.korlap_raw || '').split(/[ ,]+/)].filter(Boolean))];
+async function loadActiveClients() {
+  if (!client || !currentUser) return;
+  const requestedUserId = currentUser.id;
+  activeClientError = '';
+  const { data, error } = await client.from('marketing_clients').select('*').order('nama_client').limit(1000);
+  if (currentUser?.id !== requestedUserId) return;
+  activeClientLoaded = true;
+  if (error) { activeClients = []; activeClientError = 'Daftar client belum dapat dimuat: ' + error.message; }
+  else activeClients = data || [];
+  renderActiveClients();
+}
+function fillSelect(sel, label, values, keep) {
+  const el = $(sel);
+  el.innerHTML = `<option value="all">${label}</option>` + values.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  el.value = values.includes(keep) ? keep : 'all';
+}
+function renderActiveClients() {
+  const rows = activeClients;
+  const admin = currentMember?.role === 'admin';
+  $('#ac-scope').textContent = !activeClientLoaded ? 'Memuat daftar client…' : admin
+    ? 'Akun admin: menampilkan semua client aktif perusahaan.'
+    : 'Menampilkan client yang PIC Korlap atau PIC Admin-nya adalah akun ini.';
+  const uniq = (fn) => [...new Set(rows.map(fn).filter(Boolean))].sort();
+  fillSelect('#ac-branch', 'Semua cabang', uniq((r) => r.cabang), $('#ac-branch').value);
+  fillSelect('#ac-category', 'Semua kategori', uniq((r) => r.kategori), $('#ac-category').value);
+  fillSelect('#ac-pic', 'Semua PIC', [...new Set(rows.flatMap(picTokens))].sort(), $('#ac-pic').value);
+  const q = $('#ac-search').value.trim().toLocaleLowerCase('id');
+  const branch = $('#ac-branch').value, cat = $('#ac-category').value, pic = $('#ac-pic').value;
+  const visible = rows.filter((r) => (!q || [r.nama_client, r.pic_user, r.cabang, r.korlap_raw, r.admin_raw].some((v) => (v || '').toLocaleLowerCase('id').includes(q)))
+    && (branch === 'all' || r.cabang === branch) && (cat === 'all' || r.kategori === cat) && (pic === 'all' || picTokens(r).includes(pic)));
+  $('#ac-summary').innerHTML = `<div><strong>${rows.length}</strong><small>Client aktif</small></div><div><strong>${rows.filter((r) => r.kategori === 'PEMERINTAHAN').length}</strong><small>Pemerintahan</small></div><div><strong>${rows.filter((r) => r.kategori === 'SWASTA').length}</strong><small>Swasta</small></div><div><strong>${new Set(rows.map((r) => r.cabang).filter(Boolean)).size}</strong><small>Cabang</small></div>`;
+  $('#ac-status').textContent = activeClientError || (activeClientLoaded ? `Menampilkan ${visible.length} dari ${rows.length} client.` : '');
+  $('#ac-status').classList.toggle('error', !!activeClientError);
+  if (!visible.some((r) => r.id === activeClientId)) activeClientId = visible[0]?.id || null;
+  $('#ac-list').innerHTML = visible.length ? visible.map((r) => `<button type="button" class="client-item ${r.id === activeClientId ? 'selected' : ''}" data-ac-id="${esc(r.id)}" aria-pressed="${r.id === activeClientId}"><span class="client-item-top"><strong>${esc(r.nama_client)}</strong><span class="client-pill">${esc(r.kategori || '-')}</span></span><span>${esc(r.cabang || '-')} · PIC user: ${esc(r.pic_user || '-')}</span><small>Korlap: ${esc(r.korlap_raw || '-')} · Admin: ${esc(r.admin_raw || '-')}</small></button>`).join('')
+    : `<p class="hint">${activeClientLoaded ? 'Belum ada client yang cocok. Jika akun ini seharusnya punya client, hubungi admin untuk memeriksa pemetaan PIC.' : ''}</p>`;
+  const r = visible.find((x) => x.id === activeClientId);
+  if (!r) { $('#ac-detail').innerHTML = '<p class="hint">Pilih client untuk melihat detailnya.</p>'; return; }
+  const maps = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(r.google_maps || r.nama_client);
+  $('#ac-detail').innerHTML = `<h3>${esc(r.nama_client)}</h3><div class="client-facts"><div><small>Cabang</small><strong>${esc(r.cabang || '-')}</strong></div><div><small>Kategori</small><strong>${esc(r.kategori || '-')}</strong></div><div><small>PIC user (di client)</small><strong>${esc(r.pic_user || '-')}</strong></div><div><small>Nomor HP PIC user</small><strong>${esc(r.nomor_hp || '-')}</strong></div><div><small>PIC Korlap</small><strong>${esc(r.korlap_raw || '-')}</strong></div><div><small>PIC Admin</small><strong>${esc(r.admin_raw || '-')}</strong></div><div><small>Masa kontrak</small><strong>${esc(r.masa_kontrak || 'Belum diisi')}</strong></div></div><p><a href="${esc(maps)}" target="_blank" rel="noopener noreferrer">Buka di Google Maps</a></p>`;
+}
+['#ac-search', '#ac-branch', '#ac-category', '#ac-pic'].forEach((sel) => $(sel).addEventListener('input', renderActiveClients));
+$('#ac-refresh').addEventListener('click', loadActiveClients);
+$('#ac-list').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-ac-id]');
+  if (button) { activeClientId = button.dataset.acId; renderActiveClients(); }
+});
+
 async function loadVisits() {
   if (!client || !currentUser) return;
   const requestedUserId = currentUser.id;
@@ -709,6 +764,7 @@ async function loadSettings() {
   const { data, error } = await client.functions.invoke('marketing', { body: { action: 'settings' } });
   if (error || !data?.ok) { status('#folder-status', data?.error || error?.message || 'Pengaturan gagal dibaca', true); return; }
   currentMember = data.self;
+  renderActiveClients();
   existingStaffUsernames = (data.members || []).filter((member) => member.email?.endsWith(`@${staffLoginDomain}`))
     .map((member) => member.email.split('@')[0]);
   $('#account-info').textContent = `${memberLabel(data.self)} · ${data.self.role === 'admin' ? 'Admin' : 'Staf'}`;

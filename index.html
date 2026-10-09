@@ -25,7 +25,7 @@
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261006-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261007-1"></script>
+  <script type="module" src="app.js?v=20261009-1"></script>
 </head>
 <body>
   <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="open-settings" type="button" data-tab="settings" hidden>Pengaturan</button></header>
@@ -97,13 +97,21 @@
         </form></div><div class="card"><h2>Riwayat target</h2><div id="progress-history" class="list"><p class="hint">Pilih target untuk melihat riwayatnya.</p></div></div></div>
       </section>
       <section id="clients" class="panel" hidden>
-        <div class="preview-note"><strong>PRATINJAU · DATA CONTOH</strong><span>Perusahaan dan PIC RMP di bawah hanya contoh. Data ini belum tersambung ke daftar klien aktif perusahaan dan tidak tersimpan ke Supabase, Sheet, atau Drive.</span></div>
+        <div class="card"><div class="section-head"><div><p class="eyebrow">DATA PRODUKSI</p><h2>Database Client Active</h2><p id="ac-scope" class="hint">Memuat daftar client…</p></div><button id="ac-refresh" type="button">Muat ulang</button></div>
+          <div id="ac-summary" class="progress-summary" aria-label="Ringkasan client aktif"></div>
+          <div class="client-filters"><label>Cari client<input id="ac-search" type="search" placeholder="Nama client, PIC user, cabang"></label><label>Cabang<select id="ac-branch"><option value="all">Semua cabang</option></select></label><label>Kategori<select id="ac-category"><option value="all">Semua kategori</option></select></label><label>PIC Korlap / Admin<select id="ac-pic"><option value="all">Semua PIC</option></select></label></div>
+          <p id="ac-status" class="hint" role="status"></p>
+        </div>
+        <div class="client-layout"><div class="card"><h2>Client</h2><div id="ac-list" class="list" aria-live="polite"></div></div>
+          <div class="card"><h2>Detail client &amp; PIC</h2><div id="ac-detail"><p class="hint">Pilih client untuk melihat detailnya.</p></div></div></div>
+        <div hidden>
         <div class="card"><div class="section-head"><div><p class="eyebrow">RELASI KLIEN</p><h2>Database Client Active</h2><p class="hint">Pantau klien aktif per PIC RMP, masa kontrak, layanan berjalan, dan peluang penawaran ulang.</p></div></div>
           <div id="client-summary" class="progress-summary" aria-label="Ringkasan klien"></div>
           <div class="client-filters"><label>Cari klien<input id="client-search" type="search" placeholder="Nama perusahaan atau layanan"></label><label>PIC RMP<select id="client-pic-filter"><option value="all">Semua PIC</option></select></label><label>Status penawaran<select id="client-filter"><option value="all">Semua status</option><option value="due">Perlu follow up</option><option value="review">Perlu review</option><option value="proposal">Menyiapkan penawaran</option><option value="sent">Penawaran terkirim</option><option value="follow_up">Negosiasi / follow up</option><option value="won">Disetujui</option><option value="lost">Tidak lanjut</option></select></label></div>
         </div>
         <div class="client-layout"><div class="card"><h2>Perusahaan yang bekerja sama</h2><div id="client-list" class="list" aria-live="polite"></div></div>
           <div class="card"><h2>Detail klien & PIC</h2><div id="client-detail"><p class="hint">Pilih klien untuk melihat detailnya.</p></div></div></div>
+        </div>
       </section>
       <section id="pic-visits" class="panel" hidden>
         <div class="preview-note"><strong>PRATINJAU PIC VISIT</strong><span>Form mengikuti alur dua tahap Sales Visit untuk klien aktif. Simulasi hanya tersimpan sementara di browser; foto tidak diunggah dan data hilang saat halaman dimuat ulang.</span></div>
