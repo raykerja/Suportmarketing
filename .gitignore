@@ -8,3 +8,4 @@ __pycache__/
 *.xlsx
 !outputs/marketing-akun-staf-20261006/template-akun-staf-marketing.xlsx
 *.pdf
+Tutorial/

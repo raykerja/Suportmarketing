@@ -1,5 +1,6 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import { validateStaffWorkbook } from './staff-import.mjs';
+import { WILAYAH_DATA } from './data/wilayah.mjs';
 
 const cfg = window.RAY_CONFIG || {};
 const progressPreviewMode = cfg.progressEnabled !== true;
@@ -914,6 +915,16 @@ $('#target-type').addEventListener('change', () => {
   const swasta = $('#target-type').value === 'SWASTA';
   $('#bidang-wrap').hidden = !swasta;
   $('#bidang').required = swasta;
+});
+
+// Kabupaten/Kota -> Kecamatan (cascading) + auto-isi Provinsi. Cakupan data sebagian;
+// area di luar daftar tetap bisa diisi manual (kecamatan & provinsi tidak dikunci).
+const wilayahByKabupaten = new Map(WILAYAH_DATA.map((row) => [row.kabupaten.trim().toLocaleLowerCase('id'), row]));
+$('#kabupaten-suggestions').innerHTML = WILAYAH_DATA.map((row) => `<option value="${esc(row.kabupaten)}">`).join('');
+$('#kabupaten').addEventListener('input', () => {
+  const match = wilayahByKabupaten.get($('#kabupaten').value.trim().toLocaleLowerCase('id'));
+  $('#kecamatan-suggestions').innerHTML = match ? match.kecamatan.map((nama) => `<option value="${esc(nama)}">`).join('') : '';
+  if (match) $('#provinsi').value = match.provinsi;
 });
 
 async function loadResearches() {
