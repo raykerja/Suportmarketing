@@ -54,6 +54,16 @@ Arti penanda:
 | PIC Visit yang mengisi status penawaran otomatis tercatat ke Monitoring | 🟡 | |
 | Cadangan PIC Visit & penawaran ke Sheet/Drive per staf | ⬜ | Hanya di Supabase |
 
+## D2. Daftar harga (dikerjakan 9 Oktober 2026)
+
+| Fitur | Status | Catatan |
+| --- | --- | --- |
+| Impor 70 item seragam + 25 item peralatan dari dua berkas Excel pemilik | ✅ | Sumber: "DAFTRAR HARGA SERAGAM.xlsx", "DAFTAR HARGA PERALATAN.xlsx". Data mentah ada di `private/` (tidak di Git) |
+| Tampilan di menu Target, Penawaran & Database → 4. Database → Harga Seragam / Harga Peralatan | 🟡 | Admin: harga beli, jual, margin, kenaikan; staf: hanya harga jual |
+| Admin ubah/tambah item, ekspor Excel, verifikasi harga | 🟡 | Via RPC `marketing_save_price_item` + jejak audit |
+| **6 item seragam ditandai "perlu diverifikasi"** (harga jual disembunyikan dari staf) | ⬜ butuh pemilik | Item no. 20, 22, 24, 25, 26, 27: harga jual di Excel tidak konsisten (mis. jual lebih rendah dari beli, atau angka manual tidak sama dengan lama + kenaikan). Admin memeriksa lalu mencentang "Perlu diverifikasi" dimatikan |
+| Harga dipakai otomatis di pembuatan penawaran/RAB | ⬜ | Belum tersambung; daftar hanya referensi |
+
 ## E. Belum dibangun (ringkas; rinci di [05](05-BACKLOG-DAN-TINDAK-LANJUT.md))
 
 ⬜ Impor massal tanggal kontrak · ⬜ Cadangan Drive untuk PIC Visit/penawaran · ⬜ Foto di PIC Visit · ⬜ Jalur Drive → Supabase (edit di Sheet staf sebagai versi terpisah) · ⬜ Retry otomatis terjadwal untuk cadangan yang gagal · ⬜ Tingkat super admin berbeda dari admin · ⬜ Pengingat otomatis (Telegram/WhatsApp) untuk follow-up dan kontrak · ⬜ AI bisa menyebut daftar nama client menurut kriteria · ⬜ Pemindahan surat/riset/penawaran dari n8n (hanya bila diminta pemilik).

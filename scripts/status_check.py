@@ -58,7 +58,7 @@ else:
         fn = next((f for f in functions if f.get('slug') == 'marketing'), None)
         line('OK' if fn and fn.get('status') == 'ACTIVE' else 'GAGAL', f"Edge Function marketing versi {fn.get('version')} {fn.get('status')}" if fn else 'Edge Function marketing tidak ditemukan')
         expected_tables = ['marketing_members', 'marketing_visits', 'marketing_progress', 'marketing_clients', 'marketing_client_pics', 'marketing_pic_aliases',
-                           'marketing_client_changes', 'marketing_pic_visits', 'marketing_client_offers', 'marketing_client_offer_events', 'marketing_ai_daily_usage']
+                           'marketing_client_changes', 'marketing_pic_visits', 'marketing_client_offers', 'marketing_client_offer_events', 'marketing_ai_daily_usage', 'marketing_price_items']
         tables = {r['t']: r for r in sql("select c.relname t, c.relrowsecurity rls, (select count(*) from pg_policies p where p.schemaname='public' and p.tablename=c.relname) pol "
                                          "from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='public' and c.relkind='r'", tok)}
         missing = [t for t in expected_tables if t not in tables]
@@ -68,7 +68,7 @@ else:
         no_policy = [t for t, r in tables.items() if r['rls'] and int(r['pol']) == 0 and t != 'marketing_ai_daily_usage']
         line('OK' if not no_policy else 'PERHATIAN', 'setiap tabel punya policy' if not no_policy else 'tabel tanpa policy (akses hanya service role): ' + ', '.join(no_policy))
         funcs = {r['proname'] for r in sql("select proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public'", tok)}
-        need = {'marketing_is_admin', 'marketing_save_client', 'marketing_set_client_status', 'marketing_set_pic_alias', 'marketing_set_member_name', 'marketing_record_client_offer'}
+        need = {'marketing_is_admin', 'marketing_save_client', 'marketing_set_client_status', 'marketing_set_pic_alias', 'marketing_set_member_name', 'marketing_record_client_offer', 'marketing_save_price_item'}
         line('OK' if need <= funcs else 'GAGAL', 'semua fungsi RPC ada' if need <= funcs else 'fungsi hilang: ' + ', '.join(sorted(need - funcs)))
         members = sql('select role, active, count(*) n from marketing_members group by 1,2 order by 1,2', tok)
         print('    akun:', ', '.join(f"{m['role']}{'' if m['active'] else ' (nonaktif)'}={m['n']}" for m in members))

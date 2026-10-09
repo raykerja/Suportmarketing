@@ -70,7 +70,7 @@ function showWorkspace(user) {
   if (!user) {
     currentMember = null;
     researchCache = []; leadCache = []; letterCache = []; offerCache = []; offerRequestId = null; manualOfferRequestId = null;
-    activeClients = []; picAliases = []; memberOptions = []; renderActiveClients(); publishActiveClients(); picVisitRows = []; publishPicVisits(); publishOffers([], []);
+    activeClients = []; picAliases = []; memberOptions = []; priceRows = []; priceLoaded = false; showDbView('target'); renderActiveClients(); publishActiveClients(); picVisitRows = []; publishPicVisits(); publishOffers([], []);
     visitCache = []; $('#visit-list').textContent = ''; $('#visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>';
     publishVisitSnapshot();
     $('#review-list').textContent = ''; $('#offer-list').textContent = ''; $('#lead-list').textContent = '';
@@ -507,6 +507,111 @@ $('#ac-alias-new').addEventListener('submit', async (event) => {
   const { error } = await client.rpc('marketing_set_pic_alias', { p_alias: $('#ac-alias-name').value, p_role: $('#ac-alias-role').value, p_user_id: null, p_note: 'ditambah admin' });
   status('#ac-alias-status', error ? error.message : 'PIC baru ditambahkan.', !!error);
   if (!error) { $('#ac-alias-name').value = ''; await loadActiveClients(); }
+});
+
+// Daftar harga seragam & peralatan. Admin membaca tabel (harga beli + jual); staf membaca view yang hanya memuat harga jual.
+let priceRows = [];
+let priceView = 'target';
+let priceLoaded = false;
+let priceError = '';
+let editingPrice = null;
+const rupiah = (value) => value === null || value === undefined ? '' : 'Rp ' + Number(value).toLocaleString('id-ID');
+async function loadPrices() {
+  if (!client || !currentUser || !currentMember) return;
+  const requestedUserId = currentUser.id;
+  const source = isAdmin() ? 'marketing_price_items' : 'marketing_price_list';
+  let query = client.from(source).select('*').order('kategori').order('no').limit(1000);
+  if (isAdmin()) query = query.order('no');
+  const { data, error } = await query;
+  if (currentUser?.id !== requestedUserId) return;
+  priceLoaded = true;
+  priceError = error ? 'Daftar harga belum dapat dimuat: ' + error.message : '';
+  priceRows = error ? [] : data || [];
+  renderPrices();
+}
+function showDbView(view) {
+  priceView = view;
+  document.querySelectorAll('[data-db-view]').forEach((b) => b.classList.toggle('active', b.dataset.dbView === view));
+  $('#db-target').hidden = view !== 'target';
+  $('#db-price').hidden = view === 'target';
+  if (view !== 'target') { if (!priceLoaded) loadPrices(); renderPrices(); }
+}
+function renderPrices() {
+  if (priceView === 'target') return;
+  const admin = isAdmin();
+  const kategori = priceView;
+  const q = $('#price-query').value.trim().toLocaleLowerCase('id');
+  const all = priceRows.filter((r) => r.kategori === kategori);
+  const rows = all.filter((r) => (admin || r.active !== false) && (!q || [r.item, r.grup].some((v) => (v || '').toLocaleLowerCase('id').includes(q))));
+  $('#price-title').textContent = kategori === 'seragam' ? 'Harga Seragam' : 'Harga Peralatan dan Perlengkapan Kerja';
+  $('#price-scope').textContent = !priceLoaded ? 'Memuat…' : admin
+    ? 'Akun admin: harga beli, harga jual, dan margin terlihat; hanya admin yang dapat mengubah.' : 'Menampilkan harga jual. Item bertanda "diverifikasi" sedang diperiksa admin; tanyakan harganya ke admin.';
+  $('#price-add').hidden = !admin; $('#price-export').hidden = !admin;
+  const flagged = all.filter((r) => r.perlu_verifikasi).length;
+  const margins = admin ? all.filter((r) => r.active !== false && r.harga_beli > 0).map((r) => (r.harga_jual - r.harga_beli) / r.harga_beli) : [];
+  $('#price-summary').innerHTML = `<div><strong>${all.filter((r) => r.active !== false).length}</strong><small>Item</small></div><div><strong>${flagged}</strong><small>Perlu diverifikasi</small></div>${admin && margins.length ? `<div><strong>${Math.round(margins.reduce((a, b) => a + b, 0) / margins.length * 100)}%</strong><small>Rata-rata margin</small></div>` : ''}`;
+  $('#price-status').textContent = priceError || (priceLoaded ? `Menampilkan ${rows.length} dari ${all.length} item.` : '');
+  $('#price-status').classList.toggle('error', !!priceError);
+  $('#price-groups').innerHTML = [...new Set(all.map((r) => r.grup).filter(Boolean))].map((g) => `<option value="${esc(g)}">`).join('');
+  const head = admin ? ['No', 'Item', ...(kategori === 'seragam' ? ['Kenaikan'] : []), 'Harga beli', 'Harga jual', 'Margin', 'Status', 'Aksi'] : ['No', 'Item', 'Harga jual'];
+  const moneyCols = new Set(['Kenaikan', 'Harga beli', 'Harga jual', 'Margin']);
+  let lastGroup = null;
+  const body = rows.map((r) => {
+    const groupRow = kategori === 'seragam' && r.grup !== lastGroup ? `<tr class="group-row"><td colspan="${head.length}">${esc(r.grup)}</td></tr>` : '';
+    lastGroup = r.grup;
+    const flag = r.perlu_verifikasi ? '<span class="badge processing">Perlu diverifikasi</span>' : '<span class="badge">OK</span>';
+    const margin = admin ? `${rupiah(r.harga_jual - r.harga_beli)}<br><small>${r.harga_beli ? Math.round((r.harga_jual - r.harga_beli) / r.harga_beli * 100) + '%' : '-'}</small>` : '';
+    const cells = admin
+      ? `<td class="num">${esc(r.no)}</td><td><strong>${esc(r.item)}</strong>${r.catatan ? `<br><small>${esc(r.catatan)}</small>` : ''}${r.active === false ? ' <span class="badge error">Disembunyikan</span>' : ''}</td>${kategori === 'seragam' ? `<td class="money">${r.kenaikan ? '+' + Number(r.kenaikan).toLocaleString('id-ID') : '-'}</td>` : ''}<td class="money">${rupiah(r.harga_beli)}</td><td class="money"><strong>${rupiah(r.harga_jual)}</strong></td><td class="money">${margin}</td><td>${flag}</td><td class="act"><button type="button" data-price-edit="${esc(r.id)}">Ubah</button></td>`
+      : `<td class="num">${esc(r.no)}</td><td><strong>${esc(r.item)}</strong></td><td class="money">${r.harga_jual === null ? '<span class="badge processing">Sedang diverifikasi</span>' : `<strong>${rupiah(r.harga_jual)}</strong>`}</td>`;
+    return groupRow + `<tr>${cells}</tr>`;
+  }).join('');
+  $('#price-table').innerHTML = `<thead><tr>${head.map((h) => `<th class="${moneyCols.has(h) ? 'money' : ''}">${h}</th>`).join('')}</tr></thead><tbody>${body || `<tr><td colspan="${head.length}" class="hint">${priceLoaded ? 'Belum ada item yang cocok.' : ''}</td></tr>`}</tbody>`;
+}
+function openPriceForm(row) {
+  editingPrice = row || null;
+  $('#price-form-title').textContent = row ? `Ubah item #${row.no}` : `Tambah item ${priceView}`;
+  $('#price-f-item').value = row?.item || ''; $('#price-f-grup').value = row?.grup || (priceView === 'peralatan' ? 'Peralatan dan Perlengkapan Kerja' : '');
+  $('#price-f-beli').value = row?.harga_beli ?? ''; $('#price-f-jual').value = row?.harga_jual ?? '';
+  $('#price-f-verif').checked = !!row?.perlu_verifikasi; $('#price-f-catatan').value = row?.catatan || ''; $('#price-f-active').checked = row ? row.active !== false : true;
+  status('#price-form-status', ''); $('#price-form-save').disabled = false;
+  $('#price-dialog').showModal();
+}
+async function savePriceForm(event) {
+  event.preventDefault();
+  const beli = $('#price-f-beli').value, jual = $('#price-f-jual').value;
+  if (!$('#price-f-item').value.trim() || beli === '' || jual === '') { status('#price-form-status', 'Nama item, harga beli, dan harga jual wajib diisi.', true); return; }
+  const payload = { id: editingPrice?.id || null, kategori: priceView, expected_updated_at: editingPrice?.updated_at, item: $('#price-f-item').value, grup: $('#price-f-grup').value,
+    harga_beli: Number(beli), harga_jual: Number(jual), perlu_verifikasi: $('#price-f-verif').checked, catatan: $('#price-f-catatan').value, active: $('#price-f-active').checked };
+  $('#price-form-save').disabled = true; status('#price-form-status', 'Menyimpan…');
+  const { error } = await client.rpc('marketing_save_price_item', { p: payload });
+  if (error) { $('#price-form-save').disabled = false; status('#price-form-status', error.message, true); return; }
+  $('#price-dialog').close();
+  await loadPrices();
+  status('#price-status', 'Perubahan harga tersimpan.');
+}
+async function exportPrices() {
+  const rows = priceRows.filter((r) => r.kategori === priceView);
+  try { await loadXlsx(); } catch (error) { status('#price-status', error.message, true); return; }
+  const data = rows.map((r) => ({ 'No': r.no, 'Kelompok': r.grup, 'Item': r.item, 'Harga Beli': r.harga_beli, 'Harga Jual': r.harga_jual, 'Margin (Rp)': r.harga_jual - r.harga_beli,
+    'Margin (%)': r.harga_beli ? Math.round((r.harga_jual - r.harga_beli) / r.harga_beli * 1000) / 10 : '', 'Perlu Diverifikasi': r.perlu_verifikasi ? 'ya' : '', 'Catatan': r.catatan }));
+  const sheet = window.XLSX.utils.json_to_sheet(data);
+  sheet['!cols'] = [6, 28, 48, 14, 14, 14, 12, 18, 50].map((wch) => ({ wch }));
+  const book = window.XLSX.utils.book_new();
+  window.XLSX.utils.book_append_sheet(book, sheet, priceView === 'seragam' ? 'Harga Seragam' : 'Harga Peralatan');
+  window.XLSX.writeFile(book, `harga-${priceView}-${todayIso()}.xlsx`);
+  status('#price-status', `${rows.length} item diekspor.`);
+}
+document.querySelectorAll('[data-db-view]').forEach((b) => b.addEventListener('click', () => showDbView(b.dataset.dbView)));
+$('#price-query').addEventListener('input', renderPrices);
+$('#price-refresh').addEventListener('click', loadPrices);
+$('#price-add').addEventListener('click', () => openPriceForm(null));
+$('#price-export').addEventListener('click', exportPrices);
+$('#price-form').addEventListener('submit', savePriceForm);
+$('#price-form-cancel').addEventListener('click', () => $('#price-dialog').close());
+$('#price-table').addEventListener('click', (event) => {
+  const edit = event.target.closest('[data-price-edit]');
+  if (edit) { const row = priceRows.find((r) => r.id === edit.dataset.priceEdit); if (row) openPriceForm(row); }
 });
 
 // PIC Visit ke client aktif (data produksi, RLS: staf hanya miliknya, admin membaca semua).
@@ -1021,6 +1126,7 @@ async function loadSettings() {
   const { data, error } = await client.functions.invoke('marketing', { body: { action: 'settings' } });
   if (error || !data?.ok) { status('#folder-status', data?.error || error?.message || 'Pengaturan gagal dibaca', true); return; }
   currentMember = data.self;
+  priceLoaded = false; priceRows = []; if (priceView !== 'target') loadPrices();
   memberOptions = (data.members || []).filter((m) => m.active !== false).map((m) => ({ user_id: m.user_id, display_name: m.display_name })).sort((a, b) => a.display_name.localeCompare(b.display_name));
   renderActiveClients();
   existingStaffUsernames = (data.members || []).filter((member) => member.email?.endsWith(`@${staffLoginDomain}`))

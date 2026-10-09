@@ -1,3 +1,9 @@
+VERSION: 0.8.1 (daftar harga seragam & peralatan)
+DATE: 2026-10-09
+
+ADDED: Sub menu Database di Target, Penawaran & Database kini berisi Database Target, Harga Seragam (70 item), Harga Peralatan (25 item); tabel marketing_price_items + view marketing_price_list (staf hanya harga jual) + RPC marketing_save_price_item; admin ubah/tambah/ekspor; 6 item ditandai perlu diverifikasi.
+MIGRATIONS: 20261009_marketing_price_items.
+
 VERSION: 0.8.0 (Client Active produksi, alat admin, panduan serah terima)
 DATE: 2026-10-09
 

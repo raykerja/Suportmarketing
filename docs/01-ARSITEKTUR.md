@@ -32,7 +32,7 @@ Versi cache file ditandai `?v=...` di `index.html`; **naikkan nomor versi saat m
 
 - **Active Client, Repitching & Progress**: `1. Database Client Active` (tabel), `2. PIC Visit`, `3. Monitoring & Tindaklanjut`.
 - **New Client, Visit & Progress**: Sales Visit (dua tahap + foto), Progress.
-- **Target, Penawaran & Database**: Cari Target, Review Hasil, Buat Penawaran, Database Target.
+- **Target, Penawaran & Database**: Cari Target, Review Hasil, Buat Penawaran, **4. Database (Target & Harga)** — di dalamnya tiga tampilan: Database Target, Harga Seragam, Harga Peralatan.
 - **Pengaturan** (ikon/tombol di header): folder Drive sendiri; untuk admin: akun tim, impor Excel akun, nonaktifkan/reset sandi, ganti nama & folder staf.
 - **Asisten Marketing** (kotak pencarian di atas): jawaban AI berdasarkan data yang boleh diakses akun.
 
@@ -71,9 +71,10 @@ Aturan lihat client: **admin semua**; **staf** hanya `status='aktif'` yang punya
 | `marketing_client_changes` | **Jejak audit** perubahan client, pemetaan PIC, status arsip, nama staf |
 | `marketing_pic_visits` | PIC Visit ke client aktif (tahap 1 `initial`, tahap 2 `detail`; isi di kolom JSON `data`) |
 | `marketing_client_offers`, `marketing_client_offer_events` | Status & riwayat penawaran ulang per client (menu Monitoring) |
+| `marketing_price_items` | Daftar harga seragam (70 item) dan peralatan (25 item). **Hanya admin** yang membaca tabel (ada harga beli/modal). Staf membaca lewat view `marketing_price_list` yang hanya memuat harga jual; harga item berstatus `perlu_verifikasi` disembunyikan dari staf |
 | `marketing_ai_daily_usage` | Pembatas 30 pencarian AI/hari/akun |
 
-Fungsi (RPC): `marketing_is_admin`, `marketing_save_client`, `marketing_set_client_status`, `marketing_set_pic_alias`, `marketing_set_member_name`, `marketing_record_client_offer` (security invoker, RLS berlaku), `marketing_record_progress`, `marketing_ai_reserve`. Fungsi `security definer` selalu memeriksa `marketing_is_admin()` di dalamnya.
+Fungsi (RPC): `marketing_is_admin`, `marketing_save_client`, `marketing_set_client_status`, `marketing_set_pic_alias`, `marketing_set_member_name`, `marketing_save_price_item`, `marketing_record_client_offer` (security invoker, RLS berlaku), `marketing_record_progress`, `marketing_ai_reserve`. Fungsi `security definer` selalu memeriksa `marketing_is_admin()` di dalamnya.
 
 Bucket Storage `marketing-visit-photos` bersifat privat.
 
