@@ -284,6 +284,17 @@ function fillSelect(sel, label, values, keep) {
   el.innerHTML = `<option value="all">${label}</option>` + values.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
   el.value = values.includes(keep) ? keep : 'all';
 }
+// Nomor HP -> tautan WhatsApp (wa.me). Satu isian boleh memuat beberapa nomor dipisah "/", "," atau ";".
+function waLinks(raw) {
+  const parts = String(raw ?? '').split(/[\/;,]/).map((part) => part.trim()).filter(Boolean);
+  return parts.map((part) => {
+    let digits = part.replace(/\D/g, '');
+    if (digits.startsWith('0')) digits = '62' + digits.slice(1);
+    else if (digits.startsWith('8')) digits = '62' + digits;
+    if (!/^62\d{8,13}$/.test(digits)) return esc(part);
+    return `<a href="https://wa.me/${digits}" target="_blank" rel="noopener noreferrer" title="Chat WhatsApp ${esc(part)}">${esc(part)}</a>`;
+  }).join('<br>');
+}
 function renderActiveClients() {
   const rows = activeClients;
   const admin = isAdmin();
@@ -307,7 +318,7 @@ function renderActiveClients() {
   const maps = (r) => (/^https?:\/\//i.test(r.google_maps || '') ? r.google_maps : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(r.google_maps || r.nama_client));
   const head = ['No', 'Nama client', 'Cabang', 'Kategori', 'PIC user', 'No. HP', 'PIC Korlap', 'PIC Admin', 'Masa kontrak', 'Google Maps', 'Aksi'];
   $('#ac-table').innerHTML = `<thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${visible.length ? visible.map((r) => `<tr>
-    <td class="num">${esc(r.source_no)}</td><td><strong>${esc(r.nama_client)}</strong></td><td>${esc(r.cabang)}</td><td>${esc(r.kategori)}</td><td>${esc(r.pic_user)}</td><td>${esc(r.nomor_hp)}</td>
+    <td class="num">${esc(r.source_no)}</td><td><strong>${esc(r.nama_client)}</strong></td><td>${esc(r.cabang)}</td><td>${esc(r.kategori)}</td><td>${esc(r.pic_user)}</td><td>${waLinks(r.nomor_hp)}</td>
     <td>${esc(r.korlap_raw)}</td><td>${esc(r.admin_raw)}</td><td>${esc(r.masa_kontrak)}</td>
     <td>${r.google_maps ? `<a href="${esc(maps(r))}" target="_blank" rel="noopener noreferrer">${esc(/^https?:\/\//i.test(r.google_maps) ? 'Buka link' : r.google_maps)}</a>` : `<a href="${esc(maps(r))}" target="_blank" rel="noopener noreferrer"><small>Cari di Maps</small></a>`}</td>
     <td class="act">${admin ? `<button type="button" data-ac-edit="${esc(r.id)}">Ubah</button>` : ''}<button type="button" data-ac-visit="${esc(r.id)}">Catat Visit</button></td></tr>`).join('')
