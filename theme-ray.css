@@ -117,3 +117,16 @@ th { color: var(--ray-muted); background: #f7faff; }
 }
 @media (max-width: 390px) { .client-facts { grid-template-columns: 1fr; } }
 @media (max-width: 480px) { .brand small { display: none; } }
+
+.ac-table-wrap { max-height: 70vh; overflow: auto; }
+.ac-table { min-width: 1100px; }
+.ac-table thead th { position: sticky; top: 0; z-index: 1; white-space: nowrap; }
+.ac-table td.num { color: #667a70; }
+.ac-table td.act { white-space: nowrap; }
+.ac-table td.act button { padding: 6px 10px; font-size: 12px; margin-right: 4px; }
+#ac-dialog { width: min(680px, calc(100vw - 24px)); border: 1px solid #cbd8d0; border-radius: 16px; padding: 22px; }
+#ac-dialog::backdrop { background: rgba(10, 30, 25, .45); }
+.ac-checks { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+.ac-checks label { display: flex; align-items: center; gap: 6px; font-weight: 600; width: auto; }
+.ac-checks input { width: auto; }
+#ac-dialog fieldset { border: 1px solid #e2e9e5; border-radius: 10px; }
