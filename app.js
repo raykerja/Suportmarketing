@@ -919,11 +919,60 @@ $('#target-type').addEventListener('change', () => {
 
 // Kabupaten/Kota -> Kecamatan (cascading) + auto-isi Provinsi. Cakupan data sebagian;
 // area di luar daftar tetap bisa diisi manual (kecamatan & provinsi tidak dikunci).
+// Autocomplete: ketik untuk mencari, hasil disortir (cocok di awal nama dulu, baru di tengah).
+function createAutocomplete(input, listEl, getOptions) {
+  let items = []; let activeIndex = -1;
+  const pick = (name) => {
+    input.value = name; listEl.hidden = true; input.setAttribute('aria-expanded', 'false');
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+  };
+  const render = () => {
+    const all = getOptions();
+    const q = input.value.trim().toLocaleLowerCase('id');
+    if (!q) { items = all.slice(0, 30); }
+    else {
+      const starts = []; const contains = [];
+      for (const name of all) {
+        const n = name.toLocaleLowerCase('id');
+        if (n.startsWith(q)) starts.push(name); else if (n.includes(q)) contains.push(name);
+      }
+      starts.sort((a, b) => a.localeCompare(b, 'id')); contains.sort((a, b) => a.localeCompare(b, 'id'));
+      items = [...starts, ...contains].slice(0, 30);
+    }
+    activeIndex = -1;
+    listEl.innerHTML = items.length
+      ? items.map((name, i) => `<li role="option" data-i="${i}">${esc(name)}</li>`).join('')
+      : '<li class="ac-empty">Tidak ditemukan di daftar — tetap bisa diketik manual</li>';
+    listEl.hidden = false; input.setAttribute('aria-expanded', 'true');
+  };
+  input.addEventListener('input', render);
+  input.addEventListener('focus', render);
+  input.addEventListener('keydown', (event) => {
+    const lis = listEl.querySelectorAll('li[data-i]');
+    if (event.key === 'ArrowDown') { if (listEl.hidden) { render(); return; } event.preventDefault(); activeIndex = Math.min(activeIndex + 1, lis.length - 1); }
+    else if (event.key === 'ArrowUp') { event.preventDefault(); activeIndex = Math.max(activeIndex - 1, 0); }
+    else if (event.key === 'Enter') { if (activeIndex >= 0 && items[activeIndex]) { event.preventDefault(); pick(items[activeIndex]); } return; }
+    else if (event.key === 'Escape') { listEl.hidden = true; return; }
+    else return;
+    lis.forEach((li, i) => li.classList.toggle('active', i === activeIndex));
+    lis[activeIndex]?.scrollIntoView({ block: 'nearest' });
+  });
+  listEl.addEventListener('mousedown', (event) => {
+    const li = event.target.closest('li[data-i]');
+    if (!li) return;
+    event.preventDefault(); pick(items[Number(li.dataset.i)]);
+  });
+  input.addEventListener('blur', () => setTimeout(() => { listEl.hidden = true; input.setAttribute('aria-expanded', 'false'); }, 150));
+}
+
 const wilayahByKabupaten = new Map(WILAYAH_DATA.map((row) => [row.kabupaten.trim().toLocaleLowerCase('id'), row]));
-$('#kabupaten-suggestions').innerHTML = WILAYAH_DATA.map((row) => `<option value="${esc(row.kabupaten)}">`).join('');
+const allKabupatenNames = WILAYAH_DATA.map((row) => row.kabupaten).sort((a, b) => a.localeCompare(b, 'id'));
+let currentKecamatanPool = [];
+createAutocomplete($('#kabupaten'), $('#kabupaten-options'), () => allKabupatenNames);
+createAutocomplete($('#kecamatan'), $('#kecamatan-options'), () => currentKecamatanPool);
 $('#kabupaten').addEventListener('input', () => {
   const match = wilayahByKabupaten.get($('#kabupaten').value.trim().toLocaleLowerCase('id'));
-  $('#kecamatan-suggestions').innerHTML = match ? match.kecamatan.map((nama) => `<option value="${esc(nama)}">`).join('') : '';
+  currentKecamatanPool = match ? match.kecamatan : [];
   if (match) $('#provinsi').value = match.provinsi;
 });
 

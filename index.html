@@ -20,12 +20,12 @@
     });
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
-  <link rel="stylesheet" href="style.css?v=20261005-8">
+  <link rel="stylesheet" href="style.css?v=20261009-9">
   <link rel="stylesheet" href="theme-ray.css?v=20261009-3">
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-2"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261009-12"></script>
+  <script type="module" src="app.js?v=20261009-13"></script>
 </head>
 <body>
   <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="open-settings" type="button" data-tab="settings" hidden>Pengaturan</button></header>
@@ -176,8 +176,8 @@
         <div class="columns"><div class="card"><h2>Riset target baru</h2><p class="hint">AI dan verifikasi internet dijalankan oleh workflow n8n. Proses dapat memerlukan beberapa menit.</p>
           <form id="research-form"><label>Jenis target<select id="target-type"><option value="SWASTA">Perusahaan swasta</option><option value="PEMERINTAH">Instansi pemerintah</option></select></label>
             <label id="bidang-wrap">Bidang usaha<input id="bidang" maxlength="150" required placeholder="Contoh: HOTEL"></label>
-            <label>Kabupaten/Kota<input id="kabupaten" list="kabupaten-suggestions" maxlength="100" required placeholder="Contoh: Kota Semarang" autocomplete="off"></label><datalist id="kabupaten-suggestions"></datalist>
-            <label>Kecamatan<input id="kecamatan" list="kecamatan-suggestions" maxlength="100" required placeholder="Contoh: Mijen" autocomplete="off"></label><datalist id="kecamatan-suggestions"></datalist>
+            <label>Kabupaten/Kota<div class="ac-wrap"><input id="kabupaten" maxlength="100" required placeholder="Ketik untuk mencari, atau isi manual" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"><ul id="kabupaten-options" class="ac-list" role="listbox" hidden></ul></div></label>
+            <label>Kecamatan<div class="ac-wrap"><input id="kecamatan" maxlength="100" required placeholder="Pilih Kabupaten/Kota dahulu, atau ketik manual" autocomplete="off" role="combobox" aria-expanded="false" aria-autocomplete="list"><ul id="kecamatan-options" class="ac-list" role="listbox" hidden></ul></div></label>
             <label>Provinsi<input id="provinsi" maxlength="100" required placeholder="Terisi otomatis dari Kabupaten/Kota, atau isi manual"></label>
             <label>Jumlah target<input id="jumlah" type="number" min="1" max="10" value="5" required></label><button class="primary" id="research-submit">Cari target</button></form>
           <p id="research-status" role="status"></p></div>
