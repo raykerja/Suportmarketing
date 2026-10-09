@@ -173,6 +173,26 @@ window.addEventListener('popstate', (event) => {
   if (currentUser && !invitePending) activateTab(event.state?.marketingTab || 'visits', false);
 });
 
+function closeSettingsMenu() {
+  $('#settings-menu').hidden = true;
+  $('#open-settings').setAttribute('aria-expanded', 'false');
+}
+$('#open-settings').addEventListener('click', (event) => {
+  event.stopPropagation();
+  const willOpen = $('#settings-menu').hidden;
+  if (willOpen) { $('#settings-menu').hidden = false; $('#open-settings').setAttribute('aria-expanded', 'true'); }
+  else closeSettingsMenu();
+});
+$('#settings-menu').addEventListener('click', (event) => { if (event.target.closest('[data-tab]')) closeSettingsMenu(); });
+$('#settings-menu').addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const item = event.target.closest('[data-tab]');
+  if (!item) return;
+  event.preventDefault(); item.click();
+});
+document.addEventListener('click', (event) => { if (!$('#settings-menu').hidden && !event.target.closest('.settings-menu-wrap')) closeSettingsMenu(); });
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !$('#settings-menu').hidden) closeSettingsMenu(); });
+
 const visitFields = ['area','nama_perusahaan','kategori','nomor_kontak_perusahaan','alamat','tanggal_janji_kunjungan',
   'jabatan_pic','nama_pejabat_pic_1','nama_pejabat_pic_2','nomor_kontak_pic','tanggal_realisasi_kunjungan',
   'respon','tanggal_follow_up','catatan','titik_lokasi_laporan','koordinat_target','tanggal_follow_up_aktual',
@@ -1203,6 +1223,27 @@ async function loadSettings() {
     return `<div class="item"><strong>${esc(memberLabel(m))}</strong><small>${esc(username)} · ${esc(m.role)} · ${m.active ? 'aktif' : 'nonaktif'}</small>${m.user_id === currentUser?.id ? '' : `<div class="actions"><button type="button" data-member-active="${esc(m.user_id)}" data-active="${m.active ? '0' : '1'}" data-name="${esc(memberLabel(m))}">${m.active ? 'Nonaktifkan akun' : 'Aktifkan akun'}</button><button type="button" data-member-reset="${esc(m.user_id)}" data-name="${esc(memberLabel(m))}">Reset kata sandi</button></div>`}<form class="member-name-form" data-user-id="${esc(m.user_id)}"><label>Nama staf<input type="text" maxlength="100" value="${esc(m.display_name || '')}" required></label><button type="submit">Simpan nama</button></form><form class="member-folder-form" data-user-id="${esc(m.user_id)}"><label>Folder Drive<input type="url" value="${esc(m.drive_folder_url || '')}" required></label><button type="submit">Simpan folder</button></form></div>`;
   }).join('');
 }
+$('#password-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  if (!form.reportValidity()) return;
+  const oldPassword = $('#password-old').value;
+  const newPassword = $('#password-new').value;
+  const confirmPassword = $('#password-confirm').value;
+  if (newPassword !== confirmPassword) { status('#password-status', 'Konfirmasi kata sandi baru tidak sama dengan kata sandi baru.', true); return; }
+  if (newPassword === oldPassword) { status('#password-status', 'Kata sandi baru harus berbeda dari kata sandi lama.', true); return; }
+  const button = $('#password-form button[type="submit"]'); button.disabled = true;
+  status('#password-status', 'Memeriksa kata sandi lama…');
+  try {
+    const { error: signInError } = await client.auth.signInWithPassword({ email: currentUser.email, password: oldPassword });
+    if (signInError) throw new Error('Kata sandi lama salah.');
+    const { error: updateError } = await client.auth.updateUser({ password: newPassword });
+    if (updateError) throw updateError;
+    status('#password-status', 'Kata sandi berhasil diganti. Gunakan kata sandi baru saat login berikutnya.');
+    form.reset();
+  } catch (error) { status('#password-status', String(error.message || error), true); }
+  finally { button.disabled = false; }
+});
 $('#folder-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const { data, error } = await client.functions.invoke('marketing', { body: { action: 'set_folder', drive_folder_url: $('#folder-url').value.trim() } });
