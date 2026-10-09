@@ -23,9 +23,9 @@
   <link rel="stylesheet" href="style.css?v=20261005-8">
   <link rel="stylesheet" href="theme-ray.css?v=20261009-2">
   <script src="config.js"></script>
-  <script defer src="clients-preview.js?v=20261009-1"></script>
+  <script defer src="clients-preview.js?v=20261009-2"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261009-7"></script>
+  <script type="module" src="app.js?v=20261009-8"></script>
 </head>
 <body>
   <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="open-settings" type="button" data-tab="settings" hidden>Pengaturan</button></header>
@@ -120,14 +120,6 @@
           <p id="ac-form-status" class="hint" role="status"></p>
           <div class="actions"><button class="primary" id="ac-form-save" type="submit">Simpan</button><button id="ac-form-cancel" type="button">Batal</button></div>
         </form></dialog>
-        <div hidden>
-        <div class="card"><div class="section-head"><div><p class="eyebrow">RELASI KLIEN</p><h2>Database Client Active</h2><p class="hint">Pantau klien aktif per PIC RMP, masa kontrak, layanan berjalan, dan peluang penawaran ulang.</p></div></div>
-          <div id="client-summary" class="progress-summary" aria-label="Ringkasan klien"></div>
-          <div class="client-filters"><label>Cari klien<input id="client-search" type="search" placeholder="Nama perusahaan atau layanan"></label><label>PIC RMP<select id="client-pic-filter"><option value="all">Semua PIC</option></select></label><label>Status penawaran<select id="client-filter"><option value="all">Semua status</option><option value="due">Perlu follow up</option><option value="review">Perlu review</option><option value="proposal">Menyiapkan penawaran</option><option value="sent">Penawaran terkirim</option><option value="follow_up">Negosiasi / follow up</option><option value="won">Disetujui</option><option value="lost">Tidak lanjut</option></select></label></div>
-        </div>
-        <div class="client-layout"><div class="card"><h2>Perusahaan yang bekerja sama</h2><div id="client-list" class="list" aria-live="polite"></div></div>
-          <div class="card"><h2>Detail klien & PIC</h2><div id="client-detail"><p class="hint">Pilih klien untuk melihat detailnya.</p></div></div></div>
-        </div>
       </section>
       <section id="pic-visits" class="panel" hidden>
         <div class="preview-note"><strong>DATA PRODUKSI</strong><span>PIC Visit tersimpan di database untuk client yang PIC-nya akun ini. Foto belum didukung. Monitoring &amp; Tindaklanjut (menu 3) masih simulasi.</span></div>
@@ -163,7 +155,7 @@
         </div>
       </section>
       <section id="client-progress" class="panel" hidden>
-        <div class="preview-note"><strong>PRATINJAU MONITORING KLIEN AKTIF</strong><span>PIC Visit dan riwayat penawaran ulang masih simulasi di browser. Sales Visit di dashboard dibaca dari laporan yang tersedia untuk akun Anda; dashboard tidak mengubah data tersebut.</span></div>
+        <div class="preview-note"><strong>DATA PRODUKSI</strong><span>Tahap penawaran ulang tersimpan di database per client dan terlihat oleh PIC client itu serta admin. Dashboard Sales Visit dibaca dari laporan yang tersedia untuk akun Anda.</span></div>
         <div class="card activity-dashboard"><div class="section-head"><div><p class="eyebrow">AKTIVITAS KUNJUNGAN</p><h2>Dashboard PIC Visit &amp; Sales Visit</h2><p class="hint">Pantau input kunjungan sebelum mencatat perkembangan penawaran ulang. PIC Visit adalah simulasi; Sales Visit berasal dari laporan tersimpan.</p></div></div>
           <div id="activity-dashboard-summary" class="progress-summary" aria-label="Ringkasan input kunjungan"></div>
           <div class="activity-dashboard-grid"><div><div class="section-head"><h3>PIC Visit</h3><button type="button" data-tab="pic-visits">Buka PIC Visit</button></div><div id="activity-pic-list" class="list activity-dashboard-list" aria-live="polite"></div></div>
@@ -177,7 +169,7 @@
           <label>Tanggal kegiatan<input id="client-progress-date" type="date" required></label>
           <label>Respons klien dan langkah berikutnya<textarea id="client-progress-note" rows="4" maxlength="3000" required></textarea></label>
           <label id="client-progress-next-wrap">Jadwal follow up berikutnya <span class="required">*</span><input id="client-progress-next" type="date" required></label>
-          <button class="primary" type="submit">Coba simpan (simulasi)</button><p id="client-progress-status" role="status"></p>
+          <button class="primary" type="submit">Simpan perkembangan</button><p id="client-progress-status" role="status"></p>
         </form></div><div class="card"><h2>Riwayat penawaran ulang</h2><div id="client-progress-history" class="list"></div></div></div>
       </section>
       <section id="research" class="panel" hidden>

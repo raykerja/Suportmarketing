@@ -70,7 +70,7 @@ function showWorkspace(user) {
   if (!user) {
     currentMember = null;
     researchCache = []; leadCache = []; letterCache = []; offerCache = []; offerRequestId = null; manualOfferRequestId = null;
-    activeClients = []; picAliases = []; memberOptions = []; renderActiveClients(); publishActiveClients(); picVisitRows = []; publishPicVisits();
+    activeClients = []; picAliases = []; memberOptions = []; renderActiveClients(); publishActiveClients(); picVisitRows = []; publishPicVisits(); publishOffers([], []);
     visitCache = []; $('#visit-list').textContent = ''; $('#visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>';
     publishVisitSnapshot();
     $('#review-list').textContent = ''; $('#offer-list').textContent = ''; $('#lead-list').textContent = '';
@@ -90,7 +90,7 @@ function showWorkspace(user) {
   $('#logout').hidden = !user || invitePending;
   if (user && !invitePending) {
     activateTab(history.state?.marketingTab || 'visits', false);
-    loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); loadActiveClients().then(loadPicVisits);
+    loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); loadActiveClients().then(() => { loadPicVisits(); loadClientOffers(); });
   }
   else {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
@@ -362,7 +362,7 @@ function renderActiveClients() {
     <td class="num">${esc(r.source_no)}</td><td><strong>${esc(r.nama_client)}</strong>${r.status === 'arsip' ? `<br><span class="badge error">Arsip</span> <small>${esc(r.archive_reason)}</small>` : ''}</td><td>${esc(r.cabang)}</td><td>${esc(r.kategori)}</td><td>${esc(r.pic_user)}</td><td>${waLinks(r.nomor_hp)}</td>
     <td>${esc(r.korlap_raw)}</td><td>${esc(r.admin_raw)}</td><td>${contractCell(r)}</td>
     <td>${r.google_maps ? `<a href="${esc(maps(r))}" target="_blank" rel="noopener noreferrer">${esc(/^https?:\/\//i.test(r.google_maps) ? 'Buka link' : r.google_maps)}</a>` : `<a href="${esc(maps(r))}" target="_blank" rel="noopener noreferrer"><small>Cari di Maps</small></a>`}</td>
-    <td class="act">${admin ? `<button type="button" data-ac-edit="${esc(r.id)}">Ubah</button><button type="button" data-ac-archive="${esc(r.id)}">${r.status === 'arsip' ? 'Aktifkan lagi' : 'Arsipkan'}</button>` : ''}${r.status === 'aktif' ? `<button type="button" data-ac-visit="${esc(r.id)}">Catat Visit</button>` : ''}</td></tr>`).join('')
+    <td class="act">${admin ? `<button type="button" data-ac-edit="${esc(r.id)}">Ubah</button><button type="button" data-ac-archive="${esc(r.id)}">${r.status === 'arsip' ? 'Aktifkan lagi' : 'Arsipkan'}</button>` : ''}${r.status === 'aktif' ? `<button type="button" data-ac-visit="${esc(r.id)}">Catat Visit</button><button type="button" data-ac-offer="${esc(r.id)}">Penawaran</button>` : ''}</td></tr>`).join('')
     : `<tr><td colspan="${head.length}" class="hint">${activeClientLoaded ? 'Belum ada client yang cocok. Jika akun ini seharusnya punya client, hubungi admin untuk memeriksa pemetaan PIC.' : ''}</td></tr>`}</tbody>`;
   if (admin) { renderAliasTable(); renderDashboard(live); }
 }
@@ -492,6 +492,8 @@ $('#ac-table').addEventListener('click', async (event) => {
   }
   const visit = event.target.closest('[data-ac-visit]');
   if (visit) window.marketingPicVisit?.open(visit.dataset.acVisit);
+  const offer = event.target.closest('[data-ac-offer]');
+  if (offer) window.marketingOffers?.open(offer.dataset.acOffer);
 });
 $('#ac-alias-table').addEventListener('change', async (event) => {
   const sel = event.target.closest('select[data-alias]');
@@ -510,7 +512,7 @@ $('#ac-alias-new').addEventListener('submit', async (event) => {
 // PIC Visit ke client aktif (data produksi, RLS: staf hanya miliknya, admin membaca semua).
 let picVisitRows = [];
 function publishActiveClients() {
-  const clients = activeClients.filter((r) => r.status === 'aktif').map((r) => ({ id: r.id, name: r.nama_client, area: r.cabang, pic: r.pic_user, owner: `Korlap ${r.korlap_raw || '-'} · Admin ${r.admin_raw || '-'}` }));
+  const clients = activeClients.filter((r) => r.status === 'aktif').map((r) => ({ id: r.id, name: r.nama_client, area: r.cabang, pic: r.pic_user, owner: `Korlap ${r.korlap_raw || '-'} · Admin ${r.admin_raw || '-'}`, kategori: r.kategori, kontrakAkhir: r.kontrak_akhir || '' }));
   window.dispatchEvent(new CustomEvent('marketing:clients-snapshot', { detail: { clients } }));
 }
 function publishPicVisits(error = '') {
@@ -526,7 +528,28 @@ async function loadPicVisits() {
   picVisitRows = data || [];
   publishPicVisits();
 }
+function publishOffers(offers, events, error = '') {
+  window.dispatchEvent(new CustomEvent('marketing:offers-snapshot', { detail: { offers, events, error } }));
+}
+async function loadClientOffers() {
+  if (!client || !currentUser) return;
+  const requestedUserId = currentUser.id;
+  const [offers, events] = await Promise.all([
+    client.from('marketing_client_offers').select('*').limit(2000),
+    client.from('marketing_client_offer_events').select('*').order('created_at', { ascending: false }).limit(2000)
+  ]);
+  if (currentUser?.id !== requestedUserId) return;
+  const failed = offers.error || events.error;
+  publishOffers(failed ? [] : offers.data || [], failed ? [] : events.data || [], failed ? 'Monitoring belum dapat dimuat: ' + failed.message : '');
+}
 window.marketingApi = {
+  async saveOffer({ clientId, stage, offerType, activityDate, note, next }) {
+    if (!client || !currentUser) return { error: 'Belum login.' };
+    const { error } = await client.rpc('marketing_record_client_offer', { p_client_id: clientId, p_stage: stage, p_offer_type: offerType, p_activity_date: activityDate, p_note: note, p_next_follow_up: next || null });
+    if (error) return { error: error.message };
+    await loadClientOffers();
+    return { ok: true };
+  },
   async savePicVisit({ id, clientId, visitStage, data }) {
     if (!client || !currentUser) return { error: 'Belum login.' };
     const query = id
