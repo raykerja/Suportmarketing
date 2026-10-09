@@ -130,3 +130,9 @@ th { color: var(--ray-muted); background: #f7faff; }
 .ac-checks label { display: flex; align-items: center; gap: 6px; font-weight: 600; width: auto; }
 .ac-checks input { width: auto; }
 #ac-dialog fieldset { border: 1px solid #e2e9e5; border-radius: 10px; }
+
+.ac-archived { opacity: .6; background: #f6f6f6; }
+#ac-dashboard summary { cursor: pointer; }
+#ac-dashboard summary small { color: #667a70; font-weight: 400; }
+#ac-dash-body { margin-top: 12px; }
+.member-name-form, .member-folder-form { margin-top: 8px; }

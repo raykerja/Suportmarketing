@@ -21,11 +21,11 @@
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
   <link rel="stylesheet" href="style.css?v=20261005-8">
-  <link rel="stylesheet" href="theme-ray.css?v=20261009-1">
+  <link rel="stylesheet" href="theme-ray.css?v=20261009-2">
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-1"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261009-6"></script>
+  <script type="module" src="app.js?v=20261009-7"></script>
 </head>
 <body>
   <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><button id="open-settings" type="button" data-tab="settings" hidden>Pengaturan</button></header>
@@ -97,11 +97,13 @@
         </form></div><div class="card"><h2>Riwayat target</h2><div id="progress-history" class="list"><p class="hint">Pilih target untuk melihat riwayatnya.</p></div></div></div>
       </section>
       <section id="clients" class="panel" hidden>
-        <div class="card"><div class="section-head"><div><p class="eyebrow">DATA PRODUKSI</p><h2>Database Client Active</h2><p id="ac-scope" class="hint">Memuat daftar client…</p></div><div class="actions"><button id="ac-refresh" type="button">Muat ulang</button><button id="ac-add" type="button" class="primary" hidden>+ Tambah client</button><button id="ac-alias-toggle" type="button" hidden>Pemetaan PIC → akun</button></div></div>
+        <div class="card"><div class="section-head"><div><p class="eyebrow">DATA PRODUKSI</p><h2>Database Client Active</h2><p id="ac-scope" class="hint">Memuat daftar client…</p></div><div class="actions"><button id="ac-refresh" type="button">Muat ulang</button><button id="ac-add" type="button" class="primary" hidden>+ Tambah client</button><button id="ac-alias-toggle" type="button" hidden>Pemetaan PIC → akun</button><button id="ac-history-toggle" type="button" hidden>Riwayat perubahan</button><button id="ac-export" type="button" hidden>Ekspor Excel</button></div></div>
           <div id="ac-summary" class="progress-summary" aria-label="Ringkasan client aktif"></div>
-          <div class="client-filters"><label>Cari client<input id="ac-search" type="search" placeholder="Nama client, PIC user, cabang"></label><label>Cabang<select id="ac-branch"><option value="all">Semua cabang</option></select></label><label>Kategori<select id="ac-category"><option value="all">Semua kategori</option></select></label><label>PIC Korlap / Admin<select id="ac-pic"><option value="all">Semua PIC</option></select></label></div>
+          <div class="client-filters"><label>Cari client<input id="ac-search" type="search" placeholder="Nama client, PIC user, cabang"></label><label>Cabang<select id="ac-branch"><option value="all">Semua cabang</option></select></label><label>Kategori<select id="ac-category"><option value="all">Semua kategori</option></select></label><label>PIC Korlap / Admin<select id="ac-pic"><option value="all">Semua PIC</option></select></label><label>Masa kontrak<select id="ac-contract"><option value="all">Semua</option><option value="30">Berakhir ≤ 30 hari</option><option value="90">Berakhir ≤ 90 hari</option><option value="expired">Sudah berakhir</option><option value="none">Tanggal belum diisi</option></select></label><label id="ac-status-wrap" hidden>Status client<select id="ac-status-filter"><option value="aktif">Aktif</option><option value="arsip">Arsip</option><option value="all">Semua</option></select></label><label id="ac-visited-wrap" hidden>Kunjungan<select id="ac-visited"><option value="all">Semua</option><option value="never">Belum pernah dikunjungi</option></select></label></div>
           <p id="ac-status" class="hint" role="status"></p>
         </div>
+        <details id="ac-dashboard" class="card" hidden><summary><strong>Ringkasan kunjungan per PIC Korlap</strong> <small id="ac-dash-note"></small></summary><div id="ac-dash-body"></div></details>
+        <div id="ac-history-card" class="card" hidden><h2>Riwayat perubahan</h2><p class="hint">Perubahan data client, PIC, status arsip, dan nama staf (300 terakhir).</p><div class="table-wrap"><table id="ac-history-table"></table></div></div>
         <div id="ac-alias-card" class="card" hidden><h2>Pemetaan PIC → akun portal</h2><p class="hint">Menentukan akun mana yang melihat client dengan PIC itu. PIC tanpa akun (kosong) hanya terlihat oleh admin. Tambahkan PIC baru di bawah bila perlu.</p><div class="table-wrap"><table id="ac-alias-table"></table></div>
           <form id="ac-alias-new" class="client-filters"><label>Nama PIC baru<input id="ac-alias-name" maxlength="60" placeholder="Contoh: BUDI" required></label><label>Peran<select id="ac-alias-role"><option value="korlap">PIC Korlap</option><option value="admin">PIC Admin</option></select></label><label>&nbsp;<button class="primary" type="submit">Tambah PIC</button></label></form><p id="ac-alias-status" class="hint" role="status"></p></div>
         <div class="card"><div class="table-wrap ac-table-wrap"><table id="ac-table" class="ac-table"></table></div></div>
@@ -111,7 +113,8 @@
           <div class="form-grid"><label>Cabang<input id="ac-f-cabang" maxlength="100" list="ac-branches"></label><label>Kategori<select id="ac-f-kategori"><option value="">-</option><option>PEMERINTAHAN</option><option>SWASTA</option></select></label></div>
           <datalist id="ac-branches"></datalist>
           <div class="form-grid"><label>PIC user (di client)<input id="ac-f-picuser" maxlength="200"></label><label>Nomor HP PIC user<input id="ac-f-hp" maxlength="100" inputmode="tel"></label></div>
-          <div class="form-grid"><label>Masa kontrak<input id="ac-f-kontrak" maxlength="200" placeholder="Contoh: 1 JAN 2026 - 31 DES 2026"></label><label>Google Maps <small>nama tempat atau tempel link</small><input id="ac-f-maps" maxlength="500" placeholder="Nama tempat atau https://maps.app.goo.gl/…"></label></div>
+          <div class="form-grid"><label>Kontrak mulai<input id="ac-f-mulai" type="date"></label><label>Kontrak berakhir<input id="ac-f-akhir" type="date"></label></div>
+          <div class="form-grid"><label>Catatan kontrak<input id="ac-f-kontrak" maxlength="200" placeholder="Opsional"></label><label>Google Maps <small>nama tempat atau tempel link</small><input id="ac-f-maps" maxlength="500" placeholder="Nama tempat atau https://maps.app.goo.gl/…"></label></div>
           <fieldset><legend>PIC Korlap</legend><div id="ac-f-korlap" class="ac-checks"></div></fieldset>
           <fieldset><legend>PIC Admin</legend><div id="ac-f-admin" class="ac-checks"></div></fieldset>
           <p id="ac-form-status" class="hint" role="status"></p>

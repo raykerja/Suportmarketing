@@ -251,18 +251,31 @@ function fillVisitForm(row, step = '2') {
   document.querySelector('[data-tab="visits"]').click();
   $('#visit-form').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
-// Database Client Active (data produksi): RLS membatasi staf pada client yang PIC-nya dirinya; admin mengubah lewat RPC.
+// Database Client Active (data produksi): RLS membatasi staf pada client aktif yang PIC-nya dirinya; admin mengubah lewat RPC.
 let activeClients = [];
 let activeClientLoaded = false;
 let activeClientError = '';
 let picAliases = [];
 let memberOptions = [];
 let editingClient = null;
+let visitStats = [];
+let changeLog = [];
 const isAdmin = () => currentMember?.role === 'admin';
 const picTokens = (row) => {
   const split = (raw) => (raw || '').split(',').flatMap((part) => (part.trim() === 'PAK TOHAR' ? ['PAK TOHAR'] : part.split(/\s+/))).filter(Boolean);
   return [...new Set([...split(row.korlap_raw), ...split(row.admin_raw)])];
 };
+const korlapTokens = (row) => picTokens({ korlap_raw: row.korlap_raw });
+const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
+const daysLeft = (r) => r.kontrak_akhir ? Math.round((new Date(r.kontrak_akhir + 'T00:00:00') - new Date(todayIso() + 'T00:00:00')) / 86400000) : null;
+const shortDate = (v) => v ? new Date(v + 'T12:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+function contractCell(r) {
+  if (!r.kontrak_akhir && !r.kontrak_mulai) return r.masa_kontrak ? esc(r.masa_kontrak) : '<small>belum diisi</small>';
+  const left = daysLeft(r);
+  const badge = left === null ? '' : left < 0 ? `<span class="badge error">Berakhir ${-left} hari lalu</span>` : left <= 30 ? `<span class="badge error">${left} hari lagi</span>`
+    : left <= 90 ? `<span class="badge processing">${left} hari lagi</span>` : `<span class="badge">${left} hari lagi</span>`;
+  return `${esc(shortDate(r.kontrak_mulai) || '?')} – ${esc(shortDate(r.kontrak_akhir) || '?')}<br>${badge}${r.masa_kontrak ? `<br><small>${esc(r.masa_kontrak)}</small>` : ''}`;
+}
 async function loadActiveClients() {
   if (!client || !currentUser) return;
   const requestedUserId = currentUser.id;
@@ -276,6 +289,11 @@ async function loadActiveClients() {
   if (clients.error) { activeClients = []; activeClientError = 'Daftar client belum dapat dimuat: ' + clients.error.message; }
   else activeClients = clients.data || [];
   picAliases = aliases.data || [];
+  if (isAdmin()) {
+    const stats = await client.from('marketing_pic_visits').select('client_id,owner_id,created_at').order('created_at', { ascending: false }).limit(5000);
+    if (currentUser?.id !== requestedUserId) return;
+    visitStats = stats.data || [];
+  } else visitStats = [];
   renderActiveClients();
   publishActiveClients();
 }
@@ -295,40 +313,99 @@ function waLinks(raw) {
     return `<a href="https://wa.me/${digits}" target="_blank" rel="noopener noreferrer" title="Chat WhatsApp ${esc(part)}">${esc(part)}</a>`;
   }).join('<br>');
 }
+const visitedIds = () => new Set(visitStats.map((v) => v.client_id));
+function filteredClients() {
+  const q = $('#ac-search').value.trim().toLocaleLowerCase('id');
+  const branch = $('#ac-branch').value, cat = $('#ac-category').value, pic = $('#ac-pic').value, contract = $('#ac-contract').value;
+  const statusFilter = isAdmin() ? $('#ac-status-filter').value : 'aktif';
+  const never = isAdmin() && $('#ac-visited').value === 'never';
+  const seen = visitedIds();
+  return activeClients.filter((r) => {
+    if (statusFilter !== 'all' && r.status !== statusFilter) return false;
+    if (q && ![r.nama_client, r.pic_user, r.cabang, r.korlap_raw, r.admin_raw].some((v) => (v || '').toLocaleLowerCase('id').includes(q))) return false;
+    if (branch !== 'all' && r.cabang !== branch) return false;
+    if (cat !== 'all' && r.kategori !== cat) return false;
+    if (pic !== 'all' && !picTokens(r).includes(pic)) return false;
+    const left = daysLeft(r);
+    if (contract === 'none' && r.kontrak_akhir) return false;
+    if (contract === '30' && !(left !== null && left >= 0 && left <= 30)) return false;
+    if (contract === '90' && !(left !== null && left >= 0 && left <= 90)) return false;
+    if (contract === 'expired' && !(left !== null && left < 0)) return false;
+    if (never && seen.has(r.id)) return false;
+    return true;
+  });
+}
 function renderActiveClients() {
   const rows = activeClients;
   const admin = isAdmin();
+  const live = rows.filter((r) => r.status === 'aktif');
   $('#ac-scope').textContent = !activeClientLoaded ? 'Memuat daftar client…' : admin
-    ? 'Akun admin: menampilkan dan dapat mengubah semua client aktif perusahaan.'
-    : 'Menampilkan client yang PIC Korlap atau PIC Admin-nya adalah akun ini.';
-  $('#ac-add').hidden = !admin; $('#ac-alias-toggle').hidden = !admin;
-  if (!admin) $('#ac-alias-card').hidden = true;
+    ? 'Akun admin: menampilkan dan dapat mengubah semua client perusahaan.'
+    : 'Menampilkan client aktif yang PIC Korlap atau PIC Admin-nya adalah akun ini.';
+  for (const id of ['#ac-add', '#ac-alias-toggle', '#ac-history-toggle', '#ac-export']) $(id).hidden = !admin;
+  for (const id of ['#ac-status-wrap', '#ac-visited-wrap']) $(id).hidden = !admin;
+  $('#ac-dashboard').hidden = !admin;
+  if (!admin) { $('#ac-alias-card').hidden = true; $('#ac-history-card').hidden = true; }
   const uniq = (fn) => [...new Set(rows.map(fn).filter(Boolean))].sort();
   fillSelect('#ac-branch', 'Semua cabang', uniq((r) => r.cabang), $('#ac-branch').value);
   fillSelect('#ac-category', 'Semua kategori', uniq((r) => r.kategori), $('#ac-category').value);
   fillSelect('#ac-pic', 'Semua PIC', [...new Set(rows.flatMap(picTokens))].sort(), $('#ac-pic').value);
   $('#ac-branches').innerHTML = uniq((r) => r.cabang).map((v) => `<option value="${esc(v)}">`).join('');
-  const q = $('#ac-search').value.trim().toLocaleLowerCase('id');
-  const branch = $('#ac-branch').value, cat = $('#ac-category').value, pic = $('#ac-pic').value;
-  const visible = rows.filter((r) => (!q || [r.nama_client, r.pic_user, r.cabang, r.korlap_raw, r.admin_raw].some((v) => (v || '').toLocaleLowerCase('id').includes(q)))
-    && (branch === 'all' || r.cabang === branch) && (cat === 'all' || r.kategori === cat) && (pic === 'all' || picTokens(r).includes(pic)));
-  $('#ac-summary').innerHTML = `<div><strong>${rows.length}</strong><small>Client aktif</small></div><div><strong>${rows.filter((r) => r.kategori === 'PEMERINTAHAN').length}</strong><small>Pemerintahan</small></div><div><strong>${rows.filter((r) => r.kategori === 'SWASTA').length}</strong><small>Swasta</small></div><div><strong>${new Set(rows.map((r) => r.cabang).filter(Boolean)).size}</strong><small>Cabang</small></div>`;
+  const visible = filteredClients();
+  const soon = live.filter((r) => { const l = daysLeft(r); return l !== null && l >= 0 && l <= 90; }).length;
+  $('#ac-summary').innerHTML = `<div><strong>${live.length}</strong><small>Client aktif</small></div><div><strong>${live.filter((r) => r.kategori === 'PEMERINTAHAN').length}</strong><small>Pemerintahan</small></div><div><strong>${live.filter((r) => r.kategori === 'SWASTA').length}</strong><small>Swasta</small></div><div><strong>${soon}</strong><small>Kontrak ≤ 90 hari</small></div>${admin ? `<div><strong>${rows.length - live.length}</strong><small>Diarsipkan</small></div>` : ''}`;
   $('#ac-status').textContent = activeClientError || (activeClientLoaded ? `Menampilkan ${visible.length} dari ${rows.length} client.` : '');
   $('#ac-status').classList.toggle('error', !!activeClientError);
   const maps = (r) => (/^https?:\/\//i.test(r.google_maps || '') ? r.google_maps : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(r.google_maps || r.nama_client));
   const head = ['No', 'Nama client', 'Cabang', 'Kategori', 'PIC user', 'No. HP', 'PIC Korlap', 'PIC Admin', 'Masa kontrak', 'Google Maps', 'Aksi'];
-  $('#ac-table').innerHTML = `<thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${visible.length ? visible.map((r) => `<tr>
-    <td class="num">${esc(r.source_no)}</td><td><strong>${esc(r.nama_client)}</strong></td><td>${esc(r.cabang)}</td><td>${esc(r.kategori)}</td><td>${esc(r.pic_user)}</td><td>${waLinks(r.nomor_hp)}</td>
-    <td>${esc(r.korlap_raw)}</td><td>${esc(r.admin_raw)}</td><td>${esc(r.masa_kontrak)}</td>
+  $('#ac-table').innerHTML = `<thead><tr>${head.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${visible.length ? visible.map((r) => `<tr class="${r.status === 'arsip' ? 'ac-archived' : ''}">
+    <td class="num">${esc(r.source_no)}</td><td><strong>${esc(r.nama_client)}</strong>${r.status === 'arsip' ? `<br><span class="badge error">Arsip</span> <small>${esc(r.archive_reason)}</small>` : ''}</td><td>${esc(r.cabang)}</td><td>${esc(r.kategori)}</td><td>${esc(r.pic_user)}</td><td>${waLinks(r.nomor_hp)}</td>
+    <td>${esc(r.korlap_raw)}</td><td>${esc(r.admin_raw)}</td><td>${contractCell(r)}</td>
     <td>${r.google_maps ? `<a href="${esc(maps(r))}" target="_blank" rel="noopener noreferrer">${esc(/^https?:\/\//i.test(r.google_maps) ? 'Buka link' : r.google_maps)}</a>` : `<a href="${esc(maps(r))}" target="_blank" rel="noopener noreferrer"><small>Cari di Maps</small></a>`}</td>
-    <td class="act">${admin ? `<button type="button" data-ac-edit="${esc(r.id)}">Ubah</button>` : ''}<button type="button" data-ac-visit="${esc(r.id)}">Catat Visit</button></td></tr>`).join('')
+    <td class="act">${admin ? `<button type="button" data-ac-edit="${esc(r.id)}">Ubah</button><button type="button" data-ac-archive="${esc(r.id)}">${r.status === 'arsip' ? 'Aktifkan lagi' : 'Arsipkan'}</button>` : ''}${r.status === 'aktif' ? `<button type="button" data-ac-visit="${esc(r.id)}">Catat Visit</button>` : ''}</td></tr>`).join('')
     : `<tr><td colspan="${head.length}" class="hint">${activeClientLoaded ? 'Belum ada client yang cocok. Jika akun ini seharusnya punya client, hubungi admin untuk memeriksa pemetaan PIC.' : ''}</td></tr>`}</tbody>`;
-  if (admin) renderAliasTable();
+  if (admin) { renderAliasTable(); renderDashboard(live); }
+}
+function renderDashboard(live) {
+  const seen = visitedIds();
+  const since = Date.now() - 30 * 86400000;
+  const recent = visitStats.filter((v) => new Date(v.created_at).getTime() >= since);
+  const never = live.filter((r) => !seen.has(r.id)).length;
+  const noDate = live.filter((r) => !r.kontrak_akhir).length;
+  $('#ac-dash-note').textContent = `· ${never} client belum pernah dikunjungi · ${recent.length} kunjungan 30 hari terakhir`;
+  const korlaps = picAliases.filter((a) => a.pic_role === 'korlap').map((a) => {
+    const mine = live.filter((r) => korlapTokens(r).includes(a.alias));
+    const ids = new Set(mine.map((r) => r.id));
+    const member = memberOptions.find((m) => m.user_id === a.user_id);
+    return { alias: a.alias, member: member?.display_name || '(belum punya akun)', total: mine.length, visited: mine.filter((r) => seen.has(r.id)).length, month: recent.filter((v) => ids.has(v.client_id)).length };
+  }).filter((k) => k.total).sort((a, b) => (b.total - b.visited) - (a.total - a.visited));
+  $('#ac-dash-body').innerHTML = `<div class="progress-summary"><div><strong>${never}</strong><small>Belum pernah dikunjungi</small></div><div><strong>${recent.length}</strong><small>Kunjungan 30 hari</small></div><div><strong>${noDate}</strong><small>Tanggal kontrak belum diisi</small></div></div>
+    <div class="table-wrap"><table><thead><tr><th>PIC Korlap</th><th>Akun</th><th>Client</th><th>Sudah dikunjungi</th><th>Belum</th><th>Kunjungan 30 hari</th></tr></thead><tbody>${korlaps.map((k) => `<tr><td><strong>${esc(k.alias)}</strong></td><td>${esc(k.member)}</td><td>${k.total}</td><td>${k.visited}</td><td>${k.total - k.visited}</td><td>${k.month}</td></tr>`).join('')}</tbody></table></div>
+    <p class="hint">Dihitung dari PIC Visit yang tercatat di portal sejak fitur ini aktif; kunjungan sebelumnya tidak ikut terhitung.</p>`;
 }
 function renderAliasTable() {
-  const count = (alias, role) => activeClients.filter((r) => picTokens({ [role + '_raw']: r[role + '_raw'] }).includes(alias)).length;
+  const count = (alias, role) => activeClients.filter((r) => r.status === 'aktif' && picTokens({ [role + '_raw']: r[role + '_raw'] }).includes(alias)).length;
   const opts = (sel) => `<option value="">(belum punya akun)</option>` + memberOptions.map((m) => `<option value="${esc(m.user_id)}" ${m.user_id === sel ? 'selected' : ''}>${esc(m.display_name)}</option>`).join('');
-  $('#ac-alias-table').innerHTML = `<thead><tr><th>PIC</th><th>Peran</th><th>Jumlah client</th><th>Akun portal</th></tr></thead><tbody>${picAliases.map((a) => `<tr><td><strong>${esc(a.alias)}</strong></td><td>${a.pic_role === 'korlap' ? 'Korlap' : 'Admin'}</td><td>${count(a.alias, a.pic_role)}</td><td><select data-alias="${esc(a.alias)}" data-role="${esc(a.pic_role)}">${opts(a.user_id)}</select></td></tr>`).join('')}</tbody>`;
+  $('#ac-alias-table').innerHTML = `<thead><tr><th>PIC</th><th>Peran</th><th>Jumlah client aktif</th><th>Akun portal</th></tr></thead><tbody>${picAliases.map((a) => `<tr><td><strong>${esc(a.alias)}</strong></td><td>${a.pic_role === 'korlap' ? 'Korlap' : 'Admin'}</td><td>${count(a.alias, a.pic_role)}</td><td><select data-alias="${esc(a.alias)}" data-role="${esc(a.pic_role)}">${opts(a.user_id)}</select></td></tr>`).join('')}</tbody>`;
+}
+async function loadChangeLog() {
+  $('#ac-history-table').innerHTML = '<tbody><tr><td class="hint">Memuat…</td></tr></tbody>';
+  const { data, error } = await client.from('marketing_client_changes').select('*').order('changed_at', { ascending: false }).limit(300);
+  if (error) { $('#ac-history-table').innerHTML = `<tbody><tr><td class="hint">Riwayat belum dapat dimuat: ${esc(error.message)}</td></tr></tbody>`; return; }
+  changeLog = data || [];
+  const who = (id) => memberOptions.find((m) => m.user_id === id)?.display_name || (id === currentUser?.id ? 'Anda' : '—');
+  const nameOf = (c) => activeClients.find((r) => r.id === c.client_id)?.nama_client || c.after?.nama_client || c.before?.nama_client || '';
+  const labels = { nama_client: 'Nama', cabang: 'Cabang', kategori: 'Kategori', pic_user: 'PIC user', nomor_hp: 'No. HP', google_maps: 'Maps', masa_kontrak: 'Catatan kontrak', kontrak_mulai: 'Mulai kontrak', kontrak_akhir: 'Akhir kontrak', korlap: 'Korlap', admin: 'Admin', status: 'Status', display_name: 'Nama staf' };
+  const show = (v) => Array.isArray(v) ? v.join(', ') || '-' : (v === null || v === undefined || v === '' ? '-' : String(v));
+  const diff = (c) => {
+    if (c.action === 'alias') return `PIC ${c.after?.alias} (${c.after?.role}) → ${memberOptions.find((m) => m.user_id === c.after?.user_id)?.display_name || 'belum punya akun'}`;
+    if (c.action === 'create') return 'Client baru ditambahkan';
+    if (c.action === 'status') return `Status: ${show(c.before?.status)} → ${show(c.after?.status)}${c.after?.alasan ? ` (${c.after.alasan})` : ''}`;
+    const out = Object.keys(labels).filter((k) => k in (c.after || {}) && show(c.before?.[k]) !== show(c.after?.[k])).map((k) => `${labels[k]}: ${show(c.before?.[k])} → ${show(c.after?.[k])}`);
+    return out.join('; ') || 'Tanpa perubahan isi';
+  };
+  const act = { create: 'Tambah', update: 'Ubah', alias: 'Pemetaan PIC', status: 'Status', member_name: 'Nama staf' };
+  $('#ac-history-table').innerHTML = `<thead><tr><th>Waktu</th><th>Oleh</th><th>Jenis</th><th>Client</th><th>Perubahan</th></tr></thead><tbody>${changeLog.length ? changeLog.map((c) => `<tr><td>${esc(new Date(c.changed_at).toLocaleString('id-ID'))}</td><td>${esc(who(c.changed_by))}</td><td>${esc(act[c.action] || c.action)}</td><td>${esc(nameOf(c))}</td><td>${esc(diff(c))}</td></tr>`).join('') : '<tr><td colspan="5" class="hint">Belum ada perubahan.</td></tr>'}</tbody>`;
 }
 function openClientForm(row) {
   editingClient = row || null;
@@ -336,6 +413,7 @@ function openClientForm(row) {
   $('#ac-f-nama').value = row?.nama_client || ''; $('#ac-f-cabang').value = row?.cabang || '';
   $('#ac-f-kategori').value = row?.kategori || ''; $('#ac-f-picuser').value = row?.pic_user || '';
   $('#ac-f-hp').value = row?.nomor_hp || ''; $('#ac-f-kontrak').value = row?.masa_kontrak || ''; $('#ac-f-maps').value = row?.google_maps || '';
+  $('#ac-f-mulai').value = row?.kontrak_mulai || ''; $('#ac-f-akhir').value = row?.kontrak_akhir || '';
   const has = (raw, alias) => picTokens({ korlap_raw: raw }).includes(alias);
   for (const role of ['korlap', 'admin']) {
     $('#ac-f-' + role).innerHTML = picAliases.filter((a) => a.pic_role === role).map((a) => `<label><input type="checkbox" value="${esc(a.alias)}" ${row && has(row[role + '_raw'], a.alias) ? 'checked' : ''}>${esc(a.alias)}</label>`).join('') || '<small>Belum ada PIC. Tambahkan lewat Pemetaan PIC.</small>';
@@ -346,9 +424,11 @@ function openClientForm(row) {
 async function saveClientForm(event) {
   event.preventDefault();
   if (!$('#ac-f-nama').value.trim()) { status('#ac-form-status', 'Nama client wajib diisi.', true); return; }
+  if ($('#ac-f-mulai').value && $('#ac-f-akhir').value && $('#ac-f-akhir').value < $('#ac-f-mulai').value) { status('#ac-form-status', 'Tanggal berakhir tidak boleh sebelum tanggal mulai.', true); return; }
   const checked = (role) => [...document.querySelectorAll(`#ac-f-${role} input:checked`)].map((i) => i.value);
   const payload = { id: editingClient?.id || null, expected_updated_at: editingClient?.updated_at, nama_client: $('#ac-f-nama').value, cabang: $('#ac-f-cabang').value,
     kategori: $('#ac-f-kategori').value, pic_user: $('#ac-f-picuser').value, nomor_hp: $('#ac-f-hp').value, masa_kontrak: $('#ac-f-kontrak').value,
+    kontrak_mulai: $('#ac-f-mulai').value, kontrak_akhir: $('#ac-f-akhir').value,
     google_maps: $('#ac-f-maps').value, korlap: checked('korlap'), admin: checked('admin') };
   $('#ac-form-save').disabled = true; status('#ac-form-status', 'Menyimpan…');
   const { error } = await client.rpc('marketing_save_client', { p: payload });
@@ -357,15 +437,59 @@ async function saveClientForm(event) {
   await loadActiveClients();
   status('#ac-status', editingClient ? 'Perubahan client tersimpan.' : 'Client baru tersimpan.');
 }
-['#ac-search', '#ac-branch', '#ac-category', '#ac-pic'].forEach((sel) => $(sel).addEventListener('input', renderActiveClients));
+let xlsxLoading = null;
+function loadXlsx() {
+  if (window.XLSX) return Promise.resolve();
+  xlsxLoading ||= new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'vendor/xlsx-0.18.5.full.min.js';
+    script.onload = resolve;
+    script.onerror = () => { xlsxLoading = null; reject(new Error('Pustaka Excel gagal dimuat')); };
+    document.head.appendChild(script);
+  });
+  return xlsxLoading;
+}
+async function exportClients() {
+  const rows = filteredClients();
+  if (!rows.length) { status('#ac-status', 'Tidak ada baris untuk diekspor.', true); return; }
+  try { await loadXlsx(); } catch (error) { status('#ac-status', error.message, true); return; }
+  const data = rows.map((r) => ({ 'No': r.source_no, 'Nama Client': r.nama_client, 'Cabang': r.cabang, 'Kategori': r.kategori, 'PIC User': r.pic_user, 'Nomor HP': r.nomor_hp,
+    'PIC Korlap': r.korlap_raw, 'PIC Admin': r.admin_raw, 'Kontrak Mulai': r.kontrak_mulai || '', 'Kontrak Berakhir': r.kontrak_akhir || '', 'Catatan Kontrak': r.masa_kontrak,
+    'Google Maps': r.google_maps, 'Status': r.status, 'Alasan Arsip': r.archive_reason }));
+  const sheet = window.XLSX.utils.json_to_sheet(data);
+  sheet['!cols'] = [6, 44, 12, 14, 24, 22, 16, 14, 14, 16, 26, 36, 8, 28].map((wch) => ({ wch }));
+  const book = window.XLSX.utils.book_new();
+  window.XLSX.utils.book_append_sheet(book, sheet, 'Client Active');
+  window.XLSX.writeFile(book, `client-active-${todayIso()}.xlsx`);
+  status('#ac-status', `${rows.length} baris diekspor.`);
+}
+['#ac-search', '#ac-branch', '#ac-category', '#ac-pic', '#ac-contract', '#ac-status-filter', '#ac-visited'].forEach((sel) => $(sel).addEventListener('input', renderActiveClients));
 $('#ac-refresh').addEventListener('click', loadActiveClients);
 $('#ac-add').addEventListener('click', () => openClientForm(null));
+$('#ac-export').addEventListener('click', exportClients);
 $('#ac-alias-toggle').addEventListener('click', () => { $('#ac-alias-card').hidden = !$('#ac-alias-card').hidden; });
+$('#ac-history-toggle').addEventListener('click', () => { $('#ac-history-card').hidden = !$('#ac-history-card').hidden; if (!$('#ac-history-card').hidden) loadChangeLog(); });
 $('#ac-form').addEventListener('submit', saveClientForm);
 $('#ac-form-cancel').addEventListener('click', () => $('#ac-dialog').close());
-$('#ac-table').addEventListener('click', (event) => {
+$('#ac-table').addEventListener('click', async (event) => {
   const edit = event.target.closest('[data-ac-edit]');
   if (edit) { const row = activeClients.find((r) => r.id === edit.dataset.acEdit); if (row) openClientForm(row); return; }
+  const archive = event.target.closest('[data-ac-archive]');
+  if (archive) {
+    const row = activeClients.find((r) => r.id === archive.dataset.acArchive);
+    if (!row) return;
+    let reason = '';
+    if (row.status === 'aktif') {
+      reason = window.prompt(`Arsipkan "${row.nama_client}"?\nClient tidak akan terlihat oleh staf dan tidak bisa dicatat kunjungannya. Data dan riwayat tetap tersimpan.\n\nAlasan pengarsipan:`, 'Kontrak berakhir');
+      if (reason === null) return;
+      if (!reason.trim()) { status('#ac-status', 'Alasan pengarsipan wajib diisi.', true); return; }
+    } else if (!window.confirm(`Aktifkan kembali "${row.nama_client}"?`)) return;
+    const { error } = await client.rpc('marketing_set_client_status', { p_id: row.id, p_status: row.status === 'aktif' ? 'arsip' : 'aktif', p_reason: reason });
+    if (error) { status('#ac-status', error.message, true); return; }
+    await loadActiveClients();
+    status('#ac-status', row.status === 'aktif' ? 'Client diarsipkan.' : 'Client diaktifkan kembali.');
+    return;
+  }
   const visit = event.target.closest('[data-ac-visit]');
   if (visit) window.marketingPicVisit?.open(visit.dataset.acVisit);
 });
@@ -386,7 +510,7 @@ $('#ac-alias-new').addEventListener('submit', async (event) => {
 // PIC Visit ke client aktif (data produksi, RLS: staf hanya miliknya, admin membaca semua).
 let picVisitRows = [];
 function publishActiveClients() {
-  const clients = activeClients.map((r) => ({ id: r.id, name: r.nama_client, area: r.cabang, pic: r.pic_user, owner: `Korlap ${r.korlap_raw || '-'} · Admin ${r.admin_raw || '-'}` }));
+  const clients = activeClients.filter((r) => r.status === 'aktif').map((r) => ({ id: r.id, name: r.nama_client, area: r.cabang, pic: r.pic_user, owner: `Korlap ${r.korlap_raw || '-'} · Admin ${r.admin_raw || '-'}` }));
   window.dispatchEvent(new CustomEvent('marketing:clients-snapshot', { detail: { clients } }));
 }
 function publishPicVisits(error = '') {
@@ -885,7 +1009,7 @@ async function loadSettings() {
   $('#ai-search-submit').textContent = data.ai_ready ? 'Cari dengan AI' : 'Cari data';
   $('#member-list').innerHTML = (data.members || []).map((m) => {
     const username = m.email?.endsWith(`@${staffLoginDomain}`) ? m.email.split('@')[0] : 'akun lama';
-    return `<div class="item"><strong>${esc(memberLabel(m))}</strong><small>${esc(username)} · ${esc(m.role)} · ${m.active ? 'aktif' : 'nonaktif'}</small><form class="member-name-form" data-user-id="${esc(m.user_id)}"><label>Nama staf<input type="text" maxlength="100" value="${esc(m.display_name || '')}" required></label><button type="submit">Simpan nama</button></form><form class="member-folder-form" data-user-id="${esc(m.user_id)}"><label>Folder Drive<input type="url" value="${esc(m.drive_folder_url || '')}" required></label><button type="submit">Simpan folder</button></form></div>`;
+    return `<div class="item"><strong>${esc(memberLabel(m))}</strong><small>${esc(username)} · ${esc(m.role)} · ${m.active ? 'aktif' : 'nonaktif'}</small>${m.user_id === currentUser?.id ? '' : `<div class="actions"><button type="button" data-member-active="${esc(m.user_id)}" data-active="${m.active ? '0' : '1'}" data-name="${esc(memberLabel(m))}">${m.active ? 'Nonaktifkan akun' : 'Aktifkan akun'}</button><button type="button" data-member-reset="${esc(m.user_id)}" data-name="${esc(memberLabel(m))}">Reset kata sandi</button></div>`}<form class="member-name-form" data-user-id="${esc(m.user_id)}"><label>Nama staf<input type="text" maxlength="100" value="${esc(m.display_name || '')}" required></label><button type="submit">Simpan nama</button></form><form class="member-folder-form" data-user-id="${esc(m.user_id)}"><label>Folder Drive<input type="url" value="${esc(m.drive_folder_url || '')}" required></label><button type="submit">Simpan folder</button></form></div>`;
   }).join('');
 }
 $('#folder-form').addEventListener('submit', async (event) => {
@@ -1002,6 +1126,32 @@ $('#generate-invite-password').addEventListener('click', () => {
   $('#invite-password').value = Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join('');
   $('#invite-password').type = 'text';
   $('#toggle-invite-password').textContent = 'Sembunyikan';
+});
+const randomPassword = () => {
+  const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
+  return Array.from(crypto.getRandomValues(new Uint32Array(16)), (n) => alphabet[n % alphabet.length]).join('');
+};
+let memberStatusTimer = null;
+$('#member-list').addEventListener('click', async (event) => {
+  const toggle = event.target.closest('[data-member-active]');
+  const reset = event.target.closest('[data-member-reset]');
+  if (!toggle && !reset) return;
+  const name = (toggle || reset).dataset.name;
+  if (toggle) {
+    const active = toggle.dataset.active === '1';
+    if (!window.confirm(active ? `Aktifkan kembali akun ${name}?` : `Nonaktifkan akun ${name}?\nStaf tidak bisa masuk dan tidak bisa melihat data. Data lama tetap tersimpan.`)) return;
+    const { data, error } = await client.functions.invoke('marketing', { body: { action: 'set_member_active', user_id: toggle.dataset.memberActive, active } });
+    status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Status akun gagal diubah' : (data.warning || `Akun ${name} ${active ? 'diaktifkan' : 'dinonaktifkan'}.`), !!error || !data?.ok);
+    if (data?.ok) loadSettings();
+    return;
+  }
+  if (!window.confirm(`Buat kata sandi baru untuk ${name}?\nKata sandi lama langsung tidak berlaku.`)) return;
+  const password = randomPassword();
+  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'reset_member_password', user_id: reset.dataset.memberReset, password } });
+  if (error || !data?.ok) { status('#invite-status', data?.error || error?.message || 'Kata sandi gagal diubah', true); return; }
+  status('#invite-status', `Kata sandi baru ${name}: ${password} — catat sekarang dan sampaikan ke staf; tidak akan ditampilkan lagi.`);
+  clearTimeout(memberStatusTimer);
+  memberStatusTimer = setTimeout(() => status('#invite-status', ''), 120000);
 });
 $('#member-list').addEventListener('submit', async (event) => {
   const nameForm = event.target.closest('.member-name-form');

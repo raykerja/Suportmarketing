@@ -273,6 +273,30 @@ Deno.serve(async (request) => {
     return error ? response({ error: 'Folder gagal disimpan' }, 500, origin)
       : updated ? response({ ok: true }, 200, origin) : response({ error: 'Akun tidak ditemukan' }, 404, origin);
   }
+  if (data.action === 'set_member_active') {
+    if (membership.role !== 'admin') return response({ error: 'Hanya admin dapat mengubah status akun' }, 403, origin);
+    const targetId = String(data.user_id || '');
+    if (!/^[0-9a-f-]{36}$/i.test(targetId) || typeof data.active !== 'boolean') return response({ error: 'Permintaan tidak valid' }, 400, origin);
+    if (targetId === authData.user.id) return response({ error: 'Akun sendiri tidak dapat dinonaktifkan' }, 400, origin);
+    const { data: updated, error } = await admin.from('marketing_members').update({ active: data.active, updated_at: new Date().toISOString() })
+      .eq('user_id', targetId).select('user_id,display_name').maybeSingle();
+    if (error) return response({ error: 'Status akun gagal disimpan' }, 500, origin);
+    if (!updated) return response({ error: 'Akun tidak ditemukan' }, 404, origin);
+    const { error: banError } = await admin.auth.admin.updateUserById(targetId, { ban_duration: data.active ? 'none' : '876000h' });
+    if (banError) return response({ ok: true, warning: 'Akses data sudah ' + (data.active ? 'dibuka' : 'ditutup') + ', tetapi pembatasan login gagal diperbarui: ' + banError.message }, 200, origin);
+    return response({ ok: true }, 200, origin);
+  }
+  if (data.action === 'reset_member_password') {
+    if (membership.role !== 'admin') return response({ error: 'Hanya admin dapat mengatur ulang kata sandi' }, 403, origin);
+    const targetId = String(data.user_id || '');
+    const password = String(data.password || '');
+    if (!/^[0-9a-f-]{36}$/i.test(targetId)) return response({ error: 'Permintaan tidak valid' }, 400, origin);
+    if (password.length < 12 || password.length > 128) return response({ error: 'Kata sandi harus 12–128 karakter' }, 400, origin);
+    const { data: target } = await admin.from('marketing_members').select('user_id').eq('user_id', targetId).maybeSingle();
+    if (!target) return response({ error: 'Akun tidak ditemukan' }, 404, origin);
+    const { error } = await admin.auth.admin.updateUserById(targetId, { password });
+    return error ? response({ error: 'Kata sandi gagal diubah: ' + error.message }, 502, origin) : response({ ok: true }, 200, origin);
+  }
   if (data.action === 'invite_member') {
     if (membership.role !== 'admin') return response({ error: 'Hanya admin dapat membuat akun' }, 403, origin);
     const email = String(data.email || '').trim().toLowerCase();
