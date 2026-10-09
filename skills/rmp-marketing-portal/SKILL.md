@@ -1,18 +1,39 @@
 ---
 name: rmp-marketing-portal
-description: Lanjutkan atau audit portal marketing.raykerja.cloud dari raykerja/Suportmarketing, termasuk Supabase Marketing, AI pencarian, Sales Visit, klien aktif, dan integrasi n8n/Drive. Gunakan hanya untuk proyek portal Marketing RAY ini.
+description: Lanjutkan, audit, atau jawab "sudah atau belum?" untuk portal marketing.raykerja.cloud (repo raykerja/Suportmarketing, Supabase ewicmiekwzmxkkokmpzf) — Client Active + PIC, PIC Visit, Monitoring penawaran ulang, Sales Visit, daftar harga, RAB/penawaran n8n, asisten AI, alat admin. Gunakan hanya untuk proyek portal Marketing RAY ini.
 ---
 
 # Portal Marketing RAY
 
-Gunakan repository `raykerja/Suportmarketing` branch `main` sebagai source resmi. Temukan checkout yang aktif, lalu baca `AGENTS.md`, `PROJECT_MEMORY.md`, dan `PROJECT_HANDOFF.md`; lanjutkan ke README, changelog, log proses, dan hasil uji sesuai tugas. Catatan memori memiliki tanggal: verifikasi kondisi aktual, jangan menganggapnya status permanen.
+## Mulai (urutan tetap)
+1. Baca `CLAUDE.md`, lalu `docs/00-MULAI-DI-SINI.md` → `docs/02-STATUS-PROGRES.md` (sampai mana) → `docs/05-BACKLOG-DAN-TINDAK-LANJUT.md` (apa berikutnya). Arsitektur: `docs/01`; rilis/pengaturan: `docs/03`; pengujian: `docs/04`; keputusan pemilik: `docs/06`.
+2. Jalankan `python3 scripts/status_check.py` (hanya-baca). **Hasil skrip + produksi lebih benar daripada dokumen bertanggal.**
+3. Dokumen lama (`PROJECT_HANDOFF.md`, `README.md`, dll.) = riwayat; bila bertentangan dengan `docs/`, ikuti `docs/`.
 
-Pertahankan HTML/CSS/JavaScript statis di GitHub Pages, Supabase sebagai database utama, dan alur n8n → Google Sheet/Drive yang sudah berjalan. Periksa `git status`, remote, source, schema/policy, Edge Function, serta workflow yang relevan sebelum revisi. Ubah sesedikit mungkin dan cek hasil pada sistem tujuan.
+## Menjawab "sudah atau belum?"
+Jangan menyimpulkan dari nama berkas. Periksa `git log/status`, `status_check.py`, skema/policy/fungsi (`scripts/_supabase.py` → `sql(...)`), dan kodenya. Pakai tiga tingkat: ✅ terbukti di produksi · 🟡 live tetapi belum diuji login asli (hanya DB/RLS + browser dengan mock) · ⬜ belum dibangun. Sebut batas uji apa adanya.
 
-Mulai dari `CLAUDE.md` dan `docs/` (status, arsitektur, pengujian). Sejak 9 Oktober 2026 Client Active (tabel + edit admin), PIC Visit, Monitoring & Tindaklanjut, dan progres memakai data produksi Supabase dengan RLS; jalankan `python3 scripts/status_check.py` untuk keadaan nyata dan baca `docs/02-STATUS-PROGRES.md` untuk apa yang sudah/belum diuji.
+## Peta sistem (ringkas; rinci di docs/01)
+Frontend statis GitHub Pages (`index.html`, `app.js`, `clients-preview.js` = kode produksi PIC Visit/Monitoring, `theme-ray.css`) → Supabase Auth + Postgres (RLS) + Edge Function `marketing` (satu berkas `supabase/functions/marketing/index.ts`) → n8n (riset, surat, **penawaran web = Surat + RAB**, sinkron kunjungan) + Apps Script Drive Gateway (cadangan Drive staf, tanpa n8n) + OpenAI (asisten AI). Peran: `staff` dan `admin` (= super admin).
 
-Backup kunjungan + progres ke folder Drive staf berjalan tanpa n8n: Edge Function `backupOwnerToDrive` memanggil Apps Script `apps-script/drive-gateway/` (secret `DRIVE_GATEWAY_URL`/`DRIVE_GATEWAY_SECRET`, ulang 3x). Uji dengan `curl -L -d ...` tanpa `-X POST`; perubahan skrip butuh Deployment versi baru. Surat, riset, dan penawaran masih lewat n8n.
+Model client: `marketing_clients` + `marketing_client_pics` + `marketing_pic_aliases` (nama PIC → akun; `user_id` kosong = PIC belum punya akun). Staf hanya melihat client **aktif** yang PIC-nya dipetakan ke akunnya; admin semua. Perubahan admin **hanya lewat RPC** (`marketing_save_client`, `marketing_set_client_status`, `marketing_set_pic_alias`, `marketing_set_member_name`, `marketing_save_price_item`) dengan kunci optimistik dan jejak di `marketing_client_changes`. Daftar harga: harga beli hanya admin (tabel), staf lewat view `marketing_price_list` (harga jual).
 
-Untuk keamanan, periksa RLS **dan** grant pada setiap tabel baru, akses anonim, isolasi pemilik/staf lain/admin, bucket Storage, serta jalur Edge Function yang memakai service key. Pencarian AI memakai secret server `OPENAI_API_KEY`; periksa keberadaannya tanpa mencetak nilainya. Status secret dan source yang benar belum sama dengan uji jawaban AI setelah login.
+## Aturan kerja
+- Perubahan minimum; jangan tulis ulang. Persetujuan eksplisit pemilik sebelum push, migrasi produksi (`scripts/apply_migration.py`), deploy (`scripts/deploy_function.py`), n8n aktif, DNS, atau menonaktifkan akun nyata.
+- Tabel/fungsi baru: RLS **dan** grant eksplisit; uji pemilik / staf lain / admin / anonim dengan transaksi dibatalkan; untuk Edge Function pakai akun uji sementara dan bersihkan (`docs/04`). Edge Function melewati RLS → ulangi filter akses manual (`visibleClients()`); ubah policy = ubah kode itu juga.
+- **Repo PUBLIK**: tanpa nama staf/PIC, nomor HP, email, ID folder, ekspor data, token. Data impor di `private/` (gitignored), `*.xlsx` diabaikan.
+- Naikkan `?v=` di `index.html` saat JS/CSS berubah. Setelah push cek **Actions** (`conclusion: success`) dan `status_check.py` (live = repo). Berkas `.nojekyll` wajib ada (tanpa itu `{{ }}` di dokumen membuat build Jekyll gagal dan situs berhenti terbit).
+- Setelah selesai: perbarui `docs/02-STATUS-PROGRES.md` + `CHANGELOG.md`.
 
-Jangan simpan credential atau data klien di Git. Ikuti kebijakan `rmp-master` dan `AGENTS.md`: backup bila relevan, uji sebelum deploy, dan minta persetujuan eksplisit untuk setiap push, migration, perubahan produksi, atau tindakan destruktif yang belum diinstruksikan pengguna. Catat hasil serta batas pengujian di dokumen proyek.
+## Jebakan yang sudah terjadi
+- Build Pages gagal karena `{{ }}` di markdown → `.nojekyll`.
+- Memeriksa kode node n8n yang memuat secret mencetak secret → mask sebelum mencetak; jika terlanjur, rotasi.
+- `select` dalam satu pernyataan tidak melihat efek fungsi di pernyataan itu (uji RLS: pisahkan); `user_id` harus di-resolve sebelum `set local role authenticated`.
+- Status "tidak ada error" pada Playwright dengan mock ≠ bukti data asli.
+- Penomoran surat (counter) terpakai oleh tiap eksekusi nyata generator penawaran: uji RAB lewat workflow n8n sementara, bukan webhook produksi.
+
+## RAB/penawaran (n8n `R7kXoTLBk8X0d4cy`, node `Validasi Penawaran Web` + `Isi Data RAB`)
+Template RAB Drive tidak diubah; n8n menyalin lalu menulis sel lewat `batchUpdate`: `G10` = Gaji Pokok (opsional, default = UMK), BPJS (JKK/JKM/JHT/Kesehatan) = `=UMK*persentase` ditulis eksplisit per sel (acuan **UMK Setempat**, bukan gaji pokok), Kompensasi & JP dikosongkan dengan keterangan "Sesuai Kebijakan Client". Ubah via backup → patch dengan assert → uji di workflow sementara → `PUT` (lihat skill `n8n` §9). Template di `n8n/offer-documents.template.json` harus ikut diperbarui.
+
+## Belum dikerjakan (lihat docs/05)
+Uji manusia (staf & admin asli), 4 PIC tanpa akun, tanggal kontrak 272 client, cadangan Drive untuk PIC Visit/penawaran, foto PIC Visit, retry cadangan, pengingat otomatis, tingkat super admin, daftar nama oleh AI, verifikasi 6 harga seragam, penyambungan daftar harga ke RAB.
