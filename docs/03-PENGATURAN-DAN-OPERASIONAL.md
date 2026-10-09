@@ -65,7 +65,7 @@ Catatan:
 - **Berkas migrasi harus idempoten untuk pembacaan manusia, tetapi dijalankan sekali.** `apply_migration.py` membungkusnya dalam transaksi; gagal = batal semua. Jangan menjalankan ulang migrasi yang sudah terpasang (banyak memakai `create table` tanpa `if not exists`).
 - Urutan nama berkas migrasi tidak dilacak oleh Supabase CLI (diterapkan manual lewat API). **Catatan penerapan ada di `docs/02`**; jangan menebak dari nama berkas.
 - Edge Function dikirim sebagai **satu berkas** `index.ts` (mengimpor `npm:@supabase/supabase-js@2`). Tidak ada langkah bundel.
-- GitHub Pages: push ke `main`; tab Actions menunjukkan status. Domain di `CNAME`.
+- GitHub Pages: push ke `main`; tab Actions menunjukkan status. Domain di `CNAME`. Berkas `.nojekyll` di akar **wajib ada**: tanpanya Jekyll ikut memproses berkas `.md` dan **gagal build** bila ada tanda `{{ }}` di dokumen (terjadi 9 Okt 2026), sehingga situs berhenti memperbarui walau push sukses. Selalu cek tab Actions atau `scripts/status_check.py` setelah push.
 - Setelah mengubah Apps Script: **Deploy → Kelola deployment → versi baru**, jika tidak, perubahan tidak berlaku. Uji dengan `curl -L -d ...` (tanpa `-X POST`).
 - `config.js` hanya berisi URL dan *publishable key* — aman di Git. Jangan menaruh service role key di mana pun di frontend.
 
