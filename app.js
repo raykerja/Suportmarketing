@@ -885,7 +885,7 @@ async function loadSettings() {
   $('#ai-search-submit').textContent = data.ai_ready ? 'Cari dengan AI' : 'Cari data';
   $('#member-list').innerHTML = (data.members || []).map((m) => {
     const username = m.email?.endsWith(`@${staffLoginDomain}`) ? m.email.split('@')[0] : 'akun lama';
-    return `<div class="item"><strong>${esc(memberLabel(m))}</strong><small>${esc(username)} · ${esc(m.role)} · ${m.active ? 'aktif' : 'nonaktif'}</small><form class="member-folder-form" data-user-id="${esc(m.user_id)}"><label>Folder Drive<input type="url" value="${esc(m.drive_folder_url || '')}" required></label><button type="submit">Simpan folder</button></form></div>`;
+    return `<div class="item"><strong>${esc(memberLabel(m))}</strong><small>${esc(username)} · ${esc(m.role)} · ${m.active ? 'aktif' : 'nonaktif'}</small><form class="member-name-form" data-user-id="${esc(m.user_id)}"><label>Nama staf<input type="text" maxlength="100" value="${esc(m.display_name || '')}" required></label><button type="submit">Simpan nama</button></form><form class="member-folder-form" data-user-id="${esc(m.user_id)}"><label>Folder Drive<input type="url" value="${esc(m.drive_folder_url || '')}" required></label><button type="submit">Simpan folder</button></form></div>`;
   }).join('');
 }
 $('#folder-form').addEventListener('submit', async (event) => {
@@ -1004,6 +1004,14 @@ $('#generate-invite-password').addEventListener('click', () => {
   $('#toggle-invite-password').textContent = 'Sembunyikan';
 });
 $('#member-list').addEventListener('submit', async (event) => {
+  const nameForm = event.target.closest('.member-name-form');
+  if (nameForm) {
+    event.preventDefault();
+    const { error } = await client.rpc('marketing_set_member_name', { p_user_id: nameForm.dataset.userId, p_name: nameForm.querySelector('input').value });
+    status('#invite-status', error ? error.message : 'Nama staf tersimpan.', !!error);
+    if (!error) { loadSettings(); loadActiveClients(); }
+    return;
+  }
   const form = event.target.closest('.member-folder-form');
   if (!form) return;
   event.preventDefault();
