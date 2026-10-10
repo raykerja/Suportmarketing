@@ -76,6 +76,7 @@ function showWorkspace(user) {
     visitCache = []; $('#visit-list').textContent = ''; $('#visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>';
     publishVisitSnapshot();
     expenseCache = []; $('#expense-list').textContent = '';
+    expenseRecapRows = []; $('#expense-recap-table').textContent = ''; $('#expense-recap-pdf').disabled = true; status('#expense-recap-status', '');
     $('#review-list').textContent = ''; $('#offer-list').textContent = ''; $('#lead-list').textContent = '';
     $('#ai-answer').textContent = ''; $('#ai-answer').hidden = true; $('#ai-sources').textContent = '';
     status('#ai-search-status', '');
@@ -93,7 +94,7 @@ function showWorkspace(user) {
   $('#logout').hidden = !user || invitePending;
   if (user && !invitePending) {
     activateTab(history.state?.marketingTab || 'visits', false);
-    loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); loadExpenses(); loadActiveClients().then(() => { loadPicVisits(); loadClientOffers(); });
+    loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); loadExpenses(); loadExpenseRecap(); loadActiveClients().then(() => { loadPicVisits(); loadClientOffers(); });
   }
   else {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
@@ -965,6 +966,66 @@ $('#expense-form').addEventListener('submit', async (event) => {
   finally { button.disabled = false; }
 });
 resetExpenseForm();
+
+const displayDateId = (v) => v ? new Date(`${v}T12:00:00`).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+let expenseRecapRows = [];
+let expenseRecapRange = { from: '', to: '' };
+(() => {
+  const now = new Date();
+  const first = new Date(now.getFullYear(), now.getMonth(), 1);
+  const toStr = (d) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  $('#expense-recap-from').value = toStr(first);
+  $('#expense-recap-to').value = localToday();
+})();
+function expenseRecapRowsHtml(admin) {
+  return expenseRecapRows.map((row, i) => `<tr><td>${i + 1}</td><td>${esc(displayDateId(row.tanggal_realisasi))}</td>${admin ? `<td>${esc(row.nama_marketing)}</td>` : ''}<td>${esc(row.jenis_pengeluaran)}</td><td style="text-align:right">${rupiah(row.nominal)}</td></tr>`).join('');
+}
+async function loadExpenseRecap() {
+  if (!client || !currentUser) return;
+  const from = $('#expense-recap-from').value;
+  const to = $('#expense-recap-to').value;
+  if (!from || !to) { status('#expense-recap-status', 'Isi tanggal dari dan sampai.', true); return; }
+  if (from > to) { status('#expense-recap-status', 'Tanggal "Dari" tidak boleh setelah "Sampai".', true); return; }
+  status('#expense-recap-status', 'Memuat rekap…');
+  $('#expense-recap-pdf').disabled = true;
+  const { data, error } = await client.from('marketing_expenses').select('*')
+    .gte('tanggal_realisasi', from).lte('tanggal_realisasi', to).order('tanggal_realisasi', { ascending: true });
+  if (error) { status('#expense-recap-status', 'Rekap belum dapat dibaca: ' + error.message, true); $('#expense-recap-table').textContent = ''; return; }
+  expenseRecapRows = data || [];
+  expenseRecapRange = { from, to };
+  renderExpenseRecap();
+}
+function renderExpenseRecap() {
+  const admin = isAdmin();
+  if (!expenseRecapRows.length) {
+    $('#expense-recap-table').innerHTML = '<p class="hint">Tidak ada pengeluaran pada rentang tanggal ini.</p>';
+    status('#expense-recap-status', 'Tidak ada data pada rentang ini.');
+    $('#expense-recap-pdf').disabled = true;
+    return;
+  }
+  const total = expenseRecapRows.reduce((sum, row) => sum + Number(row.nominal || 0), 0);
+  $('#expense-recap-table').innerHTML = `<table><thead><tr><th>No</th><th>Tanggal</th>${admin ? '<th>Nama Marketing</th>' : ''}<th>Jenis Pengeluaran</th><th>Nominal</th></tr></thead><tbody>${expenseRecapRowsHtml(admin)}</tbody><tfoot><tr><td colspan="${admin ? 4 : 3}"><strong>Total</strong></td><td style="text-align:right"><strong>${rupiah(total)}</strong></td></tr></tfoot></table>`;
+  status('#expense-recap-status', `${expenseRecapRows.length} transaksi · Total ${rupiah(total)}`);
+  $('#expense-recap-pdf').disabled = false;
+}
+$('#expense-recap-filter').addEventListener('click', loadExpenseRecap);
+$('#expense-recap-pdf').addEventListener('click', () => {
+  if (!expenseRecapRows.length) return;
+  const admin = isAdmin();
+  const total = expenseRecapRows.reduce((sum, row) => sum + Number(row.nominal || 0), 0);
+  const who = admin ? 'Semua Marketing' : memberLabel(currentMember);
+  printDocument(`<h1>Laporan Reimbursement Pengeluaran Marketing</h1>
+    <p>PT Ray Mitra Perkasa &middot; Nama: ${esc(who)} &middot; Periode: ${esc(displayDateId(expenseRecapRange.from))} s.d. ${esc(displayDateId(expenseRecapRange.to))}</p>
+    <table><thead><tr><th>No</th><th>Tanggal</th>${admin ? '<th>Nama Marketing</th>' : ''}<th>Jenis Pengeluaran</th><th>Nominal</th></tr></thead><tbody>${expenseRecapRowsHtml(admin)}</tbody>
+    <tfoot><tr><td colspan="${admin ? 4 : 3}"><strong>Total</strong></td><td style="text-align:right"><strong>${rupiah(total)}</strong></td></tr></tfoot></table>
+    <p style="margin-top:40px">Dicetak: ${esc(date(new Date().toISOString()))}</p>
+    <table style="margin-top:30px;border:none"><tbody><tr>
+      <td style="border:none;text-align:center;width:33%">Dibuat oleh,<br><br><br><br>(${esc(who)})</td>
+      <td style="border:none;text-align:center;width:33%">Diperiksa oleh,<br><br><br><br>(....................)</td>
+      <td style="border:none;text-align:center;width:33%">Disetujui oleh,<br><br><br><br>(....................)</td>
+    </tr></tbody></table>`);
+});
+loadExpenseRecap();
 
 const stageNames = { kunjungan: 'Kunjungan', proposal: 'Proposal', penawaran: 'Penawaran', follow_up: 'Follow up', deal: 'Deal', gagal: 'Gagal' };
 function previewDate(days) {

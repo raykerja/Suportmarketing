@@ -29,7 +29,7 @@
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261010-3"></script>
+  <script type="module" src="app.js?v=20261010-4"></script>
   <script defer src="pwa.js?v=20261010-1"></script>
 </head>
 <body>
@@ -249,6 +249,17 @@
             </form>
           </div>
           <div class="card"><div class="section-head"><h2>Riwayat Pengeluaran</h2><button id="refresh-expenses" type="button">Muat ulang</button></div><div id="expense-list" class="list"></div></div>
+        </div>
+        <div class="card" id="expense-recap-card">
+          <div class="section-head"><div><p class="eyebrow">LAPORAN REIMBURSEMENT</p><h2>Rekap Pengeluaran</h2></div></div>
+          <p class="hint">Pilih rentang tanggal untuk cek rekap pengeluaran kapan saja, termasuk saat tidak di kantor. Hasilnya bisa diunduh sebagai PDF untuk keperluan reimbursement.</p>
+          <div class="form-grid">
+            <label>Dari tanggal<input id="expense-recap-from" type="date"></label>
+            <label>Sampai tanggal<input id="expense-recap-to" type="date"></label>
+          </div>
+          <div class="actions"><button id="expense-recap-filter" class="primary" type="button">Tampilkan Rekap</button><button id="expense-recap-pdf" type="button" disabled>Unduh PDF</button></div>
+          <p id="expense-recap-status" class="hint" role="status"></p>
+          <div id="expense-recap-table" class="table-wrap"></div>
         </div>
       </section>
       <section id="change-password" class="panel" hidden><div class="card password-card"><h2>Ganti Kata Sandi</h2><p class="hint">Masukkan kata sandi lama untuk verifikasi, lalu kata sandi baru (minimal 12 karakter).</p><form id="password-form" novalidate><label>Kata sandi lama<input id="password-old" type="password" required autocomplete="current-password"></label><label>Kata sandi baru<input id="password-new" type="password" minlength="12" required autocomplete="new-password"></label><label>Konfirmasi kata sandi baru<input id="password-confirm" type="password" minlength="12" required autocomplete="new-password"></label><button class="primary" type="submit">Ganti kata sandi</button></form><p id="password-status" role="status"></p></div></section>
