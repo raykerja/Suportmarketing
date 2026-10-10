@@ -1009,21 +1009,64 @@ function renderExpenseRecap() {
   $('#expense-recap-pdf').disabled = false;
 }
 $('#expense-recap-filter').addEventListener('click', loadExpenseRecap);
-$('#expense-recap-pdf').addEventListener('click', () => {
+let jsPdfLoading = null;
+function loadScriptOnce(src) {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = src;
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Pustaka PDF gagal dimuat'));
+    document.head.appendChild(script);
+  });
+}
+function loadJsPdf() {
+  if (window.jspdf?.jsPDF) return Promise.resolve();
+  jsPdfLoading ||= loadScriptOnce('vendor/jspdf-4.2.1.umd.min.js').then(() => loadScriptOnce('vendor/jspdf-autotable-5.0.8.min.js'))
+    .catch((e) => { jsPdfLoading = null; throw e; });
+  return jsPdfLoading;
+}
+$('#expense-recap-pdf').addEventListener('click', async () => {
   if (!expenseRecapRows.length) return;
-  const admin = isAdmin();
-  const total = expenseRecapRows.reduce((sum, row) => sum + Number(row.nominal || 0), 0);
-  const who = admin ? 'Semua Marketing' : memberLabel(currentMember);
-  printDocument(`<h1>Laporan Reimbursement Pengeluaran Marketing</h1>
-    <p>PT Ray Mitra Perkasa &middot; Nama: ${esc(who)} &middot; Periode: ${esc(displayDateId(expenseRecapRange.from))} s.d. ${esc(displayDateId(expenseRecapRange.to))}</p>
-    <table><thead><tr><th>No</th><th>Tanggal</th>${admin ? '<th>Nama Marketing</th>' : ''}<th>Jenis Pengeluaran</th><th>Nominal</th></tr></thead><tbody>${expenseRecapRowsHtml(admin)}</tbody>
-    <tfoot><tr><td colspan="${admin ? 4 : 3}"><strong>Total</strong></td><td style="text-align:right"><strong>${rupiah(total)}</strong></td></tr></tfoot></table>
-    <p style="margin-top:40px">Dicetak: ${esc(date(new Date().toISOString()))}</p>
-    <table style="margin-top:30px;border:none"><tbody><tr>
-      <td style="border:none;text-align:center;width:33%">Dibuat oleh,<br><br><br><br>(${esc(who)})</td>
-      <td style="border:none;text-align:center;width:33%">Diperiksa oleh,<br><br><br><br>(....................)</td>
-      <td style="border:none;text-align:center;width:33%">Disetujui oleh,<br><br><br><br>(....................)</td>
-    </tr></tbody></table>`);
+  const button = $('#expense-recap-pdf'); button.disabled = true;
+  status('#expense-recap-status', 'Menyiapkan PDF…');
+  try {
+    await loadJsPdf();
+    const { jsPDF } = window.jspdf;
+    const admin = isAdmin();
+    const total = expenseRecapRows.reduce((sum, row) => sum + Number(row.nominal || 0), 0);
+    const who = admin ? 'Semua Marketing' : memberLabel(currentMember);
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    doc.setFontSize(14); doc.setFont(undefined, 'bold');
+    doc.text('Laporan Reimbursement Pengeluaran Marketing', 14, 18);
+    doc.setFontSize(10); doc.setFont(undefined, 'normal');
+    doc.text('PT Ray Mitra Perkasa', 14, 25);
+    doc.text(`Nama: ${who}`, 14, 31);
+    doc.text(`Periode: ${displayDateId(expenseRecapRange.from)} s.d. ${displayDateId(expenseRecapRange.to)}`, 14, 36);
+    const head = [['No', 'Tanggal', ...(admin ? ['Nama Marketing'] : []), 'Jenis Pengeluaran', 'Nominal']];
+    const body = expenseRecapRows.map((row, i) => [String(i + 1), displayDateId(row.tanggal_realisasi), ...(admin ? [row.nama_marketing] : []), row.jenis_pengeluaran, rupiah(row.nominal)]);
+    const lastCol = head[0].length - 1;
+    doc.autoTable({
+      startY: 42, head, body,
+      styles: { fontSize: 9, cellPadding: 2 },
+      headStyles: { fillColor: [18, 59, 55] },
+      columnStyles: { [lastCol]: { halign: 'right' } },
+      foot: [[{ content: 'Total', colSpan: lastCol, styles: { halign: 'right', fontStyle: 'bold' } },
+        { content: rupiah(total), styles: { halign: 'right', fontStyle: 'bold' } }]],
+    });
+    let y = doc.lastAutoTable.finalY + 14;
+    doc.setFontSize(9);
+    doc.text(`Dicetak: ${date(new Date().toISOString())}`, 14, y);
+    y += 24;
+    const cols = [35, 105, 175];
+    const labels = ['Dibuat oleh,', 'Diperiksa oleh,', 'Disetujui oleh,'];
+    labels.forEach((label, i) => doc.text(label, cols[i], y, { align: 'center' }));
+    doc.text(`(${who})`, cols[0], y + 22, { align: 'center' });
+    doc.text('(....................)', cols[1], y + 22, { align: 'center' });
+    doc.text('(....................)', cols[2], y + 22, { align: 'center' });
+    doc.save(`rekap-pengeluaran-${expenseRecapRange.from}_${expenseRecapRange.to}.pdf`);
+    status('#expense-recap-status', `${expenseRecapRows.length} transaksi · Total ${rupiah(total)} · PDF diunduh.`);
+  } catch (e) { status('#expense-recap-status', 'Gagal membuat PDF: ' + (e.message || e), true); }
+  finally { button.disabled = false; }
 });
 loadExpenseRecap();
 
