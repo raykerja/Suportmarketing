@@ -1278,7 +1278,8 @@ async function loadOffers() {
   if (error) { $('#offer-list').textContent = 'Dokumen belum dapat dibaca: ' + error.message; return; }
   offerCache = data || [];
   const recent = (row) => row.status === 'processing' && Date.now() - new Date(row.updated_at).getTime() < 600000;
-  const offerListHtml = offerCache.length ? offerCache.map((row) => `<div class="item"><strong>${esc(row.client_name)}</strong><small>${esc(date(row.created_at))} · UMK Rp${Number(row.umk).toLocaleString('id-ID')}${row.gaji_pokok ? ` · Gaji pokok Rp${Number(row.gaji_pokok).toLocaleString('id-ID')}` : ''} · ${esc(row.nomor_surat || 'Nomor diproses')}</small><div><span class="badge ${row.status === 'error' ? 'error' : row.status === 'processing' || row.status === 'partial' ? 'processing' : ''}">${esc(row.status.toUpperCase())}</span></div><div class="offer-links">${row.doc_file_url ? `<a href="${esc(row.doc_file_url)}" target="_blank" rel="noopener noreferrer">Google Docs surat pengantar</a>` : ''}${row.rab_file_url ? `<a href="${esc(row.rab_file_url)}" target="_blank" rel="noopener noreferrer">Google Sheets RAB</a>` : ''}</div>${row.error ? `<small class="error">${esc(row.error)}</small>` : row.status === 'processing' && !recent(row) ? '<small class="error">Proses lebih dari 10 menit. Muat ulang atau minta admin memeriksa eksekusi n8n.</small>' : ''}</div>`).join('') : '<p class="hint">Belum ada dokumen penawaran.</p>';
+  const previewUrl = (url) => url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/preview') : '';
+  const offerListHtml = offerCache.length ? offerCache.map((row) => `<div class="item"><strong>${esc(row.client_name)}</strong><small>${esc(date(row.created_at))} · UMK Rp${Number(row.umk).toLocaleString('id-ID')}${row.gaji_pokok ? ` · Gaji pokok Rp${Number(row.gaji_pokok).toLocaleString('id-ID')}` : ''} · ${esc(row.nomor_surat || 'Nomor diproses')}</small><div><span class="badge ${row.status === 'error' ? 'error' : row.status === 'processing' || row.status === 'partial' ? 'processing' : ''}">${esc(row.status.toUpperCase())}</span></div><div class="offer-links">${row.doc_file_url ? `<button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrl(row.doc_file_url))}" data-preview-open="${esc(row.doc_file_url)}" data-preview-title="Surat pengantar · ${esc(row.client_name)}">Preview Surat</button>` : ''}${row.rab_file_url ? `<button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrl(row.rab_file_url))}" data-preview-open="${esc(row.rab_file_url)}" data-preview-title="RAB · ${esc(row.client_name)}">Preview RAB</button>` : ''}</div>${row.error ? `<small class="error">${esc(row.error)}</small>` : row.status === 'processing' && !recent(row) ? '<small class="error">Proses lebih dari 10 menit. Muat ulang atau minta admin memeriksa eksekusi n8n.</small>' : ''}</div>`).join('') : '<p class="hint">Belum ada dokumen penawaran.</p>';
   $('#offer-list').innerHTML = offerListHtml;
   if ($('#offer-list-manual')) $('#offer-list-manual').innerHTML = offerListHtml;
   if (offerCache.some(recent) && !offerPollTimer) offerPollTimer = setInterval(loadOffers, 5000);
@@ -1286,6 +1287,16 @@ async function loadOffers() {
 }
 $('#refresh-offers').addEventListener('click', loadOffers);
 $('#refresh-offers-manual').addEventListener('click', loadOffers);
+document.addEventListener('click', (event) => {
+  const btn = event.target.closest('[data-preview-url]');
+  if (!btn) return;
+  $('#offer-preview-title').textContent = btn.dataset.previewTitle || 'Pratinjau dokumen';
+  $('#offer-preview-open').href = btn.dataset.previewOpen || btn.dataset.previewUrl;
+  $('#offer-preview-frame').src = btn.dataset.previewUrl;
+  $('#offer-preview-dialog').showModal();
+});
+$('#offer-preview-close').addEventListener('click', () => $('#offer-preview-dialog').close());
+$('#offer-preview-dialog').addEventListener('close', () => { $('#offer-preview-frame').src = 'about:blank'; });
 
 $('#manual-offer-date').value = localToday();
 $('#manual-offer-form').addEventListener('input', () => { manualOfferRequestId = null; });

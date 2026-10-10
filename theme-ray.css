@@ -195,3 +195,7 @@ th { color: var(--ray-muted); background: #f7faff; }
 .ac-check input { width: auto; }
 #price-dialog { width: min(560px, calc(100vw - 24px)); border: 1px solid #cbd8d0; border-radius: 16px; padding: 22px; }
 #price-dialog::backdrop { background: rgba(10, 30, 25, .45); }
+#offer-preview-dialog { width: min(900px, calc(100vw - 24px)); border: 1px solid #cbd8d0; border-radius: 16px; padding: 18px; }
+#offer-preview-dialog::backdrop { background: rgba(10, 30, 25, .45); }
+#offer-preview-frame { width: 100%; height: min(75vh, 760px); border: 1px solid var(--ray-line); border-radius: 10px; }
+@media (max-width: 760px) { #offer-preview-frame { height: 60vh; } }
