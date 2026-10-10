@@ -894,6 +894,19 @@ $('#expense-photo-rows').addEventListener('click', (event) => {
   event.target.closest('.visit-service').remove();
   $('#add-expense-photo').hidden = $('#expense-photo-rows').children.length >= 3;
 });
+const digitsOnly = (v) => String(v || '').replace(/\D/g, '');
+const groupThousands = (v) => digitsOnly(v).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+$('#expense-amount').addEventListener('input', (event) => {
+  const field = event.target;
+  const digitsBeforeCursor = digitsOnly(field.value.slice(0, field.selectionStart)).length;
+  field.value = groupThousands(field.value);
+  let seen = 0, pos = field.value.length;
+  for (let i = 0; i < field.value.length; i++) {
+    if (/\d/.test(field.value[i])) seen++;
+    if (seen === digitsBeforeCursor) { pos = i + 1; break; }
+  }
+  field.setSelectionRange(pos, pos);
+});
 function resetExpenseForm() {
   $('#expense-form').reset();
   $('#expense-photo-rows').replaceChildren();
@@ -923,8 +936,9 @@ $('#expense-form').addEventListener('submit', async (event) => {
   if (!client || !currentUser) return;
   const tanggal = $('#expense-date').value;
   const jenis = $('#expense-type').value;
-  const nominal = Number($('#expense-amount').value);
+  const nominal = Number(digitsOnly($('#expense-amount').value));
   if (!tanggal || !jenis || !nominal || nominal <= 0) { status('#expense-status', 'Lengkapi tanggal, jenis pengeluaran, dan nominal.', true); return; }
+  if (nominal > 1000000000) { status('#expense-status', 'Nominal maksimal Rp 1.000.000.000.', true); return; }
   const button = $('#save-expense'); button.disabled = true;
   status('#expense-status', 'Menyimpan laporan…');
   try {

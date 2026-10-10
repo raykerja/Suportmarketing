@@ -25,7 +25,7 @@
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261010-1"></script>
+  <script type="module" src="app.js?v=20261010-2"></script>
 </head>
 <body>
   <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><div class="settings-menu-wrap"><button id="open-settings" type="button" aria-haspopup="true" aria-expanded="false" hidden>Pengaturan</button><ul id="settings-menu" class="settings-dropdown" role="menu" hidden><li role="menuitem" tabindex="0" data-tab="research">Cari Target</li><li role="menuitem" tabindex="0" data-tab="manual-offer">Buat Penawaran Manual</li><li role="menuitem" tabindex="0" data-tab="change-password">Ganti Kata Sandi</li><li role="menuitem" tabindex="0" data-tab="settings">Pengaturan Akun</li></ul></div></header>
@@ -228,7 +228,7 @@
               <label>Nama Marketing<input id="expense-name" type="text" disabled></label>
               <label>Tanggal Realisasi <span class="required">*</span><input id="expense-date" type="date" required></label>
               <label>Jenis Pengeluaran <span class="required">*</span><select id="expense-type" required><option value="">Pilih Jenis...</option><option>Transportasi (BBM/Tol/Parkir)</option><option>Akomodasi/Penginapan</option><option>Konsumsi</option><option>Komunikasi (Pulsa/Internet)</option><option>Cetak &amp; Dokumen</option><option>Entertain Klien</option><option>Lain-lain</option></select></label>
-              <label>Nominal (Rp) <span class="required">*</span><input id="expense-amount" type="number" min="1" max="1000000000" step="500" inputmode="numeric" required placeholder="Contoh: 50000"></label>
+              <label>Nominal (Rp) <span class="required">*</span><input id="expense-amount" type="text" inputmode="numeric" autocomplete="off" required placeholder="Contoh: 50.000"></label>
               <div><strong>Foto Bukti (Max 3)</strong><small> Ambil dengan kamera HP atau pilih dari galeri</small>
                 <div id="expense-photo-rows" class="visit-services"></div>
                 <button id="add-expense-photo" type="button">+ Tambah Foto Lainnya</button>
