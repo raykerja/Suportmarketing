@@ -49,6 +49,7 @@ async function backupOwnerToDrive(admin: ReturnType<typeof createClient>, ownerI
 const webhookSecret = Deno.env.get('MARKETING_WEBHOOK_SECRET')!;
 const aiApiKey = Deno.env.get('OPENAI_API_KEY') || '';
 const staffLoginDomain = 'staff.marketing.raykerja.cloud';
+const expenseTypes = ['Transportasi (BBM/Tol/Parkir)','Akomodasi/Penginapan','Konsumsi','Komunikasi (Pulsa/Internet)','Cetak & Dokumen','Entertain Klien','Lain-lain'];
 const allowedOrigins = new Set([
   'https://marketing.raykerja.cloud',
   'https://raykerja.github.io',
@@ -518,6 +519,36 @@ Deno.serve(async (request) => {
       .eq('id', id).eq('owner_id', authData.user.id).select('id').maybeSingle();
     return error ? response({ error: 'Foto gagal ditautkan' }, 500, origin)
       : updated ? response({ ok: true }, 200, origin) : response({ error: 'Laporan tidak ditemukan' }, 404, origin);
+  }
+  if (data.action === 'save_expense') {
+    const tanggal = String(data.tanggal_realisasi || '').trim();
+    const jenis = String(data.jenis_pengeluaran || '').trim();
+    const nominal = Number(data.nominal);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(tanggal) || Number.isNaN(Date.parse(tanggal)))
+      return response({ error: 'Tanggal realisasi tidak valid' }, 400, origin);
+    if (!expenseTypes.includes(jenis)) return response({ error: 'Jenis pengeluaran tidak valid' }, 400, origin);
+    if (!Number.isFinite(nominal) || nominal <= 0 || nominal > 1000000000)
+      return response({ error: 'Nominal tidak valid' }, 400, origin);
+    const { data: created, error } = await admin.from('marketing_expenses').insert({ owner_id: authData.user.id,
+      nama_marketing: membership.display_name || membership.email, tanggal_realisasi: tanggal,
+      jenis_pengeluaran: jenis, nominal }).select('id').single();
+    return error ? response({ error: 'Laporan pengeluaran gagal disimpan' }, 500, origin)
+      : response({ ok: true, expense_id: created.id }, 200, origin);
+  }
+  if (data.action === 'attach_expense_photo') {
+    const id = String(data.expense_id || '');
+    const path = String(data.photo_path || '');
+    if (!/^[0-9a-f-]{36}$/i.test(id) || !new RegExp(`^${authData.user.id}/${id}/[0-9a-f-]{36}\\.(?:jpe?g|png|webp|heic|heif)$`, 'i').test(path))
+      return response({ error: 'Foto atau laporan tidak valid' }, 400, origin);
+    const { data: object } = await admin.storage.from('marketing-expense-photos').info(path);
+    if (!object) return response({ error: 'Foto belum terunggah' }, 404, origin);
+    const { data: expense } = await admin.from('marketing_expenses').select('photo_paths').eq('id', id).eq('owner_id', authData.user.id).maybeSingle();
+    if (!expense) return response({ error: 'Laporan tidak ditemukan' }, 404, origin);
+    const paths = Array.isArray(expense.photo_paths) ? expense.photo_paths as string[] : [];
+    if (paths.length >= 3) return response({ error: 'Maksimal 3 foto per laporan' }, 400, origin);
+    const { error } = await admin.from('marketing_expenses').update({ photo_paths: [...paths, path], updated_at: new Date().toISOString() })
+      .eq('id', id).eq('owner_id', authData.user.id);
+    return error ? response({ error: 'Foto gagal ditautkan' }, 500, origin) : response({ ok: true }, 200, origin);
   }
   if (data.action === 'sync_visit') {
     const id = String(data.visit_id || '');

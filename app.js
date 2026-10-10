@@ -35,6 +35,7 @@ let progressEvents = [];
 let editingVisitId = null;
 let activeVisitStep = '1';
 let editingLetterId = null;
+let expenseCache = [];
 
 function status(id, message, error = false) {
   const el = $(id); el.textContent = message; el.style.color = error ? '#b73729' : '#0a4fa6';
@@ -74,6 +75,7 @@ function showWorkspace(user) {
     activeClients = []; picAliases = []; memberOptions = []; priceRows = []; priceLoaded = false; showDbView('target'); renderActiveClients(); publishActiveClients(); picVisitRows = []; publishPicVisits(); publishOffers([], []);
     visitCache = []; $('#visit-list').textContent = ''; $('#visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>';
     publishVisitSnapshot();
+    expenseCache = []; $('#expense-list').textContent = '';
     $('#review-list').textContent = ''; $('#offer-list').textContent = ''; $('#lead-list').textContent = '';
     $('#ai-answer').textContent = ''; $('#ai-answer').hidden = true; $('#ai-sources').textContent = '';
     status('#ai-search-status', '');
@@ -91,7 +93,7 @@ function showWorkspace(user) {
   $('#logout').hidden = !user || invitePending;
   if (user && !invitePending) {
     activateTab(history.state?.marketingTab || 'visits', false);
-    loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); loadActiveClients().then(() => { loadPicVisits(); loadClientOffers(); });
+    loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); loadExpenses(); loadActiveClients().then(() => { loadPicVisits(); loadClientOffers(); });
   }
   else {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
@@ -135,6 +137,7 @@ $('#setup-form').addEventListener('submit', async (event) => {
 const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress']);
 const salesTabs = new Set(['visits', 'progress']);
 const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation', 'leads']);
+const expenseTabs = new Set(['expenses']);
 function activateTab(tab, record = true) {
   if (!$('#' + tab)?.classList.contains('panel')) tab = 'visits';
   const current = document.querySelector('.panel:not([hidden])')?.id;
@@ -160,6 +163,9 @@ function activateTab(tab, record = true) {
   $('#pipeline-tabs').hidden = !inPipeline;
   $('#pipeline-menu').classList.toggle('active', inPipeline);
   $('#pipeline-menu').setAttribute('aria-expanded', String(inPipeline));
+  const inExpense = expenseTabs.has(tab);
+  $('#expense-menu').classList.toggle('active', inExpense);
+  $('#expense-menu').setAttribute('aria-expanded', String(inExpense));
   document.querySelectorAll('.panel').forEach((panel) => { panel.hidden = panel.id !== tab; });
   if (tab === 'review') loadLeads();
   if (tab === 'letters') { loadLeads(); loadOffers(); }
@@ -170,6 +176,7 @@ document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListe
 $('#active-client-menu').addEventListener('click', () => activateTab('clients'));
 $('#sales-menu').addEventListener('click', () => activateTab('visits'));
 $('#pipeline-menu').addEventListener('click', () => activateTab('research'));
+$('#expense-menu').addEventListener('click', () => activateTab('expenses'));
 window.addEventListener('popstate', (event) => {
   if (currentUser && !invitePending) activateTab(event.state?.marketingTab || 'visits', false);
 });
@@ -871,6 +878,79 @@ $('#visit-form').addEventListener('submit', async (event) => {
   finally { button.disabled = false; }
 });
 resetVisitForm();
+
+function addExpensePhotoRow() {
+  const rows = $('#expense-photo-rows');
+  if (rows.children.length >= 3) return;
+  const row = document.createElement('div'); row.className = 'visit-service';
+  row.innerHTML = '<label>Foto<input type="file" accept="image/*" capture="environment" data-expense-photo></label>' +
+    (rows.children.length ? '<button type="button" data-remove-expense-photo aria-label="Hapus foto">Hapus</button>' : '');
+  rows.appendChild(row);
+  $('#add-expense-photo').hidden = rows.children.length >= 3;
+}
+$('#add-expense-photo').addEventListener('click', addExpensePhotoRow);
+$('#expense-photo-rows').addEventListener('click', (event) => {
+  if (!event.target.closest('[data-remove-expense-photo]')) return;
+  event.target.closest('.visit-service').remove();
+  $('#add-expense-photo').hidden = $('#expense-photo-rows').children.length >= 3;
+});
+function resetExpenseForm() {
+  $('#expense-form').reset();
+  $('#expense-photo-rows').replaceChildren();
+  addExpensePhotoRow();
+  $('#add-expense-photo').hidden = false;
+  $('#expense-name').value = memberLabel(currentMember);
+  $('#expense-date').value = localToday();
+  $('#expense-timestamp').textContent = `Waktu laporan: ${date(new Date().toISOString())} (otomatis saat disimpan)`;
+  status('#expense-status', '');
+}
+async function loadExpenses() {
+  if (!client || !currentUser) return;
+  const requestedUserId = currentUser.id;
+  const { data, error } = await client.from('marketing_expenses').select('*').order('created_at', { ascending: false }).limit(200);
+  if (currentUser?.id !== requestedUserId) return;
+  if (error) { $('#expense-list').textContent = 'Laporan belum dapat dibaca: ' + error.message; return; }
+  expenseCache = data || [];
+  renderExpenseList();
+}
+function renderExpenseList() {
+  $('#expense-list').innerHTML = expenseCache.length ? expenseCache.map((row) => `<div class="item"><strong>${esc(row.jenis_pengeluaran)} · ${rupiah(row.nominal)}</strong><small>${esc(row.tanggal_realisasi)}${isAdmin() ? ' · ' + esc(row.nama_marketing) : ''} · ${row.photo_paths?.length || 0} foto</small></div>`).join('')
+    : '<p class="hint">Belum ada laporan pengeluaran.</p>';
+}
+$('#refresh-expenses').addEventListener('click', loadExpenses);
+$('#expense-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  if (!client || !currentUser) return;
+  const tanggal = $('#expense-date').value;
+  const jenis = $('#expense-type').value;
+  const nominal = Number($('#expense-amount').value);
+  if (!tanggal || !jenis || !nominal || nominal <= 0) { status('#expense-status', 'Lengkapi tanggal, jenis pengeluaran, dan nominal.', true); return; }
+  const button = $('#save-expense'); button.disabled = true;
+  status('#expense-status', 'Menyimpan laporan…');
+  try {
+    const { data, error } = await client.functions.invoke('marketing', { body: { action: 'save_expense',
+      tanggal_realisasi: tanggal, jenis_pengeluaran: jenis, nominal } });
+    if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Gagal menyimpan laporan');
+    const expenseId = data.expense_id;
+    const photoInputs = Array.from(document.querySelectorAll('[data-expense-photo]')).filter((input) => input.files?.[0]).slice(0, 3);
+    let photoWarning = '';
+    for (const input of photoInputs) {
+      const photo = input.files[0];
+      if (photo.size > 10 * 1024 * 1024) { photoWarning = 'Salah satu foto lebih dari 10 MB dan dilewati.'; continue; }
+      const ext = (photo.name.split('.').pop() || 'jpg').toLowerCase();
+      const path = `${currentUser.id}/${expenseId}/${crypto.randomUUID()}.${ext}`;
+      const upload = await client.storage.from('marketing-expense-photos').upload(path, photo, { contentType: photo.type || 'image/jpeg' });
+      if (upload.error) { photoWarning = 'Foto gagal diunggah: ' + upload.error.message; continue; }
+      const linked = await client.functions.invoke('marketing', { body: { action: 'attach_expense_photo', expense_id: expenseId, photo_path: path } });
+      if (linked.error || !linked.data?.ok) photoWarning = 'Foto gagal ditautkan: ' + (linked.data?.error || linked.error?.message);
+    }
+    resetExpenseForm();
+    await loadExpenses();
+    status('#expense-status', photoWarning ? 'Laporan tersimpan, tetapi ' + photoWarning : 'Laporan pengeluaran tersimpan.', !!photoWarning);
+  } catch (e) { status('#expense-status', String(e.message || e), true); }
+  finally { button.disabled = false; }
+});
+resetExpenseForm();
 
 const stageNames = { kunjungan: 'Kunjungan', proposal: 'Proposal', penawaran: 'Penawaran', follow_up: 'Follow up', deal: 'Deal', gagal: 'Gagal' };
 function previewDate(days) {
