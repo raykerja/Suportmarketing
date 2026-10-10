@@ -9,6 +9,10 @@
   <link rel="shortcut icon" href="/favicon.ico?v=20261005-6">
   <link rel="icon" type="image/png" href="/favicon-ray-square.png?v=20261005-6" sizes="256x256">
   <link rel="apple-touch-icon" href="/favicon-ray-square.png?v=20261005-6">
+  <link rel="manifest" href="manifest.json?v=20261010-1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Marketing RAY">
   <script>
     window.addEventListener('pageshow', () => {
       document.querySelectorAll('link[rel="icon"], link[rel="shortcut icon"]').forEach((link) => link.remove());
@@ -20,15 +24,17 @@
     });
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
-  <link rel="stylesheet" href="style.css?v=20261009-13">
-  <link rel="stylesheet" href="theme-ray.css?v=20261009-10">
+  <link rel="stylesheet" href="style.css?v=20261010-1">
+  <link rel="stylesheet" href="theme-ray.css?v=20261010-1">
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
   <script type="module" src="app.js?v=20261010-2"></script>
+  <script defer src="pwa.js?v=20261010-1"></script>
 </head>
 <body>
-  <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><div class="settings-menu-wrap"><button id="open-settings" type="button" aria-haspopup="true" aria-expanded="false" hidden>Pengaturan</button><ul id="settings-menu" class="settings-dropdown" role="menu" hidden><li role="menuitem" tabindex="0" data-tab="research">Cari Target</li><li role="menuitem" tabindex="0" data-tab="manual-offer">Buat Penawaran Manual</li><li role="menuitem" tabindex="0" data-tab="change-password">Ganti Kata Sandi</li><li role="menuitem" tabindex="0" data-tab="settings">Pengaturan Akun</li></ul></div></header>
+  <p id="ios-install-hint" hidden>Di iPhone: ketuk tombol <strong>Bagikan</strong> di Safari, lalu pilih <strong>Tambah ke Layar Utama</strong> agar Marketing RAY bisa dibuka seperti aplikasi. <button id="ios-install-hint-close" type="button">Tutup</button></p>
+  <header><div class="brand"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa · Solusi Tenaga Kerja Profesional</small></div></div><div class="settings-menu-wrap"><button id="install-app" class="primary" type="button" hidden>⭳ Instal Aplikasi</button><button id="open-settings" type="button" aria-haspopup="true" aria-expanded="false" hidden>Pengaturan</button><ul id="settings-menu" class="settings-dropdown" role="menu" hidden><li role="menuitem" tabindex="0" data-tab="research">Cari Target</li><li role="menuitem" tabindex="0" data-tab="manual-offer">Buat Penawaran Manual</li><li role="menuitem" tabindex="0" data-tab="change-password">Ganti Kata Sandi</li><li role="menuitem" tabindex="0" data-tab="settings">Pengaturan Akun</li></ul></div></header>
   <main>
     <section id="login-panel" class="card login"><img class="login-logo" src="logo-ray.png" alt="Lambang RAY"><p class="eyebrow">AKSES TIM MARKETING</p><h1>Masuk ke Marketing</h1><p>Gunakan akun yang telah didaftarkan oleh admin.</p>
       <form id="login-form"><label>Username<input id="login-name" type="text" autocomplete="username" autocapitalize="none" spellcheck="false" required placeholder="Username staf atau akun admin lama"></label><label>Kata sandi<input id="password" type="password" autocomplete="current-password" required></label><button class="primary">Masuk</button></form><p id="login-status" role="status"></p>
