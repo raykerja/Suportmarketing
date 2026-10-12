@@ -84,18 +84,19 @@ button#mobile-menu-toggle:hover { filter: none; }
   .tabs-main { display: none; }
   #mobile-menu-toggle { cursor: pointer; }
   .mobile-drawer-backdrop:not([hidden]) { display: block; position: fixed; inset: 0; background: rgba(8,16,30,.5); z-index: 50; }
-  .mobile-drawer { position: fixed; top: 0; left: 0; bottom: 0; z-index: 51; width: fit-content; max-width: 40vw; background: #fff; box-shadow: 4px 0 24px rgba(8,16,30,.25); flex-direction: column; transform: translateX(-100%); transition: transform .2s ease; overflow-y: auto; }
+  .mobile-drawer { position: fixed; top: 0; left: 0; bottom: 0; z-index: 51; width: fit-content; max-width: 40vw; background: linear-gradient(115deg, #14204a, #071c45); box-shadow: 4px 0 24px rgba(8,16,30,.25); flex-direction: column; transform: translateX(-100%); transition: transform .2s ease; overflow-y: auto; }
   .mobile-drawer:not([hidden]) { display: flex; }
   .mobile-drawer.open { transform: translateX(0); }
-  .mobile-drawer-head { position: relative; display: flex; align-items: center; gap: 3px; padding: 5px 20px 5px 4px; border-bottom: 1px solid var(--ray-line); white-space: nowrap; }
+  .mobile-drawer-head { position: relative; display: flex; align-items: center; gap: 3px; padding: 5px 20px 5px 4px; border-bottom: 1px solid rgba(255,255,255,.14); white-space: nowrap; color: #fff; }
   .mobile-drawer-head .brand-logo { width: 18px; height: 14px; padding: 1px; flex: none; }
   .mobile-drawer-head strong { font-size: 10px; letter-spacing: .02em; }
-  #mobile-drawer-close { position: absolute; top: 3px; right: 2px; flex: none; width: 17px; height: 17px; min-height: 0; padding: 0; display: grid; place-items: center; border-radius: 999px; background: #f3f6fb; border: none; }
+  #mobile-drawer-close { position: absolute; top: 3px; right: 2px; flex: none; width: 17px; height: 17px; min-height: 0; padding: 0; display: grid; place-items: center; border-radius: 999px; background: rgba(255,255,255,.14); border: none; color: #fff; }
   #mobile-drawer-close .menu-icon { width: 10px; height: 10px; }
   .mobile-drawer-grid { display: grid; grid-template-columns: auto; justify-content: stretch; gap: 1px; padding: 3px; }
-  .mobile-drawer-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; width: 100%; border: none; border-radius: 10px; background: none; padding: 8px 2px; font-size: 9px; font-weight: 700; color: var(--ray-navy); text-align: center; line-height: 1.1; white-space: nowrap; }
-  .mobile-drawer-item .menu-icon { width: 17px; height: 17px; color: var(--ray-blue); }
-  .mobile-drawer-item.active { background: var(--ray-blue-pale); color: var(--ray-blue); }
+  .mobile-drawer-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; width: 100%; border: none; border-radius: 10px; background: none; padding: 8px 2px; font-size: 9px; font-weight: 700; color: rgba(255,255,255,.62); text-align: center; line-height: 1.1; white-space: nowrap; }
+  .mobile-drawer-item .menu-icon { width: 17px; height: 17px; color: rgba(255,255,255,.78); }
+  .mobile-drawer-item.active { background: rgba(255,255,255,.1); color: #fff; }
+  .mobile-drawer-item.active .menu-icon { color: var(--ray-gold); }
   .sub-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; margin: 0; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 0; background: linear-gradient(115deg, #14204a, #071c45); border-top: 1px solid rgba(255,255,255,.08); box-shadow: 0 -8px 22px rgba(8,16,30,.3); padding: 7px 2px max(7px, env(safe-area-inset-bottom)); }
   .sub-tabs button { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; gap: 4px; background: none; border: none; border-right: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.62); font-size: 10.5px; font-weight: 700; padding: 7px 2px 2px; white-space: normal; line-height: 1.2; border-radius: 0; }
   .sub-tabs button:last-child { border-right: none; }
