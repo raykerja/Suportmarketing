@@ -237,7 +237,6 @@ function closeMobileDrawer() {
   setTimeout(() => { if (!$('#mobile-drawer').classList.contains('open')) $('#mobile-drawer').hidden = true; }, 200);
 }
 $('#mobile-menu-toggle').addEventListener('click', openMobileDrawer);
-$('#mobile-drawer-close').addEventListener('click', closeMobileDrawer);
 $('#mobile-drawer-backdrop').addEventListener('click', closeMobileDrawer);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#mobile-drawer').classList.contains('open')) closeMobileDrawer(); });
 $('#mobile-menu-home').addEventListener('click', () => { showMobileHome(); closeMobileDrawer(); });
