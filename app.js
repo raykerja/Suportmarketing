@@ -150,6 +150,8 @@ const databaseTabs = new Set(['leads']);
 const expenseTabs = new Set(['expenses']);
 const isMobileViewport = () => window.matchMedia('(max-width: 760px)').matches;
 function showMobileHome() {
+  $('.hero').hidden = false;
+  $('.ai-search-card').hidden = false;
   document.querySelectorAll('.panel').forEach((panel) => { panel.hidden = true; });
   document.querySelectorAll('.sub-tabs').forEach((nav) => { nav.hidden = true; });
   document.querySelectorAll('[data-tab].active').forEach((button) => button.classList.remove('active'));
@@ -163,6 +165,7 @@ function showMobileHome() {
 function activateTab(tab, record = true) {
   if (!$('#' + tab)?.classList.contains('panel')) tab = 'visits';
   $('#mobile-menu-home').classList.remove('active');
+  if (isMobileViewport()) { $('.hero').hidden = true; $('.ai-search-card').hidden = true; }
   const current = document.querySelector('.panel:not([hidden])')?.id;
   if (current === 'settings' && tab !== 'settings') {
     if (staffImportBusy && currentUser) { status('#staff-import-status', 'Tunggu sampai pembuatan akun selesai sebelum pindah menu.', true); return; }
