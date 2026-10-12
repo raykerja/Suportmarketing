@@ -12,6 +12,13 @@ const memberLabel = (member) => member?.display_name || (member?.email || '').sp
 const date = (v) => v ? new Date(v).toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 const client = cfg.supabaseUrl && cfg.supabasePublishableKey
   ? createClient(cfg.supabaseUrl, cfg.supabasePublishableKey) : null;
+async function invokeFn(name, opts) {
+  const result = await client.functions.invoke(name, opts);
+  if (result.error?.context?.json) {
+    try { const body = await result.error.context.json(); if (body?.error) result.error.message = body.error; } catch {}
+  }
+  return result;
+}
 let currentUser = null;
 let currentMember = null;
 let staffImportRows = [];
@@ -816,7 +823,7 @@ $('#get-location').addEventListener('click', () => {
   { enableHighAccuracy: true, timeout: 12000, maximumAge: 60000 });
 });
 async function syncVisit(id) {
-  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'sync_visit', visit_id: id } });
+  const { data, error } = await invokeFn('marketing', { body: { action: 'sync_visit', visit_id: id } });
   const failed = !!error || !data?.ok;
   status('#visit-status', failed ? 'Laporan tersimpan di Supabase, tetapi belum masuk Sheet: ' + (data?.error || error?.message || 'Gagal memulai sinkronisasi') : 'Laporan tersimpan. Sinkronisasi Sheet sedang diproses.', failed);
   return !failed;
@@ -854,7 +861,7 @@ $('#visit-form').addEventListener('submit', async (event) => {
         'catatan','informasi_penting','status_marketing','tanggal_follow_up','visit_stage'];
       for (const key of Object.keys(payload)) if (!detailKeys.includes(key)) delete payload[key];
     }
-    const { data, error } = await client.functions.invoke('marketing', { body: { action: 'save_visit', visit_id: editingVisitId, visit: payload } });
+    const { data, error } = await invokeFn('marketing', { body: { action: 'save_visit', visit_id: editingVisitId, visit: payload } });
     if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Gagal menyimpan laporan');
     editingVisitId = data.visit_id;
     const photo = $('#visit-photo').files?.[0];
@@ -864,7 +871,7 @@ $('#visit-form').addEventListener('submit', async (event) => {
       const path = `${currentUser.id}/${data.visit_id}/${crypto.randomUUID()}.${ext}`;
       const upload = await client.storage.from('marketing-visit-photos').upload(path, photo, { contentType: photo.type || 'image/jpeg' });
       if (upload.error) throw new Error('Laporan tersimpan, tetapi foto gagal diunggah: ' + upload.error.message);
-      const linked = await client.functions.invoke('marketing', { body: { action: 'attach_visit_photo', visit_id: data.visit_id, photo_path: path } });
+      const linked = await invokeFn('marketing', { body: { action: 'attach_visit_photo', visit_id: data.visit_id, photo_path: path } });
       if (linked.error || !linked.data?.ok) throw new Error('Laporan tersimpan, tetapi foto gagal ditautkan: ' + (linked.data?.error || linked.error?.message));
     }
     $('#visit-photo').value = '';
@@ -943,7 +950,7 @@ $('#expense-form').addEventListener('submit', async (event) => {
   const button = $('#save-expense'); button.disabled = true;
   status('#expense-status', 'Menyimpan laporan…');
   try {
-    const { data, error } = await client.functions.invoke('marketing', { body: { action: 'save_expense',
+    const { data, error } = await invokeFn('marketing', { body: { action: 'save_expense',
       tanggal_realisasi: tanggal, jenis_pengeluaran: jenis, nominal } });
     if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Gagal menyimpan laporan');
     const expenseId = data.expense_id;
@@ -956,7 +963,7 @@ $('#expense-form').addEventListener('submit', async (event) => {
       const path = `${currentUser.id}/${expenseId}/${crypto.randomUUID()}.${ext}`;
       const upload = await client.storage.from('marketing-expense-photos').upload(path, photo, { contentType: photo.type || 'image/jpeg' });
       if (upload.error) { photoWarning = 'Foto gagal diunggah: ' + upload.error.message; continue; }
-      const linked = await client.functions.invoke('marketing', { body: { action: 'attach_expense_photo', expense_id: expenseId, photo_path: path } });
+      const linked = await invokeFn('marketing', { body: { action: 'attach_expense_photo', expense_id: expenseId, photo_path: path } });
       if (linked.error || !linked.data?.ok) photoWarning = 'Foto gagal ditautkan: ' + (linked.data?.error || linked.error?.message);
     }
     resetExpenseForm();
@@ -1188,7 +1195,7 @@ $('#progress-form').addEventListener('submit', async (event) => {
     const body = { action: 'record_progress', visit_id: $('#progress-visit').value, stage: $('#progress-stage').value,
       activity_date: $('#progress-date').value, note: $('#progress-note').value.trim(),
       next_follow_up: $('#progress-next').value, attachment_url: $('#progress-attachment').value.trim() };
-    const { data, error } = await client.functions.invoke('marketing', { body });
+    const { data, error } = await invokeFn('marketing', { body });
     if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Gagal menyimpan perkembangan');
     const visitId = body.visit_id;
     const syncStarted = await syncVisit(visitId);
@@ -1295,7 +1302,7 @@ $('#research-form').addEventListener('submit', async (event) => {
   const body = { action: 'research', target_type: $('#target-type').value, kecamatan: $('#kecamatan').value.trim(),
     kabupaten_kota: $('#kabupaten').value.trim(), provinsi: $('#provinsi').value.trim(), bidang: $('#bidang').value.trim(), jumlah: Number($('#jumlah').value) };
   try {
-    const { data, error } = await client.functions.invoke('marketing', { body });
+    const { data, error } = await invokeFn('marketing', { body });
     if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Permintaan gagal');
     status('#research-status', `Riset diterima. ID: ${data.research_id}. Hasil akan muncul otomatis.`);
     await loadResearches();
@@ -1339,7 +1346,7 @@ $('#review-list').addEventListener('click', async (event) => {
   if (!button) return;
   button.disabled = true;
   status('#review-status', 'Menyimpan hasil review…');
-  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'review_lead', lead_id: button.dataset.lead, review_status: button.dataset.review } });
+  const { data, error } = await invokeFn('marketing', { body: { action: 'review_lead', lead_id: button.dataset.lead, review_status: button.dataset.review } });
   status('#review-status', error || !data?.ok ? data?.error || error?.message || 'Review gagal disimpan' : 'Hasil review tersimpan.', !!error || !data?.ok);
   button.disabled = false;
   if (data?.ok) await loadLeads();
@@ -1368,7 +1375,7 @@ $('#offer-form').addEventListener('submit', async (event) => {
   offerRequestId ||= crypto.randomUUID();
   status('#offer-status', 'Mengirim permintaan dokumen ke n8n…');
   try {
-    const { data, error } = await client.functions.invoke('marketing', { body: { action: 'generate_offer', lead_id: leadId, umk, gaji_pokok: gaji, request_id: offerRequestId } });
+    const { data, error } = await invokeFn('marketing', { body: { action: 'generate_offer', lead_id: leadId, umk, gaji_pokok: gaji, request_id: offerRequestId } });
     if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Generator gagal dimulai');
     offerRequestId = null;
     status('#offer-status', `Penawaran ${data.offer_id} diterima. Dokumen akan muncul di daftar setelah selesai.`);
@@ -1424,7 +1431,7 @@ $('#manual-offer-form').addEventListener('submit', async (event) => {
   manualOfferRequestId ||= crypto.randomUUID();
   status('#manual-offer-status', 'Mengirim penawaran manual ke n8n…');
   try {
-    const { data, error } = await client.functions.invoke('marketing', { body: {
+    const { data, error } = await invokeFn('marketing', { body: {
       action: 'generate_offer_manual', request_id: manualOfferRequestId,
       tanggal_surat: $('#manual-offer-date').value,
       ditujukan_kepada: $('#manual-offer-recipient').value.trim(),
@@ -1479,14 +1486,14 @@ $('#letter-form').addEventListener('submit', async (event) => {
   const { data, error } = await query.select('id').single();
   if (error) { status('#letter-status', 'Gagal menyimpan: ' + error.message, true); return; }
   editingLetterId = data.id;
-  const { data: saved, error: driveError } = await client.functions.invoke('marketing', { body: { action: 'save_letter', letter_id: data.id } });
+  const { data: saved, error: driveError } = await invokeFn('marketing', { body: { action: 'save_letter', letter_id: data.id } });
   status('#letter-status', driveError || !saved?.ok ? 'Draft tersimpan di Supabase, tetapi salinan Drive belum berhasil: ' + (saved?.error || driveError?.message || 'Kesalahan tidak diketahui') : 'Draft tersimpan di Supabase. Salinan Drive sedang diproses.', !!driveError || !saved?.ok);
   await loadLetters();
 });
 
 async function loadSettings() {
   if (!client || !currentUser) return;
-  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'settings' } });
+  const { data, error } = await invokeFn('marketing', { body: { action: 'settings' } });
   if (error || !data?.ok) { status('#folder-status', data?.error || error?.message || 'Pengaturan gagal dibaca', true); return; }
   currentMember = data.self;
   priceLoaded = false; priceRows = []; if (priceView !== 'target') loadPrices();
@@ -1527,7 +1534,7 @@ $('#password-form').addEventListener('submit', async (event) => {
 });
 $('#folder-form').addEventListener('submit', async (event) => {
   event.preventDefault();
-  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'set_folder', drive_folder_url: $('#folder-url').value.trim() } });
+  const { data, error } = await invokeFn('marketing', { body: { action: 'set_folder', drive_folder_url: $('#folder-url').value.trim() } });
   status('#folder-status', error || !data?.ok ? data?.error || error?.message || 'Gagal menyimpan folder' : 'Folder akun tersimpan.', !!error || !data?.ok);
   if (data?.ok) loadSettings();
 });
@@ -1536,7 +1543,7 @@ $('#invite-form').addEventListener('submit', async (event) => {
   const submit = $('#invite-form button[type="submit"]');
   submit.disabled = true;
   status('#invite-status', 'Membuat akun staf…');
-  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'create_staff', username: $('#invite-username').value.trim(),
+  const { data, error } = await invokeFn('marketing', { body: { action: 'create_staff', username: $('#invite-username').value.trim(),
     password: $('#invite-password').value, display_name: $('#invite-name').value.trim(), drive_folder_url: $('#invite-folder').value.trim() } });
   submit.disabled = false;
   status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Akun gagal dibuat' : `Akun ${data.username} siap digunakan. Berikan username dan kata sandi secara privat kepada staf.`, !!error || !data?.ok);
@@ -1604,7 +1611,7 @@ $('#staff-import-create').addEventListener('click', async () => {
       let data;
       let error;
       try {
-        ({ data, error } = await client.functions.invoke('marketing', { body: { action: 'create_staff',
+        ({ data, error } = await invokeFn('marketing', { body: { action: 'create_staff',
           username: row.username, password: row.password, display_name: row.displayName, drive_folder_url: row.driveFolderUrl } }));
       } catch (caught) { error = caught; }
       if (data?.ok) { created++; report.push(`${row.username}: berhasil`); continue; }
@@ -1653,14 +1660,14 @@ $('#member-list').addEventListener('click', async (event) => {
   if (toggle) {
     const active = toggle.dataset.active === '1';
     if (!window.confirm(active ? `Aktifkan kembali akun ${name}?` : `Nonaktifkan akun ${name}?\nStaf tidak bisa masuk dan tidak bisa melihat data. Data lama tetap tersimpan.`)) return;
-    const { data, error } = await client.functions.invoke('marketing', { body: { action: 'set_member_active', user_id: toggle.dataset.memberActive, active } });
+    const { data, error } = await invokeFn('marketing', { body: { action: 'set_member_active', user_id: toggle.dataset.memberActive, active } });
     status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Status akun gagal diubah' : (data.warning || `Akun ${name} ${active ? 'diaktifkan' : 'dinonaktifkan'}.`), !!error || !data?.ok);
     if (data?.ok) loadSettings();
     return;
   }
   if (!window.confirm(`Buat kata sandi baru untuk ${name}?\nKata sandi lama langsung tidak berlaku.`)) return;
   const password = randomPassword();
-  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'reset_member_password', user_id: reset.dataset.memberReset, password } });
+  const { data, error } = await invokeFn('marketing', { body: { action: 'reset_member_password', user_id: reset.dataset.memberReset, password } });
   if (error || !data?.ok) { status('#invite-status', data?.error || error?.message || 'Kata sandi gagal diubah', true); return; }
   status('#invite-status', `Kata sandi baru ${name}: ${password} — catat sekarang dan sampaikan ke staf; tidak akan ditampilkan lagi.`);
   clearTimeout(memberStatusTimer);
@@ -1678,7 +1685,7 @@ $('#member-list').addEventListener('submit', async (event) => {
   const form = event.target.closest('.member-folder-form');
   if (!form) return;
   event.preventDefault();
-  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'set_folder', user_id: form.dataset.userId,
+  const { data, error } = await invokeFn('marketing', { body: { action: 'set_folder', user_id: form.dataset.userId,
     drive_folder_url: form.querySelector('input').value.trim() } });
   status('#invite-status', error || !data?.ok ? data?.error || error?.message || 'Folder gagal disimpan' : 'Folder staf tersimpan.', !!error || !data?.ok);
   if (data?.ok) loadSettings();
@@ -1691,7 +1698,7 @@ $('#ai-search-form').addEventListener('submit', async (event) => {
   $('#ai-answer').hidden = true;
   $('#ai-sources').textContent = '';
   status('#ai-search-status', 'Mencari data yang dapat Anda akses…');
-  const { data, error } = await client.functions.invoke('marketing', { body: { action: 'ai_search', query: $('#ai-query').value.trim() } });
+  const { data, error } = await invokeFn('marketing', { body: { action: 'ai_search', query: $('#ai-query').value.trim() } });
   submit.disabled = false;
   if (error || !data?.ok) { status('#ai-search-status', data?.error || error?.message || 'Pencarian gagal.', true); return; }
   $('#ai-answer').textContent = data.answer || '';
