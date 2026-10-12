@@ -158,9 +158,11 @@ function showMobileHome() {
   });
   ['mobile-menu-active-client', 'mobile-menu-pipeline', 'mobile-menu-sales', 'mobile-menu-database', 'mobile-menu-expense']
     .forEach((id) => $('#' + id).classList.remove('active'));
+  $('#mobile-menu-home').classList.add('active');
 }
 function activateTab(tab, record = true) {
   if (!$('#' + tab)?.classList.contains('panel')) tab = 'visits';
+  $('#mobile-menu-home').classList.remove('active');
   const current = document.querySelector('.panel:not([hidden])')?.id;
   if (current === 'settings' && tab !== 'settings') {
     if (staffImportBusy && currentUser) { status('#staff-import-status', 'Tunggu sampai pembuatan akun selesai sebelum pindah menu.', true); return; }
@@ -225,6 +227,7 @@ $('#mobile-menu-toggle').addEventListener('click', openMobileDrawer);
 $('#mobile-drawer-close').addEventListener('click', closeMobileDrawer);
 $('#mobile-drawer-backdrop').addEventListener('click', closeMobileDrawer);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#mobile-drawer').classList.contains('open')) closeMobileDrawer(); });
+$('#mobile-menu-home').addEventListener('click', () => { showMobileHome(); closeMobileDrawer(); });
 $('#mobile-menu-active-client').addEventListener('click', () => { activateTab('clients'); closeMobileDrawer(); });
 $('#mobile-menu-pipeline').addEventListener('click', () => { activateTab('research'); closeMobileDrawer(); });
 $('#mobile-menu-sales').addEventListener('click', () => { activateTab('visits'); closeMobileDrawer(); });
