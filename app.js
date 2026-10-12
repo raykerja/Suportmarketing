@@ -144,7 +144,8 @@ $('#setup-form').addEventListener('submit', async (event) => {
 
 const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress']);
 const salesTabs = new Set(['visits', 'progress']);
-const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation', 'leads']);
+const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation']);
+const databaseTabs = new Set(['leads']);
 const expenseTabs = new Set(['expenses']);
 function activateTab(tab, record = true) {
   if (!$('#' + tab)?.classList.contains('panel')) tab = 'visits';
@@ -171,6 +172,10 @@ function activateTab(tab, record = true) {
   $('#pipeline-tabs').hidden = !inPipeline;
   $('#pipeline-menu').classList.toggle('active', inPipeline);
   $('#pipeline-menu').setAttribute('aria-expanded', String(inPipeline));
+  const inDatabase = databaseTabs.has(tab);
+  $('#database-tabs').hidden = !inDatabase;
+  $('#database-menu').classList.toggle('active', inDatabase);
+  $('#database-menu').setAttribute('aria-expanded', String(inDatabase));
   const inExpense = expenseTabs.has(tab);
   $('#expense-menu').classList.toggle('active', inExpense);
   $('#expense-menu').setAttribute('aria-expanded', String(inExpense));
@@ -184,6 +189,7 @@ document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListe
 $('#active-client-menu').addEventListener('click', () => activateTab('clients'));
 $('#sales-menu').addEventListener('click', () => activateTab('visits'));
 $('#pipeline-menu').addEventListener('click', () => activateTab('research'));
+$('#database-menu').addEventListener('click', () => activateTab('leads'));
 $('#expense-menu').addEventListener('click', () => activateTab('expenses'));
 window.addEventListener('popstate', (event) => {
   if (currentUser && !invitePending) activateTab(event.state?.marketingTab || 'visits', false);
