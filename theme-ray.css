@@ -92,7 +92,7 @@ button#mobile-menu-toggle:hover { filter: none; }
   .mobile-drawer-head small { display: block; color: var(--ray-muted); font-size: 10px; }
   #mobile-drawer-close { flex: none; width: 30px; height: 30px; min-height: 0; padding: 0; display: grid; place-items: center; border-radius: 999px; background: #f3f6fb; border: none; }
   #mobile-drawer-close .menu-icon { width: 16px; height: 16px; }
-  .mobile-drawer-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; padding: 8px; }
+  .mobile-drawer-grid { display: grid; grid-template-columns: repeat(1, 1fr); gap: 2px; padding: 8px; }
   .mobile-drawer-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; width: 100%; border: none; border-radius: 12px; background: none; padding: 12px 4px; font-size: 11px; font-weight: 700; color: var(--ray-navy); text-align: center; }
   .mobile-drawer-item .menu-icon { width: 22px; height: 22px; color: var(--ray-blue); }
   .mobile-drawer-item.active { background: var(--ray-blue-pale); color: var(--ray-blue); }
