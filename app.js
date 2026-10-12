@@ -34,6 +34,8 @@ let letterCache = [];
 let offerCache = [];
 let offerRequestId = null;
 let manualOfferRequestId = null;
+let rabRecapCache = [];
+let editingRabRecap = null;
 const reviewNames = { pending: 'Menunggu review', approved: 'Disetujui', rejected: 'Tidak dipilih' };
 let visitCache = [];
 let progressVisits = [];
@@ -79,6 +81,7 @@ function showWorkspace(user) {
   if (!user) {
     currentMember = null;
     researchCache = []; leadCache = []; letterCache = []; offerCache = []; offerRequestId = null; manualOfferRequestId = null;
+    rabRecapCache = []; editingRabRecap = null; $('#rab-recap-list').textContent = ''; $('#rab-recap-admin').hidden = true;
     activeClients = []; picAliases = []; memberOptions = []; priceRows = []; priceLoaded = false; showDbView('target'); renderActiveClients(); publishActiveClients(); picVisitRows = []; publishPicVisits(); publishOffers([], []);
     visitCache = []; $('#visit-list').textContent = ''; $('#visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>';
     publishVisitSnapshot();
@@ -147,6 +150,7 @@ const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress']);
 const salesTabs = new Set(['visits', 'progress']);
 const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation']);
 const databaseTabs = new Set(['leads']);
+const rabTabs = new Set(['rab-recap']);
 const expenseTabs = new Set(['expenses']);
 const isMobileViewport = () => window.matchMedia('(max-width: 760px)').matches;
 function showMobileHome() {
@@ -155,10 +159,10 @@ function showMobileHome() {
   document.querySelectorAll('.panel').forEach((panel) => { panel.hidden = true; });
   document.querySelectorAll('.sub-tabs').forEach((nav) => { nav.hidden = true; });
   document.querySelectorAll('[data-tab].active').forEach((button) => button.classList.remove('active'));
-  ['active-client-menu', 'sales-menu', 'pipeline-menu', 'database-menu', 'expense-menu'].forEach((id) => {
+  ['active-client-menu', 'sales-menu', 'pipeline-menu', 'database-menu', 'rab-menu', 'expense-menu'].forEach((id) => {
     $('#' + id).classList.remove('active'); $('#' + id).setAttribute('aria-expanded', 'false');
   });
-  ['mobile-menu-active-client', 'mobile-menu-pipeline', 'mobile-menu-sales', 'mobile-menu-database', 'mobile-menu-expense']
+  ['mobile-menu-active-client', 'mobile-menu-pipeline', 'mobile-menu-sales', 'mobile-menu-database', 'mobile-menu-rab', 'mobile-menu-expense']
     .forEach((id) => $('#' + id).classList.remove('active'));
   $('#mobile-menu-home').classList.add('active');
 }
@@ -197,6 +201,10 @@ function activateTab(tab, record = true) {
   $('#database-menu').classList.toggle('active', inDatabase);
   $('#database-menu').setAttribute('aria-expanded', String(inDatabase));
   $('#mobile-menu-database').classList.toggle('active', inDatabase);
+  const inRab = rabTabs.has(tab);
+  $('#rab-menu').classList.toggle('active', inRab);
+  $('#rab-menu').setAttribute('aria-expanded', String(inRab));
+  $('#mobile-menu-rab').classList.toggle('active', inRab);
   const inExpense = expenseTabs.has(tab);
   $('#expense-menu').classList.toggle('active', inExpense);
   $('#expense-menu').setAttribute('aria-expanded', String(inExpense));
@@ -206,12 +214,14 @@ function activateTab(tab, record = true) {
   if (tab === 'letters') { loadLeads(); loadOffers(); }
   if (tab === 'manual-offer') loadOffers();
   if (tab === 'price-simulation') { if (!priceLoaded) loadPrices(); else renderSimTable(); }
+  if (tab === 'rab-recap') loadRabRecap();
 }
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
 $('#active-client-menu').addEventListener('click', () => activateTab('clients'));
 $('#sales-menu').addEventListener('click', () => activateTab('visits'));
 $('#pipeline-menu').addEventListener('click', () => activateTab('research'));
 $('#database-menu').addEventListener('click', () => activateTab('leads'));
+$('#rab-menu').addEventListener('click', () => activateTab('rab-recap'));
 $('#expense-menu').addEventListener('click', () => activateTab('expenses'));
 
 function openMobileDrawer() {
@@ -235,6 +245,7 @@ $('#mobile-menu-active-client').addEventListener('click', () => { activateTab('c
 $('#mobile-menu-pipeline').addEventListener('click', () => { activateTab('research'); closeMobileDrawer(); });
 $('#mobile-menu-sales').addEventListener('click', () => { activateTab('visits'); closeMobileDrawer(); });
 $('#mobile-menu-database').addEventListener('click', () => { activateTab('leads'); closeMobileDrawer(); });
+$('#mobile-menu-rab').addEventListener('click', () => { activateTab('rab-recap'); closeMobileDrawer(); });
 $('#mobile-menu-expense').addEventListener('click', () => { activateTab('expenses'); closeMobileDrawer(); });
 
 window.addEventListener('popstate', (event) => {
@@ -1460,6 +1471,73 @@ document.addEventListener('click', (event) => {
 });
 $('#offer-preview-close').addEventListener('click', () => $('#offer-preview-dialog').close());
 $('#offer-preview-dialog').addEventListener('close', () => { $('#offer-preview-frame').src = 'about:blank'; });
+
+async function loadRabRecap() {
+  if (!client || !currentUser) return;
+  $('#rab-recap-admin').hidden = !isAdmin();
+  const { data, error } = await client.from('marketing_rab_recap').select('*').order('nama');
+  if (error) { status('#rab-recap-status', 'Daftar belum dapat dimuat: ' + error.message, true); return; }
+  rabRecapCache = data || [];
+  $('#rab-recap-suggestions').innerHTML = rabRecapCache.map((r) => `<option value="${esc(r.nama)}"></option>`).join('');
+  renderRabRecap();
+}
+function previewUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/preview') : ''; }
+function renderRabRecap() {
+  const admin = isAdmin();
+  const q = $('#rab-recap-query').value.trim().toLocaleLowerCase('id');
+  const rows = rabRecapCache.filter((r) => !q || [r.nama, r.catatan].some((v) => (v || '').toLocaleLowerCase('id').includes(q)));
+  status('#rab-recap-status', rabRecapCache.length ? `Menampilkan ${rows.length} dari ${rabRecapCache.length} RAB.` : '');
+  $('#rab-recap-list').innerHTML = rows.length ? rows.map((r) => `<div class="item"><strong>${esc(r.nama)}</strong>${r.catatan ? `<br><small>${esc(r.catatan)}</small>` : ''}<br><small>Diperbarui ${esc(date(r.updated_at))}</small><div class="actions"><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button>${admin ? `<button type="button" data-rab-edit="${esc(r.id)}">Ubah</button><button type="button" data-rab-delete="${esc(r.id)}">Hapus</button>` : ''}</div></div>`).join('')
+    : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
+}
+$('#refresh-rab-recap').addEventListener('click', loadRabRecap);
+$('#rab-recap-query').addEventListener('input', renderRabRecap);
+function resetRabRecapForm() {
+  editingRabRecap = null;
+  $('#rab-recap-form-title').textContent = 'Tambah RAB';
+  $('#rab-recap-form').reset();
+  $('#rab-recap-form-cancel').hidden = true;
+  status('#rab-recap-form-status', '');
+}
+$('#rab-recap-form-cancel').addEventListener('click', resetRabRecapForm);
+$('#rab-recap-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = $('#rab-recap-form-save'); button.disabled = true;
+  status('#rab-recap-form-status', 'Menyimpan…');
+  const payload = { id: editingRabRecap?.id || null, expected_updated_at: editingRabRecap?.updated_at,
+    nama: $('#rab-recap-f-nama').value.trim(), link: $('#rab-recap-f-link').value.trim(), catatan: $('#rab-recap-f-catatan').value.trim() };
+  const { error } = await client.rpc('marketing_save_rab_recap', { p: payload });
+  button.disabled = false;
+  if (error) { status('#rab-recap-form-status', error.message, true); return; }
+  resetRabRecapForm();
+  await loadRabRecap();
+  status('#rab-recap-status', 'RAB tersimpan.');
+});
+$('#rab-recap-list').addEventListener('click', async (event) => {
+  const editBtn = event.target.closest('[data-rab-edit]');
+  if (editBtn) {
+    editingRabRecap = rabRecapCache.find((r) => r.id === editBtn.dataset.rabEdit) || null;
+    if (!editingRabRecap) return;
+    $('#rab-recap-form-title').textContent = `Ubah RAB · ${editingRabRecap.nama}`;
+    $('#rab-recap-f-nama').value = editingRabRecap.nama;
+    $('#rab-recap-f-link').value = editingRabRecap.link;
+    $('#rab-recap-f-catatan').value = editingRabRecap.catatan || '';
+    $('#rab-recap-form-cancel').hidden = false;
+    status('#rab-recap-form-status', '');
+    $('#rab-recap-f-nama').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+  const deleteBtn = event.target.closest('[data-rab-delete]');
+  if (deleteBtn) {
+    const row = rabRecapCache.find((r) => r.id === deleteBtn.dataset.rabDelete);
+    if (!row || !window.confirm(`Hapus RAB "${row.nama}"? Tindakan ini tidak bisa dibatalkan.`)) return;
+    const { error } = await client.rpc('marketing_delete_rab_recap', { p_id: row.id });
+    if (error) { status('#rab-recap-status', error.message, true); return; }
+    if (editingRabRecap?.id === row.id) resetRabRecapForm();
+    await loadRabRecap();
+    status('#rab-recap-status', 'RAB dihapus.');
+  }
+});
 
 $('#manual-offer-date').value = localToday();
 $('#manual-offer-form').addEventListener('input', () => { manualOfferRequestId = null; });

@@ -1,3 +1,11 @@
+VERSION: 0.8.4 (menu Rekap RAB; menu HP drawer+bilah bawah)
+DATE: 2026-10-12
+
+ADDED: Menu utama "Rekap RAB" — daftar bebas (nama + link Spreadsheet + catatan) RAB yang sudah final; tabel marketing_rab_recap (RLS: semua staf aktif baca, hanya admin tulis lewat RPC marketing_save_rab_recap/marketing_delete_rab_recap); pencarian dengan datalist (ketik atau pilih); pratinjau lewat dialog yang sama dengan dokumen penawaran.
+ADDED: Khusus tampilan HP (<=760px, tampilan web tidak berubah): logo RAY membuka drawer menu samping (Beranda, Client Lama, Target & Penawaran, Client Baru, Database, Rekap RAB, Pengeluaran) dengan ikon; sub-menu tiap bagian jadi bilah ikon tetap di bawah layar (latar biru tua, garis pembatas antar item, label ringkas tanpa nomor, item aktif disorot emas); layar Beranda (hero + Asisten Marketing) hanya tampil sebelum menu dipilih, bisa diakses lagi lewat drawer.
+CHANGED: Menu "Database (Target & Harga)" dipisah jadi menu utama tersendiri "Database" (sebelumnya sub-tab ke-6 di menu Target & Penawaran).
+MIGRATIONS: 20261012_marketing_rab_recap.
+
 VERSION: 0.8.3 (Gaji Pokok terpisah dari UMK Setempat di RAB)
 DATE: 2026-10-09
 

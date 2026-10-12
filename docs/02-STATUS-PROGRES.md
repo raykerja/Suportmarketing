@@ -1,6 +1,6 @@
 # Status & progres — sampai mana
 
-**Diperbarui: 9 Oktober 2026.** Perbarui dokumen ini setiap kali menyelesaikan sesuatu. Cek keadaan nyata dengan `python3 scripts/status_check.py`.
+**Diperbarui: 12 Oktober 2026.** Perbarui dokumen ini setiap kali menyelesaikan sesuatu. Cek keadaan nyata dengan `python3 scripts/status_check.py`.
 
 Arti penanda:
 - ✅ **Terbukti** — sudah di produksi dan diuji di sistem tujuan (database/RLS atau server) *dan* alurnya jalan.
@@ -73,6 +73,15 @@ Arti penanda:
 | Berlaku untuk penawaran dari target (lead) **dan** penawaran manual | ✅ | Satu workflow n8n `R7kXoTLBk8X0d4cy`, node `Isi Data RAB` |
 | Tombol di web setelah login nyata → RAB baru | 🟡 | Belum dicoba manusia; coba satu penawaran dan periksa baris Kompensasi, JP, dan Keterangan |
 | Template RAB di Drive & generator Telegram lama | ⬜ tidak diubah | Bila ingin sama, ubah template atau workflow Telegram |
+
+## D4. Rekap RAB + menu HP drawer/bilah bawah (12 Oktober 2026)
+
+| Fitur | Status | Catatan |
+| --- | --- | --- |
+| Menu utama "Rekap RAB": daftar bebas nama + link Spreadsheet RAB final + catatan | 🟡 | Tabel `marketing_rab_recap`; RLS: semua staf aktif baca, hanya admin tulis lewat RPC `marketing_save_rab_recap`/`marketing_delete_rab_recap`. Migrasi diterapkan ke produksi, belum dicoba manusia |
+| Pencarian dengan datalist (ketik bebas atau pilih dari dropdown nama yang sudah ada) | 🟡 | Sama seperti field "Nama perusahaan" di form Kunjungan Marketing |
+| Staf: hanya lihat & pratinjau (dialog sama dengan pratinjau dokumen penawaran); Admin: tambah/ubah/hapus | 🟡 | Belum dicoba manusia dengan akun staf/admin sungguhan |
+| Khusus tampilan HP (≤760px, web tidak berubah): logo RAY buka drawer menu samping dengan ikon; sub-menu jadi bilah ikon tetap di bawah (latar biru tua, label ringkas tanpa nomor); layar Beranda (hero + Asisten Marketing) hanya sebelum pilih menu, bisa diakses ulang lewat drawer | 🟡 | Belum dicoba di HP sungguhan sepenuhnya oleh pemilik |
 
 ## E. Belum dibangun (ringkas; rinci di [05](05-BACKLOG-DAN-TINDAK-LANJUT.md))
 
