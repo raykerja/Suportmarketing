@@ -66,6 +66,7 @@ form label, .client-filters label { width: 100%; }
 .tabs-main button { font-size: 20px; }
 .menu-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 .sub-tabs .menu-icon { display: none; }
+.sub-tabs .label-short { display: none; }
 @media (max-width: 760px) {
   .tabs-main { flex-direction: column; flex-wrap: nowrap; }
   .tabs-main button { width: 100%; text-align: center; }
@@ -94,10 +95,14 @@ button#mobile-menu-toggle:hover { filter: none; }
   .mobile-drawer-item { display: flex; align-items: center; gap: 14px; width: 100%; border: none; border-bottom: 1px solid var(--ray-line); border-radius: 0; background: none; padding: 16px; font-size: 16px; font-weight: 700; color: var(--ray-navy); text-align: left; }
   .mobile-drawer-item .menu-icon { color: var(--ray-blue); }
   .mobile-drawer-item.active { background: var(--ray-blue-pale); color: var(--ray-blue); }
-  .sub-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; margin: 0; display: flex; flex-wrap: nowrap; gap: 2px; background: #fff; border-top: 1px solid var(--ray-line); box-shadow: 0 -6px 18px rgba(14,27,46,.08); padding: 6px 4px max(6px, env(safe-area-inset-bottom)); }
-  .sub-tabs button { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; color: var(--ray-muted); font-size: 10.5px; font-weight: 700; padding: 6px 2px; white-space: normal; line-height: 1.2; }
-  .sub-tabs .menu-icon { display: block; width: 21px; height: 21px; }
-  .sub-tabs button.active { background: none; color: var(--ray-blue); }
+  .sub-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; margin: 0; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 0; background: linear-gradient(115deg, #14204a, #071c45); border-top: 1px solid rgba(255,255,255,.08); box-shadow: 0 -8px 22px rgba(8,16,30,.3); padding: 7px 2px max(7px, env(safe-area-inset-bottom)); }
+  .sub-tabs button { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: none; border-right: 1px solid rgba(255,255,255,.14); color: rgba(255,255,255,.62); font-size: 10.5px; font-weight: 700; padding: 7px 2px; white-space: normal; line-height: 1.2; border-radius: 0; }
+  .sub-tabs button:last-child { border-right: none; }
+  .sub-tabs .label-full { display: none; }
+  .sub-tabs .label-short { display: block; }
+  .sub-tabs .menu-icon { display: block; width: 21px; height: 21px; color: rgba(255,255,255,.78); }
+  .sub-tabs button.active { background: none; color: #fff; }
+  .sub-tabs button.active .menu-icon { color: var(--ray-gold); }
 }
 @media (min-width: 761px) {
   #mobile-drawer, #mobile-drawer-backdrop { display: none !important; }
