@@ -64,13 +64,44 @@ form label, .client-filters label { width: 100%; }
 .sub-tabs { margin-top: -6px; }
 .sub-tabs button, .db-switch button { font-size: 15px; }
 .tabs-main button { font-size: 20px; }
+.menu-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+.sub-tabs .menu-icon { display: none; }
 @media (max-width: 760px) {
   .tabs-main { flex-direction: column; flex-wrap: nowrap; }
   .tabs-main button { width: 100%; text-align: center; }
-  .sub-tabs, .db-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .sub-tabs button, .db-switch button { width: 100%; text-align: center; white-space: normal; }
+  .db-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .db-switch button { width: 100%; text-align: center; white-space: normal; }
 }
 #active-client-menu.active, #sales-menu.active, #pipeline-menu.active { background: var(--ray-blue); border-color: var(--ray-blue); color: #fff; }
+
+/* Menu HP: logo buka drawer, sub-menu jadi bilah bawah. Tampilan web di atas 760px tidak berubah. */
+button#mobile-menu-toggle { background: none; border: none; padding: 0; margin: 0; font: inherit; font-weight: 400; color: inherit; text-align: left; cursor: default; }
+button#mobile-menu-toggle:hover { filter: none; }
+.mobile-drawer-backdrop, .mobile-drawer { display: none; }
+@media (max-width: 760px) {
+  main { padding-bottom: 86px; }
+  .tabs-main { display: none; }
+  #mobile-menu-toggle { cursor: pointer; }
+  .mobile-drawer-backdrop:not([hidden]) { display: block; position: fixed; inset: 0; background: rgba(8,16,30,.5); z-index: 50; }
+  .mobile-drawer { position: fixed; top: 0; left: 0; bottom: 0; z-index: 51; width: min(82vw, 320px); background: #fff; box-shadow: 4px 0 24px rgba(8,16,30,.25); flex-direction: column; transform: translateX(-100%); transition: transform .2s ease; overflow-y: auto; }
+  .mobile-drawer:not([hidden]) { display: flex; }
+  .mobile-drawer.open { transform: translateX(0); }
+  .mobile-drawer-head { display: flex; align-items: center; gap: 10px; padding: 16px; border-bottom: 1px solid var(--ray-line); }
+  .mobile-drawer-head div { flex: 1; min-width: 0; }
+  .mobile-drawer-head small { display: block; color: var(--ray-muted); font-size: 11px; }
+  #mobile-drawer-close { flex: none; width: 36px; height: 36px; min-height: 0; padding: 0; display: grid; place-items: center; border-radius: 999px; background: #f3f6fb; border: none; }
+  #mobile-drawer-close .menu-icon { width: 18px; height: 18px; }
+  .mobile-drawer-item { display: flex; align-items: center; gap: 14px; width: 100%; border: none; border-bottom: 1px solid var(--ray-line); border-radius: 0; background: none; padding: 16px; font-size: 16px; font-weight: 700; color: var(--ray-navy); text-align: left; }
+  .mobile-drawer-item .menu-icon { color: var(--ray-blue); }
+  .mobile-drawer-item.active { background: var(--ray-blue-pale); color: var(--ray-blue); }
+  .sub-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; margin: 0; display: flex; flex-wrap: nowrap; gap: 2px; background: #fff; border-top: 1px solid var(--ray-line); box-shadow: 0 -6px 18px rgba(14,27,46,.08); padding: 6px 4px max(6px, env(safe-area-inset-bottom)); }
+  .sub-tabs button { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: none; border: none; color: var(--ray-muted); font-size: 10.5px; font-weight: 700; padding: 6px 2px; white-space: normal; line-height: 1.2; }
+  .sub-tabs .menu-icon { display: block; width: 21px; height: 21px; }
+  .sub-tabs button.active { background: none; color: var(--ray-blue); }
+}
+@media (min-width: 761px) {
+  #mobile-drawer, #mobile-drawer-backdrop { display: none !important; }
+}
 .legacy-letter-layout summary { cursor: pointer; color: var(--ray-blue); font-weight: 700; padding: 12px 0; }
 .legacy-letter-layout .columns { margin-top: 8px; }
 .manual-offer-card { margin: 8px 0 16px; }

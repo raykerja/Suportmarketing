@@ -100,7 +100,8 @@ function showWorkspace(user) {
   $('#open-settings').hidden = !user || invitePending;
   $('#logout').hidden = !user || invitePending;
   if (user && !invitePending) {
-    activateTab(history.state?.marketingTab || 'visits', false);
+    if (isMobileViewport() && !history.state?.marketingTab) showMobileHome();
+    else activateTab(history.state?.marketingTab || 'visits', false);
     loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); loadExpenses(); loadExpenseRecap(); loadActiveClients().then(() => { loadPicVisits(); loadClientOffers(); });
   }
   else {
@@ -147,6 +148,17 @@ const salesTabs = new Set(['visits', 'progress']);
 const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation']);
 const databaseTabs = new Set(['leads']);
 const expenseTabs = new Set(['expenses']);
+const isMobileViewport = () => window.matchMedia('(max-width: 760px)').matches;
+function showMobileHome() {
+  document.querySelectorAll('.panel').forEach((panel) => { panel.hidden = true; });
+  document.querySelectorAll('.sub-tabs').forEach((nav) => { nav.hidden = true; });
+  document.querySelectorAll('[data-tab].active').forEach((button) => button.classList.remove('active'));
+  ['active-client-menu', 'sales-menu', 'pipeline-menu', 'database-menu', 'expense-menu'].forEach((id) => {
+    $('#' + id).classList.remove('active'); $('#' + id).setAttribute('aria-expanded', 'false');
+  });
+  ['mobile-menu-active-client', 'mobile-menu-pipeline', 'mobile-menu-sales', 'mobile-menu-database', 'mobile-menu-expense']
+    .forEach((id) => $('#' + id).classList.remove('active'));
+}
 function activateTab(tab, record = true) {
   if (!$('#' + tab)?.classList.contains('panel')) tab = 'visits';
   const current = document.querySelector('.panel:not([hidden])')?.id;
@@ -164,21 +176,26 @@ function activateTab(tab, record = true) {
   $('#active-client-tabs').hidden = !inActiveClient;
   $('#active-client-menu').classList.toggle('active', inActiveClient);
   $('#active-client-menu').setAttribute('aria-expanded', String(inActiveClient));
+  $('#mobile-menu-active-client').classList.toggle('active', inActiveClient);
   const inSales = salesTabs.has(tab);
   $('#sales-tabs').hidden = !inSales;
   $('#sales-menu').classList.toggle('active', inSales);
   $('#sales-menu').setAttribute('aria-expanded', String(inSales));
+  $('#mobile-menu-sales').classList.toggle('active', inSales);
   const inPipeline = pipelineTabs.has(tab);
   $('#pipeline-tabs').hidden = !inPipeline;
   $('#pipeline-menu').classList.toggle('active', inPipeline);
   $('#pipeline-menu').setAttribute('aria-expanded', String(inPipeline));
+  $('#mobile-menu-pipeline').classList.toggle('active', inPipeline);
   const inDatabase = databaseTabs.has(tab);
   $('#database-tabs').hidden = !inDatabase;
   $('#database-menu').classList.toggle('active', inDatabase);
   $('#database-menu').setAttribute('aria-expanded', String(inDatabase));
+  $('#mobile-menu-database').classList.toggle('active', inDatabase);
   const inExpense = expenseTabs.has(tab);
   $('#expense-menu').classList.toggle('active', inExpense);
   $('#expense-menu').setAttribute('aria-expanded', String(inExpense));
+  $('#mobile-menu-expense').classList.toggle('active', inExpense);
   document.querySelectorAll('.panel').forEach((panel) => { panel.hidden = panel.id !== tab; });
   if (tab === 'review') loadLeads();
   if (tab === 'letters') { loadLeads(); loadOffers(); }
@@ -191,6 +208,29 @@ $('#sales-menu').addEventListener('click', () => activateTab('visits'));
 $('#pipeline-menu').addEventListener('click', () => activateTab('research'));
 $('#database-menu').addEventListener('click', () => activateTab('leads'));
 $('#expense-menu').addEventListener('click', () => activateTab('expenses'));
+
+function openMobileDrawer() {
+  $('#mobile-drawer-backdrop').hidden = false;
+  $('#mobile-drawer').hidden = false;
+  requestAnimationFrame(() => $('#mobile-drawer').classList.add('open'));
+  $('#mobile-menu-toggle').setAttribute('aria-expanded', 'true');
+}
+function closeMobileDrawer() {
+  $('#mobile-drawer').classList.remove('open');
+  $('#mobile-drawer-backdrop').hidden = true;
+  $('#mobile-menu-toggle').setAttribute('aria-expanded', 'false');
+  setTimeout(() => { if (!$('#mobile-drawer').classList.contains('open')) $('#mobile-drawer').hidden = true; }, 200);
+}
+$('#mobile-menu-toggle').addEventListener('click', openMobileDrawer);
+$('#mobile-drawer-close').addEventListener('click', closeMobileDrawer);
+$('#mobile-drawer-backdrop').addEventListener('click', closeMobileDrawer);
+document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#mobile-drawer').classList.contains('open')) closeMobileDrawer(); });
+$('#mobile-menu-active-client').addEventListener('click', () => { activateTab('clients'); closeMobileDrawer(); });
+$('#mobile-menu-pipeline').addEventListener('click', () => { activateTab('research'); closeMobileDrawer(); });
+$('#mobile-menu-sales').addEventListener('click', () => { activateTab('visits'); closeMobileDrawer(); });
+$('#mobile-menu-database').addEventListener('click', () => { activateTab('leads'); closeMobileDrawer(); });
+$('#mobile-menu-expense').addEventListener('click', () => { activateTab('expenses'); closeMobileDrawer(); });
+
 window.addEventListener('popstate', (event) => {
   if (currentUser && !invitePending) activateTab(event.state?.marketingTab || 'visits', false);
 });
