@@ -25,7 +25,7 @@
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
   <link rel="stylesheet" href="style.css?v=20261010-1">
-  <link rel="stylesheet" href="theme-ray.css?v=20261012-3">
+  <link rel="stylesheet" href="theme-ray.css?v=20261012-4">
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
@@ -59,13 +59,15 @@
   <div id="mobile-drawer-backdrop" class="mobile-drawer-backdrop" hidden></div>
   <nav id="mobile-drawer" class="mobile-drawer" aria-label="Menu utama" hidden>
     <div class="mobile-drawer-head"><img class="brand-logo" src="logo-ray.png" alt="Lambang RAY"><div><strong>RAY KERJA</strong><small>PT Ray Mitra Perkasa</small></div><button id="mobile-drawer-close" type="button" aria-label="Tutup menu"><svg class="menu-icon"><use href="#icon-close"></use></svg></button></div>
-    <button type="button" class="mobile-drawer-item" id="mobile-menu-home"><svg class="menu-icon"><use href="#icon-home"></use></svg><span>Beranda</span></button>
-    <button type="button" class="mobile-drawer-item" id="mobile-menu-active-client"><svg class="menu-icon"><use href="#icon-users"></use></svg><span>Client Lama</span></button>
-    <button type="button" class="mobile-drawer-item" id="mobile-menu-pipeline"><svg class="menu-icon"><use href="#icon-target"></use></svg><span>Target &amp; Penawaran</span></button>
-    <button type="button" class="mobile-drawer-item" id="mobile-menu-sales"><svg class="menu-icon"><use href="#icon-user-plus"></use></svg><span>Client Baru</span></button>
-    <button type="button" class="mobile-drawer-item" id="mobile-menu-database"><svg class="menu-icon"><use href="#icon-database"></use></svg><span>Database</span></button>
-    <button type="button" class="mobile-drawer-item" id="mobile-menu-rab"><svg class="menu-icon"><use href="#icon-sheet"></use></svg><span>Rekap RAB</span></button>
-    <button type="button" class="mobile-drawer-item" id="mobile-menu-expense"><svg class="menu-icon"><use href="#icon-wallet"></use></svg><span>Pengeluaran</span></button>
+    <div class="mobile-drawer-grid">
+      <button type="button" class="mobile-drawer-item" id="mobile-menu-home"><svg class="menu-icon"><use href="#icon-home"></use></svg><span>Beranda</span></button>
+      <button type="button" class="mobile-drawer-item" id="mobile-menu-active-client"><svg class="menu-icon"><use href="#icon-users"></use></svg><span>Client Lama</span></button>
+      <button type="button" class="mobile-drawer-item" id="mobile-menu-pipeline"><svg class="menu-icon"><use href="#icon-target"></use></svg><span>Target</span></button>
+      <button type="button" class="mobile-drawer-item" id="mobile-menu-sales"><svg class="menu-icon"><use href="#icon-user-plus"></use></svg><span>Client Baru</span></button>
+      <button type="button" class="mobile-drawer-item" id="mobile-menu-database"><svg class="menu-icon"><use href="#icon-database"></use></svg><span>Database</span></button>
+      <button type="button" class="mobile-drawer-item" id="mobile-menu-rab"><svg class="menu-icon"><use href="#icon-sheet"></use></svg><span>Rekap RAB</span></button>
+      <button type="button" class="mobile-drawer-item" id="mobile-menu-expense"><svg class="menu-icon"><use href="#icon-wallet"></use></svg><span>Pengeluaran</span></button>
+    </div>
   </nav>
   <main>
     <section id="login-panel" class="card login"><img class="login-logo" src="logo-ray.png" alt="Lambang RAY"><p class="eyebrow">AKSES TIM MARKETING</p><h1>Masuk ke Marketing</h1><p>Gunakan akun yang telah didaftarkan oleh admin.</p>
