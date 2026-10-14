@@ -1,3 +1,12 @@
+VERSION: 0.8.5 (foto Kunjungan PIC; sesi refresh otomatis; sinkron PIC Korlap/Admin)
+DATE: 2026-10-14
+
+ADDED: Foto kunjungan di menu 2 Kunjungan PIC, tahap "Lengkapi Detail" — unggah ke bucket marketing-visit-photos (path <uid>/pic-visits/<uuid>.ext, maks 10 MB), tombol "Lihat foto" di form dan riwayat; policy baru mengizinkan admin membaca foto milik akun lain.
+ADDED: invokeFn (app.js) kini memastikan sesi masih berlaku sebelum tiap panggilan Edge Function, dan otomatis refreshSession() + kirim ulang sekali bila sempat kena "Sesi tidak valid" — mengatasi staf yang mengisi form lama (mis. Buat Penawaran Manual) lalu token akses sudah kedaluwarsa saat klik Generate.
+CHANGED: Pemetaan PIC Korlap/Admin 152 dari 274 client (yang punya PIC Korlap) disinkronkan ke "Data Client Penawaran 2027 - Per PIC Korlap.xlsx" (105 client berubah korlap_raw/admin_raw + marketing_client_pics). 3 akun portal baru dibuat (PAK FERI, YAYA, NIKEN, password awal sama untuk semua — minta staf ganti lewat Ganti Kata Sandi); beberapa alias yang sebelumnya salah dibuatkan akun baru/salah tersambung dikoreksi ke akun existing: BAYOE→Bayu Brawarso, IZAR→Sohib (Shohib Izzar Muhammad), HARYANTO→Haryanto, KOKOH→Denis Setiawan, ADI(korlap, kode "BROWN")→Adi Putra Kristiawan. Diterapkan lewat Management API (python, token ~/.supabase_suportmarket_apikey_key), diverifikasi login sungguhan + query RLS — bukan lewat scripts/apply_migration.py karena ini perubahan data (UPDATE/INSERT baris), bukan migrasi skema.
+MIGRATIONS: 20261014_pic_visit_photo (policy storage.objects saja, tidak ada perubahan skema tabel).
+NOT TESTED: Upload foto PIC Visit dan retry sesi belum dicoba manusia di produksi setelah dipush — lihat docs/02-STATUS-PROGRES.md.
+
 VERSION: 0.8.4 (menu Rekap RAB; menu HP drawer+bilah bawah)
 DATE: 2026-10-12
 

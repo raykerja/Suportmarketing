@@ -1,6 +1,6 @@
 # Status & progres — sampai mana
 
-**Diperbarui: 12 Oktober 2026.** Perbarui dokumen ini setiap kali menyelesaikan sesuatu. Cek keadaan nyata dengan `python3 scripts/status_check.py`.
+**Diperbarui: 14 Oktober 2026.** Perbarui dokumen ini setiap kali menyelesaikan sesuatu. Cek keadaan nyata dengan `python3 scripts/status_check.py`.
 
 Arti penanda:
 - ✅ **Terbukti** — sudah di produksi dan diuji di sistem tujuan (database/RLS atau server) *dan* alurnya jalan.
@@ -24,7 +24,7 @@ Arti penanda:
 | Fitur | Status | Catatan |
 | --- | --- | --- |
 | Impor 274 client dari sheet + 551 relasi PIC | ✅ | `scripts/import_clients.py` (sekali pakai, sudah dijalankan) |
-| Pemetaan PIC → akun (24 alias) | ✅ / ⬜ | 20 terpetakan; **4 PIC belum punya akun** — dipetakan lewat menu "Pemetaan PIC → akun" saat akunnya dibuat |
+| Pemetaan PIC → akun (34 alias) | ✅ / ⬜ | 30 terpetakan; **4 PIC belum punya akun** (DARYANTO, MIDAN, RIDWAN, WAHYUDIONO) — dipetakan lewat menu "Pemetaan PIC → akun" saat akunnya dibuat. 14 Okt: disinkronkan ke "Data Client Penawaran 2027 - Per PIC Korlap.xlsx" (152 dari 274 client, lihat baris korlap_raw/admin_raw) — 3 akun baru dibuat (PAK FERI, YAYA, NIKEN), beberapa alias dikoreksi ke akun existing yang sudah ada sebelumnya (BAYOE→Bayu Brawarso, IZAR→Sohib, HARYANTO→Haryanto, KOKOH→Denis) |
 | Aturan lihat: staf hanya client PIC-nya, admin semua | ✅ | Diuji 19 akun, jumlah cocok dengan hitungan independen |
 | Menu 1 sebagai **tabel** (cari/filter cabang, kategori, PIC, kontrak, status, kunjungan) | 🟡 | Desktop & HP diuji dengan mock |
 | Tautan WhatsApp (wa.me) dari nomor HP, nomor ganda dipisah | 🟡 | 212/212 nomor terbaca |
@@ -49,7 +49,7 @@ Arti penanda:
 
 | Fitur | Status | Catatan |
 | --- | --- | --- |
-| Menu 2 **PIC Visit** tersimpan ke database (dua tahap) | 🟡 | Foto **disembunyikan** (belum didukung). Tabel produksi masih 0 baris |
+| Menu 2 **PIC Visit** tersimpan ke database (dua tahap) | 🟡 | 14 Okt: foto kunjungan ditambahkan di tahap 2 (Lengkapi Detail) — unggah ke bucket `marketing-visit-photos`, path `<uid>/pic-visits/...`, tombol "Lihat foto" di riwayat & form (admin bisa lihat punya staf lain lewat policy baru). Migrasi `20261014_pic_visit_photo.sql` sudah diterapkan ke produksi. **Belum dicoba manusia (upload foto sungguhan dari HP) setelah dipush** |
 | Menu 3 **Monitoring & Tindaklanjut** (progres penawaran ulang, pengingat, riwayat) | 🟡 | Daftar "kontrak segera berakhir tanpa penawaran" butuh tanggal kontrak terisi. Tabel produksi masih 0 baris |
 | PIC Visit yang mengisi status penawaran otomatis tercatat ke Monitoring | 🟡 | |
 | Cadangan PIC Visit & penawaran ke Sheet/Drive per staf | ⬜ | Hanya di Supabase |
@@ -85,7 +85,7 @@ Arti penanda:
 
 ## E. Belum dibangun (ringkas; rinci di [05](05-BACKLOG-DAN-TINDAK-LANJUT.md))
 
-⬜ Impor massal tanggal kontrak · ⬜ Cadangan Drive untuk PIC Visit/penawaran · ⬜ Foto di PIC Visit · ⬜ Jalur Drive → Supabase (edit di Sheet staf sebagai versi terpisah) · ⬜ Retry otomatis terjadwal untuk cadangan yang gagal · ⬜ Tingkat super admin berbeda dari admin · ⬜ Pengingat otomatis (Telegram/WhatsApp) untuk follow-up dan kontrak · ⬜ AI bisa menyebut daftar nama client menurut kriteria · ⬜ Pemindahan surat/riset/penawaran dari n8n (hanya bila diminta pemilik).
+⬜ Impor massal tanggal kontrak · ⬜ Cadangan Drive untuk PIC Visit/penawaran · ⬜ Jalur Drive → Supabase (edit di Sheet staf sebagai versi terpisah) · ⬜ Retry otomatis terjadwal untuk cadangan yang gagal · ⬜ Tingkat super admin berbeda dari admin · ⬜ Pengingat otomatis (Telegram/WhatsApp) untuk follow-up dan kontrak · ⬜ AI bisa menyebut daftar nama client menurut kriteria · ⬜ Pemindahan surat/riset/penawaran dari n8n (hanya bila diminta pemilik).
 
 ## F. Cara membaca keluaran `scripts/status_check.py`
 

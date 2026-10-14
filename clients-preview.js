@@ -143,7 +143,7 @@
     $('#pic-visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>' + picVisits.map((row) => `<option value="${escapeHtml(row.id)}">${escapeHtml(label(row))} · ${escapeHtml(new Date(row.at).toLocaleString('id-ID'))}</option>`).join('');
     if (picVisits.some((row) => row.id === savedValue)) $('#pic-visit-saved').value = savedValue;
     $('#pic-visit-list').innerHTML = picVisits.length ? picVisits.map((row) => `
-      <div class="item"><strong>${escapeHtml(label(row))}</strong><small>${escapeHtml(new Date(row.at).toLocaleString('id-ID'))} · ${escapeHtml(row.contact)} · ${escapeHtml(visitClient(row.clientId)?.owner || '')}</small><p>${escapeHtml(row.note || 'Detail belum dilengkapi.')}</p><span class="badge ${row.visitStage === 'initial' ? 'processing' : ''}">${row.visitStage === 'initial' ? 'Tahap 1 · perlu detail' : 'Detail terisi'}</span>${row.mine === false ? '' : `<div><button type="button" data-open-pic-visit="${escapeHtml(row.id)}">${row.visitStage === 'initial' ? 'Lengkapi detail' : 'Buka / ubah'}</button></div>`}</div>`).join('') : `<p class="hint">${picVisitsError || 'Belum ada Kunjungan PIC. Catat tahap 1 setelah bertemu PIC client.'}</p>`;
+      <div class="item"><strong>${escapeHtml(label(row))}</strong><small>${escapeHtml(new Date(row.at).toLocaleString('id-ID'))} · ${escapeHtml(row.contact)} · ${escapeHtml(visitClient(row.clientId)?.owner || '')}</small><p>${escapeHtml(row.note || 'Detail belum dilengkapi.')}</p><span class="badge ${row.visitStage === 'initial' ? 'processing' : ''}">${row.visitStage === 'initial' ? 'Tahap 1 · perlu detail' : 'Detail terisi'}</span><div>${row.mine === false ? '' : `<button type="button" data-open-pic-visit="${escapeHtml(row.id)}">${row.visitStage === 'initial' ? 'Lengkapi detail' : 'Buka / ubah'}</button>`}${row.photoPath ? `<button type="button" class="pic-visit-photo-view" data-path="${escapeHtml(row.photoPath)}">Lihat foto</button>` : ''}</div></div>`).join('') : `<p class="hint">${picVisitsError || 'Belum ada Kunjungan PIC. Catat tahap 1 setelah bertemu PIC client.'}</p>`;
   }
   function renderAll() {
     renderPicVisits();
@@ -173,6 +173,15 @@
     salesVisitsLoaded = true;
     renderActivityDashboard();
   });
+  function photoNoteHtml(path) {
+    return path ? `Foto tersimpan. Pilih foto baru untuk mengganti. <button type="button" class="pic-visit-photo-view" data-path="${escapeHtml(path)}">Lihat foto</button>` : '';
+  }
+  async function openPicVisitPhoto(path) {
+    if (!window.marketingApi?.getPicVisitPhotoUrl) { setStatus('#pic-visit-status', 'Aplikasi belum siap. Muat ulang halaman.', true); return; }
+    const result = await window.marketingApi.getPicVisitPhotoUrl(path);
+    if (result.url) window.open(result.url, '_blank', 'noopener');
+    else setStatus('#pic-visit-status', 'Gagal membuka foto: ' + result.error, true);
+  }
   function fillPicVisit(row) {
     picClientId = row.clientId;
     renderAll();
@@ -197,6 +206,7 @@
     $('#pic-visit-title').textContent = 'Lengkapi Kunjungan PIC';
     $('#new-pic-visit').hidden = false;
     $('#pic-visit-timestamp').textContent = `Tercatat: ${new Date(row.at).toLocaleString('id-ID')}`;
+    $('#pic-visit-photo-note').innerHTML = photoNoteHtml(row.photoPath);
     openPicVisitStep('2');
     document.querySelector('[data-tab="pic-visits"]').click();
   }
@@ -277,8 +287,14 @@
     if (row) fillPicVisit(row);
   });
   $('#pic-visit-list').addEventListener('click', (event) => {
+    const photoBtn = event.target.closest('.pic-visit-photo-view');
+    if (photoBtn) { openPicVisitPhoto(photoBtn.dataset.path); return; }
     const row = picVisits.find((item) => item.id === event.target.closest('[data-open-pic-visit]')?.dataset.openPicVisit);
     if (row) fillPicVisit(row);
+  });
+  $('#pic-visit-photo-note').addEventListener('click', (event) => {
+    const photoBtn = event.target.closest('.pic-visit-photo-view');
+    if (photoBtn) openPicVisitPhoto(photoBtn.dataset.path);
   });
   $('#add-pic-visit-service').addEventListener('click', () => addPicVisitService());
   $('#pic-visit-services').addEventListener('click', (event) => {
@@ -320,22 +336,30 @@
         need: $('#pic-visit-need').value.trim(), services, note, important: $('#pic-visit-important').value.trim(),
         offerStage, next: offerStage && isOpen({ stage: offerStage }) ? next : '' } };
     }
+    let photoWarning = '';
+    const photoFile = $('#pic-visit-photo').files?.[0];
+    if (photoFile) {
+      if (!window.marketingApi?.uploadPicVisitPhoto) { setStatus('#pic-visit-status', 'Aplikasi belum siap. Muat ulang halaman.', true); return; }
+      const uploaded = await window.marketingApi.uploadPicVisitPhoto(photoFile);
+      if (uploaded.error) photoWarning = 'Foto gagal diunggah: ' + uploaded.error + '. ';
+      else payload.data.photoPath = uploaded.path;
+    }
     picVisitSaving = true;
     setStatus('#pic-visit-status', 'Menyimpan…');
     const result = await window.marketingApi.savePicVisit(payload);
     picVisitSaving = false;
-    if (result.error) { setStatus('#pic-visit-status', 'Gagal menyimpan: ' + result.error, true); return; }
+    if (result.error) { setStatus('#pic-visit-status', photoWarning + 'Gagal menyimpan: ' + result.error, true); return; }
+    $('#pic-visit-photo').value = '';
     picClientId = payload.clientId;
     renderAll();
     $('#pic-visit-saved').value = result.id;
     $('#pic-visit-timestamp').textContent = `Tercatat: ${new Date(result.at).toLocaleString('id-ID')}`;
     $('#new-pic-visit').hidden = false;
     if (activePicVisitStep === '1') {
-      $('#pic-visit-photo').value = '';
       openPicVisitStep('2');
       setStatus('#pic-visit-status', 'Tahap 1 tersimpan. Lengkapi detail pada record yang sama.');
     } else {
-      setStatus('#pic-visit-status', 'Detail Kunjungan PIC tersimpan.');
+      setStatus('#pic-visit-status', photoWarning + 'Detail Kunjungan PIC tersimpan.', !!photoWarning);
       const d = payload.data;
       const current = offers.get(payload.clientId);
       const changed = d.offerStage && !(current && current.stage === d.offerStage && (current.next_follow_up || '') === (d.next || '') && current.last_note === `Kunjungan PIC: ${d.note}`);

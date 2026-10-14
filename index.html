@@ -163,7 +163,7 @@
         </form></dialog>
       </section>
       <section id="pic-visits" class="panel" hidden>
-        <div class="preview-note"><strong>DATA PRODUKSI</strong><span>Kunjungan PIC tersimpan di database untuk client yang PIC-nya akun ini. Foto belum didukung. Monitoring &amp; Tindaklanjut (menu 3) masih simulasi.</span></div>
+        <div class="preview-note"><strong>DATA PRODUKSI</strong><span>Kunjungan PIC tersimpan di database untuk client yang PIC-nya akun ini. Monitoring &amp; Tindaklanjut (menu 3) masih simulasi.</span></div>
         <div class="visit-layout">
           <div class="card"><div class="section-head"><div><p class="eyebrow">KUNJUNGAN PIC RMP</p><h2 id="pic-visit-title">Catat Kunjungan PIC</h2></div><button id="new-pic-visit" type="button" hidden>Entri baru</button></div><p class="hint">Pilih klien aktif, catat pertemuan di lokasi, lalu lengkapi respons dan peluang penawaran ulang.</p>
             <form id="pic-visit-form" novalidate>
@@ -173,11 +173,11 @@
                 <label>Klien aktif <span class="required">*</span><select id="pic-visit-client" required><option value="">Pilih klien aktif</option></select></label><p id="pic-visit-owner" class="hint"></p>
                 <label>Kategori <span class="required">*</span><select id="pic-visit-category" required><option value="">Pilih kategori</option><option>Swasta</option><option>Pemerintah</option><option>Hotel</option><option>Pabrik</option><option>Rumah Sakit</option><option>Pendidikan</option><option>Lainnya</option></select></label>
                 <div class="form-grid"><label>Nama PIC klien yang ditemui <span class="required">*</span><input id="pic-visit-contact" maxlength="150" required></label><label>Jabatan PIC klien <span class="required">*</span><input id="pic-visit-role" maxlength="100" required></label></div>
-                <label hidden>Foto kunjungan <small>Belum didukung</small><input id="pic-visit-photo" type="file" accept="image/*" capture="environment"></label><p id="pic-visit-photo-note" class="hint"></p>
                 <label>Koordinat kunjungan <small>Opsional; dapat diisi manual</small><input id="pic-visit-coordinates" maxlength="100" placeholder="Contoh: -6.9667, 110.4167"></label><button id="get-pic-visit-location" type="button">Ambil lokasi HP</button><p id="pic-visit-location-status" class="hint" role="status"></p>
               </fieldset></section>
               <section id="pic-visit-step-2" class="visit-step" data-pic-visit-panel="2" hidden><fieldset><legend class="sr-only">Lengkapi detail Kunjungan PIC</legend>
                 <label>Pilih Kunjungan PIC yang sudah dicatat <span class="required">*</span><select id="pic-visit-saved"><option value="">Pilih kunjungan</option></select></label>
+                <label>Foto kunjungan <small>Ambil dengan kamera HP atau pilih dari galeri</small><input id="pic-visit-photo" type="file" accept="image/*" capture="environment"></label><p id="pic-visit-photo-note" class="hint"></p>
                 <label>Alamat lokasi kunjungan<input id="pic-visit-address" maxlength="500"></label>
                 <div class="form-grid"><label>Telepon PIC klien<input id="pic-visit-phone" type="tel" maxlength="50"></label><label>Telepon perusahaan / instansi<input id="pic-visit-company-phone" type="tel" maxlength="50"></label></div>
                 <label>Respons klien <span class="required">*</span><select id="pic-visit-response"><option value="">Pilih respons</option><option>Baik</option><option>Perlu tindak lanjut</option><option>Menolak</option><option>Belum bertemu PIC</option><option>Lainnya</option></select></label>

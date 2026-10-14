@@ -13,9 +13,18 @@ const date = (v) => v ? new Date(v).toLocaleString('id-ID', { dateStyle: 'medium
 const client = cfg.supabaseUrl && cfg.supabasePublishableKey
   ? createClient(cfg.supabaseUrl, cfg.supabasePublishableKey) : null;
 async function invokeFn(name, opts) {
-  const result = await client.functions.invoke(name, opts);
-  if (result.error?.context?.json) {
-    try { const body = await result.error.context.json(); if (body?.error) result.error.message = body.error; } catch {}
+  await client.auth.getSession();
+  const run = async () => {
+    const result = await client.functions.invoke(name, opts);
+    if (result.error?.context?.json) {
+      try { const body = await result.error.context.json(); if (body?.error) result.error.message = body.error; } catch {}
+    }
+    return result;
+  };
+  let result = await run();
+  if (result.error && /sesi tidak valid|login diperlukan/i.test(result.error.message || '')) {
+    const { error: refreshError } = await client.auth.refreshSession();
+    if (!refreshError) result = await run();
   }
   return result;
 }
@@ -835,6 +844,20 @@ window.marketingApi = {
     if (error) return { error: error.message };
     await loadPicVisits();
     return { id: saved.id, at: saved.created_at };
+  },
+  async uploadPicVisitPhoto(file) {
+    if (!client || !currentUser) return { error: 'Belum login.' };
+    if (!file) return { error: 'Tidak ada file.' };
+    if (file.size > 10 * 1024 * 1024) return { error: 'Foto lebih dari 10 MB. Pilih foto yang lebih kecil.' };
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
+    const path = `${currentUser.id}/pic-visits/${crypto.randomUUID()}.${ext}`;
+    const upload = await client.storage.from('marketing-visit-photos').upload(path, file, { contentType: file.type || 'image/jpeg' });
+    return upload.error ? { error: upload.error.message } : { path };
+  },
+  async getPicVisitPhotoUrl(path) {
+    if (!client || !currentUser) return { error: 'Belum login.' };
+    const { data, error } = await client.storage.from('marketing-visit-photos').createSignedUrl(path, 600);
+    return error ? { error: error.message } : { url: data.signedUrl };
   }
 };
 
@@ -1452,7 +1475,8 @@ async function loadOffers() {
   offerCache = data || [];
   const recent = (row) => row.status === 'processing' && Date.now() - new Date(row.updated_at).getTime() < 600000;
   const previewUrl = (url) => url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/preview') : '';
-  const offerListHtml = offerCache.length ? offerCache.map((row) => `<div class="item"><strong>${esc(row.client_name)}</strong><small>${esc(date(row.created_at))} · UMK Rp${Number(row.umk).toLocaleString('id-ID')}${row.gaji_pokok ? ` · Gaji pokok Rp${Number(row.gaji_pokok).toLocaleString('id-ID')}` : ''} · ${esc(row.nomor_surat || 'Nomor diproses')}</small><div><span class="badge ${row.status === 'error' ? 'error' : row.status === 'processing' || row.status === 'partial' ? 'processing' : ''}">${esc(row.status.toUpperCase())}</span></div><div class="offer-links">${row.doc_file_url ? `<button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrl(row.doc_file_url))}" data-preview-open="${esc(row.doc_file_url)}" data-preview-title="Surat pengantar · ${esc(row.client_name)}">Preview Surat</button>` : ''}${row.rab_file_url ? `<button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrl(row.rab_file_url))}" data-preview-open="${esc(row.rab_file_url)}" data-preview-title="RAB · ${esc(row.client_name)}">Preview RAB</button>` : ''}</div>${row.error ? `<small class="error">${esc(row.error)}</small>` : row.status === 'processing' && !recent(row) ? '<small class="error">Proses lebih dari 10 menit. Muat ulang atau minta admin memeriksa eksekusi n8n.</small>' : ''}</div>`).join('') : '<p class="hint">Belum ada dokumen penawaran.</p>';
+  const pdfUrl = (url) => url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/export?format=pdf') : '';
+  const offerListHtml = offerCache.length ? offerCache.map((row) => `<div class="item"><strong>${esc(row.client_name)}</strong><small>${esc(date(row.created_at))} · UMK Rp${Number(row.umk).toLocaleString('id-ID')}${row.gaji_pokok ? ` · Gaji pokok Rp${Number(row.gaji_pokok).toLocaleString('id-ID')}` : ''} · ${esc(row.nomor_surat || 'Nomor diproses')}</small><div><span class="badge ${row.status === 'error' ? 'error' : row.status === 'processing' || row.status === 'partial' ? 'processing' : ''}">${esc(row.status.toUpperCase())}</span></div><div class="offer-links">${row.doc_file_url ? `<button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrl(row.doc_file_url))}" data-preview-open="${esc(row.doc_file_url)}" data-preview-title="Surat pengantar · ${esc(row.client_name)}">Preview Surat</button><a href="${esc(pdfUrl(row.doc_file_url))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF Surat</a>` : ''}${row.rab_file_url ? `<button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrl(row.rab_file_url))}" data-preview-open="${esc(row.rab_file_url)}" data-preview-title="RAB · ${esc(row.client_name)}">Preview RAB</button><a href="${esc(pdfUrl(row.rab_file_url))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF RAB</a>` : ''}</div>${row.error ? `<small class="error">${esc(row.error)}</small>` : row.status === 'processing' && !recent(row) ? '<small class="error">Proses lebih dari 10 menit. Muat ulang atau minta admin memeriksa eksekusi n8n.</small>' : ''}</div>`).join('') : '<p class="hint">Belum ada dokumen penawaran.</p>';
   $('#offer-list').innerHTML = offerListHtml;
   if ($('#offer-list-manual')) $('#offer-list-manual').innerHTML = offerListHtml;
   if (offerCache.some(recent) && !offerPollTimer) offerPollTimer = setInterval(loadOffers, 5000);
