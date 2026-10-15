@@ -972,25 +972,61 @@ $('#visit-form').addEventListener('submit', async (event) => {
 });
 resetVisitForm();
 
-function addExpensePhotoRow() {
-  const rows = $('#expense-photo-rows');
+const EXPENSE_TYPES_HTML = '<option value="">Pilih Jenis...</option>' +
+  ['Transportasi (BBM/Tol/Parkir)', 'Akomodasi/Penginapan', 'Konsumsi', 'Komunikasi (Pulsa/Internet)', 'Cetak &amp; Dokumen', 'Entertain Klien', 'Lain-lain']
+    .map((t) => `<option>${t}</option>`).join('');
+function addExpenseTxPhotoRow(block) {
+  const rows = block.querySelector('[data-tx-photo-rows]');
   if (rows.children.length >= 3) return;
   const row = document.createElement('div'); row.className = 'visit-service';
-  row.innerHTML = '<label>Foto<input type="file" accept="image/*" capture="environment" data-expense-photo></label>' +
-    (rows.children.length ? '<button type="button" data-remove-expense-photo aria-label="Hapus foto">Hapus</button>' : '');
+  row.innerHTML = '<label>Foto<input type="file" accept="image/*" capture="environment" data-tx-photo></label>' +
+    (rows.children.length ? '<button type="button" data-remove-tx-photo aria-label="Hapus foto">Hapus</button>' : '');
   rows.appendChild(row);
-  $('#add-expense-photo').hidden = rows.children.length >= 3;
+  block.querySelector('[data-tx-add-photo]').hidden = rows.children.length >= 3;
 }
-$('#add-expense-photo').addEventListener('click', addExpensePhotoRow);
-$('#expense-photo-rows').addEventListener('click', (event) => {
-  if (!event.target.closest('[data-remove-expense-photo]')) return;
-  event.target.closest('.visit-service').remove();
-  $('#add-expense-photo').hidden = $('#expense-photo-rows').children.length >= 3;
+function renumberExpenseTx() {
+  const blocks = Array.from($('#expense-transactions').children);
+  blocks.forEach((block, i) => {
+    block.querySelector('[data-tx-title]').textContent = `Transaksi ${i + 1}`;
+    block.querySelector('[data-remove-tx]').hidden = blocks.length <= 1;
+  });
+}
+function addExpenseTransaction() {
+  const block = document.createElement('div');
+  block.className = 'item'; block.dataset.expenseTx = '';
+  block.innerHTML = `<div class="section-head"><h3 data-tx-title></h3><button type="button" data-remove-tx hidden>Hapus transaksi</button></div>
+    <label>Tanggal Realisasi <span class="required">*</span><input type="date" data-tx-date required></label>
+    <label>Jenis Pengeluaran <span class="required">*</span><select data-tx-type required>${EXPENSE_TYPES_HTML}</select></label>
+    <label>Nominal (Rp) <span class="required">*</span><input type="text" inputmode="numeric" autocomplete="off" data-tx-amount required placeholder="Contoh: 50.000"></label>
+    <div><strong>Foto Bukti (Max 3)</strong><small> Ambil dengan kamera HP atau pilih dari galeri</small>
+      <div class="visit-services" data-tx-photo-rows></div>
+      <button type="button" data-tx-add-photo>+ Tambah Foto Lainnya</button>
+      <p class="hint">Maksimal 3 foto, masing-masing &le; 10 MB.</p>
+    </div>`;
+  $('#expense-transactions').appendChild(block);
+  block.querySelector('[data-tx-date]').value = localToday();
+  addExpenseTxPhotoRow(block);
+  renumberExpenseTx();
+}
+$('#add-expense-transaction').addEventListener('click', addExpenseTransaction);
+$('#expense-transactions').addEventListener('click', (event) => {
+  const addPhoto = event.target.closest('[data-tx-add-photo]');
+  if (addPhoto) { addExpenseTxPhotoRow(addPhoto.closest('[data-expense-tx]')); return; }
+  const removePhoto = event.target.closest('[data-remove-tx-photo]');
+  if (removePhoto) {
+    const block = removePhoto.closest('[data-expense-tx]');
+    removePhoto.closest('.visit-service').remove();
+    block.querySelector('[data-tx-add-photo]').hidden = block.querySelector('[data-tx-photo-rows]').children.length >= 3;
+    return;
+  }
+  const removeTx = event.target.closest('[data-remove-tx]');
+  if (removeTx) { removeTx.closest('[data-expense-tx]').remove(); renumberExpenseTx(); }
 });
 const digitsOnly = (v) => String(v || '').replace(/\D/g, '');
 const groupThousands = (v) => digitsOnly(v).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-$('#expense-amount').addEventListener('input', (event) => {
-  const field = event.target;
+$('#expense-transactions').addEventListener('input', (event) => {
+  const field = event.target.closest('[data-tx-amount]');
+  if (!field) return;
   const digitsBeforeCursor = digitsOnly(field.value.slice(0, field.selectionStart)).length;
   field.value = groupThousands(field.value);
   let seen = 0, pos = field.value.length;
@@ -1001,12 +1037,9 @@ $('#expense-amount').addEventListener('input', (event) => {
   field.setSelectionRange(pos, pos);
 });
 function resetExpenseForm() {
-  $('#expense-form').reset();
-  $('#expense-photo-rows').replaceChildren();
-  addExpensePhotoRow();
-  $('#add-expense-photo').hidden = false;
   $('#expense-name').value = memberLabel(currentMember);
-  $('#expense-date').value = localToday();
+  $('#expense-transactions').replaceChildren();
+  addExpenseTransaction();
   $('#expense-timestamp').textContent = `Waktu laporan: ${date(new Date().toISOString())} (otomatis saat disimpan)`;
   status('#expense-status', '');
 }
@@ -1027,33 +1060,43 @@ $('#refresh-expenses').addEventListener('click', loadExpenses);
 $('#expense-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!client || !currentUser) return;
-  const tanggal = $('#expense-date').value;
-  const jenis = $('#expense-type').value;
-  const nominal = Number(digitsOnly($('#expense-amount').value));
-  if (!tanggal || !jenis || !nominal || nominal <= 0) { status('#expense-status', 'Lengkapi tanggal, jenis pengeluaran, dan nominal.', true); return; }
-  if (nominal > 1000000000) { status('#expense-status', 'Nominal maksimal Rp 1.000.000.000.', true); return; }
+  const blocks = Array.from($('#expense-transactions').children);
+  const entries = [];
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i];
+    const tanggal = block.querySelector('[data-tx-date]').value;
+    const jenis = block.querySelector('[data-tx-type]').value;
+    const nominal = Number(digitsOnly(block.querySelector('[data-tx-amount]').value));
+    if (!tanggal || !jenis || !nominal || nominal <= 0) { status('#expense-status', `Lengkapi tanggal, jenis pengeluaran, dan nominal pada Transaksi ${i + 1}.`, true); return; }
+    if (nominal > 1000000000) { status('#expense-status', `Nominal Transaksi ${i + 1} maksimal Rp 1.000.000.000.`, true); return; }
+    const photos = Array.from(block.querySelectorAll('[data-tx-photo]')).filter((input) => input.files?.[0]).slice(0, 3);
+    entries.push({ tanggal, jenis, nominal, photos });
+  }
   const button = $('#save-expense'); button.disabled = true;
-  status('#expense-status', 'Menyimpan laporan…');
+  let photoWarning = '';
   try {
-    const { data, error } = await invokeFn('marketing', { body: { action: 'save_expense',
-      tanggal_realisasi: tanggal, jenis_pengeluaran: jenis, nominal } });
-    if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Gagal menyimpan laporan');
-    const expenseId = data.expense_id;
-    const photoInputs = Array.from(document.querySelectorAll('[data-expense-photo]')).filter((input) => input.files?.[0]).slice(0, 3);
-    let photoWarning = '';
-    for (const input of photoInputs) {
-      const photo = input.files[0];
-      if (photo.size > 10 * 1024 * 1024) { photoWarning = 'Salah satu foto lebih dari 10 MB dan dilewati.'; continue; }
-      const ext = (photo.name.split('.').pop() || 'jpg').toLowerCase();
-      const path = `${currentUser.id}/${expenseId}/${crypto.randomUUID()}.${ext}`;
-      const upload = await client.storage.from('marketing-expense-photos').upload(path, photo, { contentType: photo.type || 'image/jpeg' });
-      if (upload.error) { photoWarning = 'Foto gagal diunggah: ' + upload.error.message; continue; }
-      const linked = await invokeFn('marketing', { body: { action: 'attach_expense_photo', expense_id: expenseId, photo_path: path } });
-      if (linked.error || !linked.data?.ok) photoWarning = 'Foto gagal ditautkan: ' + (linked.data?.error || linked.error?.message);
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      status('#expense-status', entries.length > 1 ? `Menyimpan transaksi ${i + 1} dari ${entries.length}…` : 'Menyimpan laporan…');
+      const { data, error } = await invokeFn('marketing', { body: { action: 'save_expense',
+        tanggal_realisasi: entry.tanggal, jenis_pengeluaran: entry.jenis, nominal: entry.nominal } });
+      if (error || !data?.ok) throw new Error(`Transaksi ${i + 1}: ` + (data?.error || error?.message || 'Gagal menyimpan laporan'));
+      const expenseId = data.expense_id;
+      for (const input of entry.photos) {
+        const photo = input.files[0];
+        if (photo.size > 10 * 1024 * 1024) { photoWarning = `Transaksi ${i + 1}: salah satu foto lebih dari 10 MB dan dilewati.`; continue; }
+        const ext = (photo.name.split('.').pop() || 'jpg').toLowerCase();
+        const path = `${currentUser.id}/${expenseId}/${crypto.randomUUID()}.${ext}`;
+        const upload = await client.storage.from('marketing-expense-photos').upload(path, photo, { contentType: photo.type || 'image/jpeg' });
+        if (upload.error) { photoWarning = `Transaksi ${i + 1}: foto gagal diunggah - ` + upload.error.message; continue; }
+        const linked = await invokeFn('marketing', { body: { action: 'attach_expense_photo', expense_id: expenseId, photo_path: path } });
+        if (linked.error || !linked.data?.ok) photoWarning = `Transaksi ${i + 1}: foto gagal ditautkan - ` + (linked.data?.error || linked.error?.message);
+      }
     }
     resetExpenseForm();
     await loadExpenses();
-    status('#expense-status', photoWarning ? 'Laporan tersimpan, tetapi ' + photoWarning : 'Laporan pengeluaran tersimpan.', !!photoWarning);
+    status('#expense-status', photoWarning ? 'Laporan tersimpan, tetapi ' + photoWarning
+      : (entries.length > 1 ? `${entries.length} transaksi tersimpan.` : 'Laporan pengeluaran tersimpan.'), !!photoWarning);
   } catch (e) { status('#expense-status', String(e.message || e), true); }
   finally { button.disabled = false; }
 });
@@ -1117,6 +1160,57 @@ function loadJsPdf() {
     .catch((e) => { jsPdfLoading = null; throw e; });
   return jsPdfLoading;
 }
+async function loadImageAsDataUrl(url) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error('fetch gagal');
+  const blob = await res.blob();
+  const dataUrl = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('baca foto gagal'));
+    reader.readAsDataURL(blob);
+  });
+  const dims = await new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve({ w: img.naturalWidth || 1, h: img.naturalHeight || 1 });
+    img.onerror = () => reject(new Error('decode foto gagal'));
+    img.src = dataUrl;
+  });
+  return { dataUrl, ...dims };
+}
+function addNotaAttachments(doc, images) {
+  const margin = 14, gutterX = 6, gutterY = 10, cols = 2, rows = 3, perPage = cols * rows;
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const boxW = (pageW - margin * 2 - gutterX * (cols - 1)) / cols;
+  const headerTop = margin + 10;
+  const boxH = (pageH - headerTop - margin - gutterY * (rows - 1)) / rows;
+  const captionH = 9;
+  const imgAreaH = boxH - captionH;
+  images.forEach((img, i) => {
+    const slot = i % perPage;
+    if (slot === 0) {
+      doc.addPage();
+      doc.setFontSize(12); doc.setFont(undefined, 'bold');
+      doc.text('Lampiran Nota', margin, margin + 4);
+      doc.setFont(undefined, 'normal');
+    }
+    const col = slot % cols, row = Math.floor(slot / cols);
+    const x = margin + col * (boxW + gutterX);
+    const y = headerTop + row * (boxH + gutterY);
+    doc.setDrawColor(200); doc.rect(x, y, boxW, imgAreaH);
+    if (img.failed) {
+      doc.setFontSize(8);
+      doc.text('Foto tidak dapat dimuat', x + boxW / 2, y + imgAreaH / 2, { align: 'center' });
+    } else {
+      const scale = Math.min((boxW - 4) / img.w, (imgAreaH - 4) / img.h);
+      const w = img.w * scale, h = img.h * scale;
+      doc.addImage(img.dataUrl, x + (boxW - w) / 2, y + (imgAreaH - h) / 2, w, h);
+    }
+    doc.setFontSize(8);
+    doc.text(`No.${img.no} · ${displayDateId(img.tanggal)} · ${img.jenis} · ${rupiah(img.nominal)}`, x + boxW / 2, y + imgAreaH + 6, { align: 'center', maxWidth: boxW });
+  });
+}
 $('#expense-recap-pdf').addEventListener('click', async () => {
   if (!expenseRecapRows.length) return;
   const button = $('#expense-recap-pdf'); button.disabled = true;
@@ -1155,8 +1249,30 @@ $('#expense-recap-pdf').addEventListener('click', async () => {
     doc.text(`(${who})`, cols[0], y + 22, { align: 'center' });
     doc.text('(....................)', cols[1], y + 22, { align: 'center' });
     doc.text('(....................)', cols[2], y + 22, { align: 'center' });
+
+    const photoEntries = [];
+    expenseRecapRows.forEach((row, i) => {
+      (row.photo_paths || []).forEach((path) => photoEntries.push({ no: i + 1, tanggal: row.tanggal_realisasi, jenis: row.jenis_pengeluaran, nominal: row.nominal, path }));
+    });
+    if (photoEntries.length) {
+      status('#expense-recap-status', `Menyiapkan lampiran foto (0/${photoEntries.length})…`);
+      const { data: signed, error: signError } = await client.storage.from('marketing-expense-photos')
+        .createSignedUrls(photoEntries.map((p) => p.path), 600);
+      if (signError) throw new Error('Gagal menyiapkan tautan foto: ' + signError.message);
+      const images = [];
+      for (let i = 0; i < photoEntries.length; i++) {
+        status('#expense-recap-status', `Menyiapkan lampiran foto (${i + 1}/${photoEntries.length})…`);
+        const url = signed[i]?.signedUrl;
+        try {
+          if (!url) throw new Error('tautan tidak tersedia');
+          images.push({ ...photoEntries[i], ...(await loadImageAsDataUrl(url)) });
+        } catch { images.push({ ...photoEntries[i], failed: true }); }
+      }
+      addNotaAttachments(doc, images);
+    }
+
     doc.save(`rekap-pengeluaran-${expenseRecapRange.from}_${expenseRecapRange.to}.pdf`);
-    status('#expense-recap-status', `${expenseRecapRows.length} transaksi · Total ${rupiah(total)} · PDF diunduh.`);
+    status('#expense-recap-status', `${expenseRecapRows.length} transaksi · ${photoEntries.length} foto nota · Total ${rupiah(total)} · PDF diunduh.`);
   } catch (e) { status('#expense-recap-status', 'Gagal membuat PDF: ' + (e.message || e), true); }
   finally { button.disabled = false; }
 });

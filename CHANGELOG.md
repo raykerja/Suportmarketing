@@ -1,3 +1,10 @@
+VERSION: 0.8.7 (input multi-transaksi Pengeluaran; lampiran nota di PDF)
+DATE: 2026-10-15
+
+ADDED: Form "Pengeluaran" kini bisa isi beberapa transaksi (tanggal/jenis/nominal/foto masing-masing beda) dalam satu halaman via tombol "+ Tambah Transaksi", dikirim sekali jalan — tersimpan sebagai baris independen per transaksi, tidak ada perubahan database/Edge Function.
+ADDED: PDF "Unduh PDF" di Rekap Pengeluaran menambah halaman "Lampiran Nota" berisi grid 2 kolom x 3 kotak foto nota per halaman (berlanjut ke halaman baru bila foto lebih banyak, satu foto tidak terpotong ganti halaman), tiap foto dilabeli No./tanggal/jenis/nominal agar cocok dengan baris tabel rekap. Tabel rekap & kolom tanda tangan tidak berubah.
+CHANGED: app.js saja (fetch createSignedUrls bucket marketing-expense-photos + jsPDF.addImage); tidak ada migrasi.
+
 VERSION: 0.8.6 (batas harian Cari Target; data wilayah NTB & Bali)
 DATE: 2026-10-15
 

@@ -29,7 +29,7 @@
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261012-6"></script>
+  <script type="module" src="app.js?v=20261015-1"></script>
   <script defer src="pwa.js?v=20261010-1"></script>
 </head>
 <body>
@@ -290,14 +290,9 @@
             <form id="expense-form" novalidate>
               <p id="expense-timestamp" class="visit-timestamp"></p>
               <label>Nama Marketing<input id="expense-name" type="text" disabled></label>
-              <label>Tanggal Realisasi <span class="required">*</span><input id="expense-date" type="date" required></label>
-              <label>Jenis Pengeluaran <span class="required">*</span><select id="expense-type" required><option value="">Pilih Jenis...</option><option>Transportasi (BBM/Tol/Parkir)</option><option>Akomodasi/Penginapan</option><option>Konsumsi</option><option>Komunikasi (Pulsa/Internet)</option><option>Cetak &amp; Dokumen</option><option>Entertain Klien</option><option>Lain-lain</option></select></label>
-              <label>Nominal (Rp) <span class="required">*</span><input id="expense-amount" type="text" inputmode="numeric" autocomplete="off" required placeholder="Contoh: 50.000"></label>
-              <div><strong>Foto Bukti (Max 3)</strong><small> Ambil dengan kamera HP atau pilih dari galeri</small>
-                <div id="expense-photo-rows" class="visit-services"></div>
-                <button id="add-expense-photo" type="button">+ Tambah Foto Lainnya</button>
-                <p id="expense-photo-note" class="hint">Maksimal 3 foto, masing-masing ≤ 10 MB.</p>
-              </div>
+              <p class="hint">Bisa tambah beberapa transaksi (tanggal berbeda-beda juga boleh) lalu kirim sekali jalan.</p>
+              <div id="expense-transactions"></div>
+              <button id="add-expense-transaction" type="button">+ Tambah Transaksi</button>
               <div class="save-bar"><button class="primary" id="save-expense" type="submit">Kirim Laporan</button></div><p id="expense-status" role="status"></p>
             </form>
           </div>

@@ -83,6 +83,13 @@ Arti penanda:
 | Staf: hanya lihat & pratinjau (dialog sama dengan pratinjau dokumen penawaran); Admin: tambah/ubah/hapus | 🟡 | Belum dicoba manusia dengan akun staf/admin sungguhan |
 | Khusus tampilan HP (≤760px, web tidak berubah): logo RAY buka drawer menu samping dengan ikon; sub-menu jadi bilah ikon tetap di bawah (latar biru tua, label ringkas tanpa nomor); layar Beranda (hero + Asisten Marketing) hanya sebelum pilih menu, bisa diakses ulang lewat drawer | 🟡 | Belum dicoba di HP sungguhan sepenuhnya oleh pemilik |
 
+## D5. Pengeluaran marketing — input multi-transaksi + lampiran nota di PDF (15 Oktober 2026)
+
+| Fitur | Status | Catatan |
+| --- | --- | --- |
+| Form "Pengeluaran": tombol "+ Tambah Transaksi" untuk isi beberapa transaksi (tanggal/jenis/nominal/foto beda-beda) dalam satu halaman, dikirim sekali jalan | 🟡 | Tersimpan sebagai baris independen per transaksi (sama seperti input satu-satu manual); loop panggil `save_expense`/`attach_expense_photo` yang sudah ada, tidak ada migrasi/Edge Function baru. Belum dicoba manusia |
+| PDF Rekap Pengeluaran: halaman "Lampiran Nota" (grid 2 kolom × 3 kotak foto/halaman, berlanjut ke halaman baru, satu foto tidak terpotong ganti halaman, dilabeli No./tanggal/jenis/nominal) | 🟡 | Perubahan hanya di `app.js` (fetch `createSignedUrls` + `jsPDF.addImage`); tabel rekap & kolom tanda tangan di PDF tidak diubah. Belum dicoba manusia dengan foto nota sungguhan |
+
 ## E. Belum dibangun (ringkas; rinci di [05](05-BACKLOG-DAN-TINDAK-LANJUT.md))
 
 ⬜ Impor massal tanggal kontrak · ⬜ Cadangan Drive untuk PIC Visit/penawaran · ⬜ Jalur Drive → Supabase (edit di Sheet staf sebagai versi terpisah) · ⬜ Retry otomatis terjadwal untuk cadangan yang gagal · ⬜ Tingkat super admin berbeda dari admin · ⬜ Pengingat otomatis (Telegram/WhatsApp) untuk follow-up dan kontrak · ⬜ AI bisa menyebut daftar nama client menurut kriteria · ⬜ Pemindahan surat/riset/penawaran dari n8n (hanya bila diminta pemilik).
