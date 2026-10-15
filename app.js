@@ -2114,24 +2114,38 @@ function renderDashboardDetailClients() {
   const table = (rows) => `<div class="table-wrap"><table><thead><tr><th>Nama client</th><th>Cabang</th><th>Kategori</th><th>PIC Korlap</th><th>Sisa kontrak</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.nama_client)}</td><td>${esc(r.cabang)}</td><td>${esc(r.kategori)}</td><td>${esc(r.korlap_raw)}</td><td>${r.kontrak_akhir ? (r.left < 0 ? `<span class="badge error">Lewat ${Math.abs(r.left)} hari</span>` : `${r.left} hari`) : '—'}</td></tr>`).join('')}</tbody></table></div>`;
   return `<p class="hint">Client aktif: ${live.length} · diarsipkan: ${activeClients.length - live.length}</p>
     <h3>Kontrak &le; 90 hari, paling mendesak dulu (${soon.length})</h3>${soon.length ? table(soon) : '<p class="hint">Tidak ada yang mendesak.</p>'}
-    <h3>Belum ada tanggal kontrak (${noDate.length})</h3>${noDate.length ? table(noDate.slice(0, 30)) + (noDate.length > 30 ? `<p class="hint">Menampilkan 30 dari ${noDate.length}.</p>` : '') : '<p class="hint">Semua client sudah punya tanggal kontrak.</p>'}`;
+    <h3>Belum ada tanggal kontrak (${noDate.length})</h3>${noDate.length ? table(noDate) : '<p class="hint">Semua client sudah punya tanggal kontrak.</p>'}`;
 }
 function renderDashboardDetailVisits() {
+  const staffName = (id) => allMembers.find((m) => m.user_id === id)?.display_name || '(tidak diketahui)';
   const clientName = (id) => activeClients.find((c) => c.id === id)?.nama_client || '(client tidak ditemukan)';
+  const detailFields = (d) => [
+    d?.nama_pejabat_pic_1 && `PIC klien: ${esc(d.nama_pejabat_pic_1)}${d.jabatan_pic ? ' (' + esc(d.jabatan_pic) + ')' : ''}`,
+    d?.nomor_kontak_pic && `Kontak: ${esc(d.nomor_kontak_pic)}`,
+    d?.status_marketing && `Status: ${esc(d.status_marketing)}`,
+    d?.tanggal_follow_up && `Follow up: ${displayDateId(d.tanggal_follow_up)}`,
+    d?.informasi_penting && `Info penting: ${esc(d.informasi_penting)}`,
+    d?.catatan && `Catatan: ${esc(d.catatan)}`,
+  ].filter(Boolean);
+  const itemHtml = (name, tanggal, pic, stageLabel, d) => {
+    const extra = detailFields(d);
+    return `<div class="item"><strong>${esc(name)}</strong><small>${esc(tanggal)} · PIC yang mengunjungi: ${esc(pic)} · ${stageLabel}</small>${extra.length ? `<details><summary>Lihat info lengkap</summary><p>${extra.join('<br>')}</p></details>` : ''}</div>`;
+  };
   const picRows = [...picVisitRows].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 15);
-  const picHtml = picRows.length ? picRows.map((r) => `<div class="item"><strong>${esc(clientName(r.client_id))}</strong><small>${esc(date(r.created_at))} · ${r.visit_stage === 'initial' ? 'Tahap 1' : 'Detail terisi'}</small></div>`).join('') : '<p class="hint">Belum ada Kunjungan PIC.</p>';
+  const picHtml = picRows.length ? picRows.map((r) => itemHtml(clientName(r.client_id), date(r.created_at), staffName(r.owner_id), r.visit_stage === 'initial' ? 'Tahap 1' : 'Detail terisi', r.data)).join('') : '<p class="hint">Belum ada Kunjungan PIC.</p>';
   const salesRows = [...visitCache].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 15);
-  const salesHtml = salesRows.length ? salesRows.map((r) => `<div class="item"><strong>${esc(r.data?.nama_perusahaan || '(belum diisi)')}</strong><small>${esc(date(r.created_at))} · ${r.data?.visit_stage === 'initial' ? 'Tahap 1' : 'Detail terisi'}</small></div>`).join('') : '<p class="hint">Belum ada Kunjungan Marketing.</p>';
-  return `<h3>Kunjungan PIC terbaru (${picVisitRows.length} total)</h3><div class="list">${picHtml}</div>
-    <h3>Kunjungan Marketing terbaru (${visitCache.length} total)</h3><div class="list">${salesHtml}</div>`;
+  const salesHtml = salesRows.length ? salesRows.map((r) => itemHtml(r.data?.nama_perusahaan || '(belum diisi)', r.data?.tanggal_realisasi_kunjungan ? displayDateId(r.data.tanggal_realisasi_kunjungan) : date(r.created_at), staffName(r.owner_id), r.data?.visit_stage === 'initial' ? 'Tahap 1' : 'Detail terisi', r.data)).join('') : '<p class="hint">Belum ada Kunjungan Marketing.</p>';
+  return `<h3>Kunjungan PIC terbaru (${picVisitRows.length} total, menampilkan 15)</h3><div class="list">${picHtml}</div>
+    <h3>Kunjungan Marketing terbaru (${visitCache.length} total, menampilkan 15)</h3><div class="list">${salesHtml}</div>`;
 }
 function renderDashboardDetailMonitoring() {
   if (!dashboardLoaded) return '<p class="hint">Memuat…</p>';
-  const clientName = (id) => activeClients.find((c) => c.id === id)?.nama_client || '(client tidak ditemukan)';
+  const clientInfo = (id) => activeClients.find((c) => c.id === id);
   const todayStr = localToday();
   const rows = [...dashboardMonitoring].filter((r) => !['won', 'lost'].includes(r.stage))
     .sort((a, b) => (a.next_follow_up || '9999-99-99').localeCompare(b.next_follow_up || '9999-99-99'));
-  const html = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Client</th><th>Tahap</th><th>Follow up</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(clientName(r.client_id))}</td><td>${esc(monitoringStageNames[r.stage] || r.stage)}</td><td>${r.next_follow_up ? (r.next_follow_up < todayStr ? `<span class="badge error">${displayDateId(r.next_follow_up)} · terlewat</span>` : displayDateId(r.next_follow_up)) : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada yang masih berjalan.</p>';
+  const html = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Client</th><th>PIC Lapangan</th><th>PIC Admin</th><th>Tahap</th><th>Follow up</th></tr></thead><tbody>${rows.map((r) => { const c = clientInfo(r.client_id);
+    return `<tr><td>${esc(c?.nama_client || '(client tidak ditemukan)')}</td><td>${esc(c?.korlap_raw || '—')}</td><td>${esc(c?.admin_raw || '—')}</td><td>${esc(monitoringStageNames[r.stage] || r.stage)}</td><td>${r.next_follow_up ? (r.next_follow_up < todayStr ? `<span class="badge error">${displayDateId(r.next_follow_up)} · terlewat</span>` : displayDateId(r.next_follow_up)) : '—'}</td></tr>`; }).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada yang masih berjalan.</p>';
   return `<p class="hint">Yang masih berjalan (bukan "Disetujui"/"Tidak lanjut"): ${rows.length} dari ${dashboardMonitoring.length} total.</p>${html}`;
 }
 function renderDashboardDetailProgress() {

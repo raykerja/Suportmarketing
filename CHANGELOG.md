@@ -1,3 +1,10 @@
+VERSION: 0.9.1 (detail Dashboard: Client Aktif tanpa batas, Kunjungan & Monitoring lebih lengkap)
+DATE: 2026-10-15
+
+CHANGED: Detail "Client Aktif" di Dashboard — daftar "Belum ada tanggal kontrak" tidak lagi dibatasi 30, tampil semua.
+CHANGED: Detail "Kunjungan" di Dashboard — tiap baris kini menampilkan nama lokasi (client/perusahaan), tanggal kunjungan, dan PIC yang mengunjungi (staf RMP); ditambah expander `<details>` "Lihat info lengkap" (PIC klien, kontak, status, follow up, catatan) tanpa pindah halaman.
+CHANGED: Detail "Monitoring & Tindaklanjut" di Dashboard — tabel menambahkan kolom PIC Lapangan (Korlap) dan PIC Admin per client.
+
 VERSION: 0.9.0 (menu Dashboard, khusus admin)
 DATE: 2026-10-15
 
