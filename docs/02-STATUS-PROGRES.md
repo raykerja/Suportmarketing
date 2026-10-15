@@ -94,7 +94,7 @@ Arti penanda:
 
 | Fitur | Status | Catatan |
 | --- | --- | --- |
-| Menu "Dashboard" di posisi paling atas menu utama, khusus admin — 8 kartu ringkasan (Client Aktif, Kunjungan, Monitoring, Progress Client Baru, Target & Penawaran, Database Harga & Rekap RAB, Pengeluaran Bulan Ini, Tim & Akun) | 🟡 | Draf pertama untuk direview pemilik. Murni frontend (index.html + app.js), tidak ada migrasi/Edge Function. Sebagian baca cache menu lain, sebagian (Monitoring/Pengeluaran bulan ini/Database Harga) diambil ulang lewat tombol "Muat ulang". Belum dicoba manusia dengan akun admin sungguhan |
+| Menu "Dashboard" di posisi paling atas menu utama, khusus admin — 8 kartu ringkasan (Client Aktif, Kunjungan, Monitoring, Progress Client Baru, Target & Penawaran, Database Harga & Rekap RAB, Pengeluaran Bulan Ini, Tim & Akun) | 🟡 | Draf pertama untuk direview pemilik. Murni frontend (index.html + app.js), tidak ada migrasi/Edge Function. Sebagian baca cache menu lain, sebagian (Monitoring/Pengeluaran bulan ini/Database Harga) diambil ulang lewat tombol "Muat ulang". Tiap kartu ada tombol "Lihat →" ke menu terkait + tombol "← Kembali ke Dashboard" muncul di halaman tujuan. Kartu "Kunjungan" & "Database Harga & Rekap RAB" gabung 2 menu, tombolnya baru ke satu tujuan. Belum dicoba manusia dengan akun admin sungguhan |
 
 ## E. Belum dibangun (ringkas; rinci di [05](05-BACKLOG-DAN-TINDAK-LANJUT.md))
 

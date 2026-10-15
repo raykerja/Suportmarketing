@@ -156,6 +156,7 @@ $('#setup-form').addEventListener('submit', async (event) => {
 });
 
 const dashboardTabs = new Set(['dashboard']);
+let cameFromDashboardCard = false;
 const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress']);
 const salesTabs = new Set(['visits', 'progress']);
 const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation']);
@@ -195,6 +196,8 @@ function activateTab(tab, record = true) {
   $('#dashboard-menu').classList.toggle('active', inDashboard);
   $('#dashboard-menu').setAttribute('aria-expanded', String(inDashboard));
   $('#mobile-menu-dashboard').classList.toggle('active', inDashboard);
+  if (tab === 'dashboard') cameFromDashboardCard = false;
+  $('#dashboard-back').hidden = tab === 'dashboard' || !cameFromDashboardCard;
   const inActiveClient = activeClientTabs.has(tab);
   $('#active-client-tabs').hidden = !inActiveClient;
   $('#active-client-menu').classList.toggle('active', inActiveClient);
@@ -233,6 +236,13 @@ function activateTab(tab, record = true) {
 }
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
 $('#dashboard-menu').addEventListener('click', () => activateTab('dashboard'));
+$('#dashboard-back').addEventListener('click', () => activateTab('dashboard'));
+$('#dashboard').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-dash-goto]');
+  if (!button) return;
+  cameFromDashboardCard = true;
+  activateTab(button.dataset.dashGoto);
+});
 $('#active-client-menu').addEventListener('click', () => activateTab('clients'));
 $('#sales-menu').addEventListener('click', () => activateTab('visits'));
 $('#pipeline-menu').addEventListener('click', () => activateTab('research'));
