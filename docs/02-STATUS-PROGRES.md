@@ -40,7 +40,7 @@ Arti penanda:
 
 | Fitur | Status | Catatan |
 | --- | --- | --- |
-| 4 super admin (role `admin`) | ✅ | Dipilih pemilik; admin = super admin (satu tingkat) |
+| 15 super admin (role `admin`) | ✅ | Dipilih pemilik; admin = super admin (satu tingkat). 15 Okt: 11 akun staf dinaikkan jadi admin (ADI PUTRA KRISTIAWAN, AZZAHRA ANDHIRA PUTRI, DINI SAFFANAH, KARINA AYU WARDANI, KHANIFA KUSUMA APRILIANA, KHOTIJATUL MASTUROH, KHUSNAENI HITA, LAILA JANNATUN NA'IM, M. MUTOHAR, NIKEN, YAYA), diterapkan langsung lewat Management API (tidak ada fitur ubah role di UI) |
 | Admin ganti nama dan folder Drive staf | 🟡 | Nama via RPC (baru); folder via aksi `set_folder` |
 | Nonaktifkan/aktifkan akun (+ blokir login) | 🟡 | Perilaku server terbukti pada akun uji sementara; tombol di web belum dicoba pada akun staf sungguhan |
 | Reset kata sandi staf (sandi acak tampil sekali) | 🟡 | Idem |

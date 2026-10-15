@@ -1,3 +1,9 @@
+VERSION: 0.8.9 (akun AZZAHRA DEMO dihapus total; 11 staf dinaikkan jadi admin)
+DATE: 2026-10-15
+
+REMOVED (data, bukan kode): Akun "AZZAHRA DEMO" (akun seed yang sama dipakai membuat 5 client demo 0.8.8) dihapus total beserta 5 riset target, 5 lead, 5 sales visit, 5 penawaran, 5 pengeluaran, 1 alias PIC korlap, dan 1 baris pemakaian AI miliknya — semua bertanda [DEMO], dibuat batch 10 Okt. Dihapus lewat Management API (auth.users + 7 tabel terkait, urutan sesuai foreign key), bukan migrasi.
+CHANGED (data, bukan kode): 11 akun staf dinaikkan jadi admin atas permintaan pemilik: ADI PUTRA KRISTIAWAN, AZZAHRA ANDHIRA PUTRI, DINI SAFFANAH, KARINA AYU WARDANI, KHANIFA KUSUMA APRILIANA, KHOTIJATUL MASTUROH, KHUSNAENI HITA, LAILA JANNATUN NA'IM, M. MUTOHAR, NIKEN, YAYA. Total sekarang 15 admin, 17 staf. Tidak ada fitur ubah role di UI — diterapkan langsung lewat Management API.
+
 VERSION: 0.8.8 (riset target tidak lagi tampilkan client aktif; bersih data demo)
 DATE: 2026-10-15
 
