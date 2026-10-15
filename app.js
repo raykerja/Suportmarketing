@@ -156,7 +156,6 @@ $('#setup-form').addEventListener('submit', async (event) => {
 });
 
 const dashboardTabs = new Set(['dashboard']);
-let cameFromDashboardCard = false;
 const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress']);
 const salesTabs = new Set(['visits', 'progress']);
 const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation']);
@@ -196,8 +195,7 @@ function activateTab(tab, record = true) {
   $('#dashboard-menu').classList.toggle('active', inDashboard);
   $('#dashboard-menu').setAttribute('aria-expanded', String(inDashboard));
   $('#mobile-menu-dashboard').classList.toggle('active', inDashboard);
-  if (tab === 'dashboard') cameFromDashboardCard = false;
-  $('#dashboard-back').hidden = tab === 'dashboard' || !cameFromDashboardCard;
+  if (tab === 'dashboard') showDashboardOverview();
   const inActiveClient = activeClientTabs.has(tab);
   $('#active-client-tabs').hidden = !inActiveClient;
   $('#active-client-menu').classList.toggle('active', inActiveClient);
@@ -236,13 +234,11 @@ function activateTab(tab, record = true) {
 }
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
 $('#dashboard-menu').addEventListener('click', () => activateTab('dashboard'));
-$('#dashboard-back').addEventListener('click', () => activateTab('dashboard'));
-$('#dashboard').addEventListener('click', (event) => {
-  const button = event.target.closest('[data-dash-goto]');
-  if (!button) return;
-  cameFromDashboardCard = true;
-  activateTab(button.dataset.dashGoto);
+$('#dashboard-overview').addEventListener('click', (event) => {
+  const button = event.target.closest('[data-dash-detail]');
+  if (button) showDashboardDetail(button.dataset.dashDetail);
 });
+$('#dashboard-detail-back').addEventListener('click', showDashboardOverview);
 $('#active-client-menu').addEventListener('click', () => activateTab('clients'));
 $('#sales-menu').addEventListener('click', () => activateTab('visits'));
 $('#pipeline-menu').addEventListener('click', () => activateTab('research'));
@@ -2013,8 +2009,8 @@ async function loadDashboard() {
   const now = new Date();
   const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
   const [monitoring, expenseMonth] = await Promise.all([
-    client.from('marketing_client_offers').select('stage,next_follow_up'),
-    client.from('marketing_expenses').select('jenis_pengeluaran,nominal').gte('tanggal_realisasi', monthStart),
+    client.from('marketing_client_offers').select('client_id,stage,next_follow_up'),
+    client.from('marketing_expenses').select('tanggal_realisasi,nama_marketing,jenis_pengeluaran,nominal').gte('tanggal_realisasi', monthStart),
     priceLoaded ? Promise.resolve() : loadPrices(),
   ]);
   dashboardMonitoring = monitoring.error ? [] : (monitoring.data || []);
@@ -2101,3 +2097,86 @@ function renderOpsDashboard() {
     <div><strong>${korlapAliases.length}</strong><small>Total alias PIC Korlap</small></div>`;
 }
 $('#dashboard-refresh').addEventListener('click', loadDashboard);
+function showDashboardOverview() {
+  $('#dashboard-overview').hidden = false;
+  $('#dashboard-detail').hidden = true;
+}
+const dashboardDetailTitles = {
+  clients: 'Client Aktif', visits: 'Kunjungan', monitoring: 'Monitoring & Tindaklanjut (Client Lama)',
+  progress: 'Progress (Client Baru)', pipeline: 'Target & Penawaran', database: 'Database Harga & Rekap RAB',
+  expenses: 'Pengeluaran Bulan Ini', team: 'Tim & Akun',
+};
+function renderDashboardDetailClients() {
+  const live = activeClients.filter((r) => r.status === 'aktif');
+  const soon = live.filter((r) => r.kontrak_akhir).map((r) => ({ ...r, left: daysLeft(r) }))
+    .filter((r) => r.left !== null && r.left <= 90).sort((a, b) => a.left - b.left);
+  const noDate = live.filter((r) => !r.kontrak_akhir);
+  const table = (rows) => `<div class="table-wrap"><table><thead><tr><th>Nama client</th><th>Cabang</th><th>Kategori</th><th>PIC Korlap</th><th>Sisa kontrak</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.nama_client)}</td><td>${esc(r.cabang)}</td><td>${esc(r.kategori)}</td><td>${esc(r.korlap_raw)}</td><td>${r.kontrak_akhir ? (r.left < 0 ? `<span class="badge error">Lewat ${Math.abs(r.left)} hari</span>` : `${r.left} hari`) : '—'}</td></tr>`).join('')}</tbody></table></div>`;
+  return `<p class="hint">Client aktif: ${live.length} · diarsipkan: ${activeClients.length - live.length}</p>
+    <h3>Kontrak &le; 90 hari, paling mendesak dulu (${soon.length})</h3>${soon.length ? table(soon) : '<p class="hint">Tidak ada yang mendesak.</p>'}
+    <h3>Belum ada tanggal kontrak (${noDate.length})</h3>${noDate.length ? table(noDate.slice(0, 30)) + (noDate.length > 30 ? `<p class="hint">Menampilkan 30 dari ${noDate.length}.</p>` : '') : '<p class="hint">Semua client sudah punya tanggal kontrak.</p>'}`;
+}
+function renderDashboardDetailVisits() {
+  const clientName = (id) => activeClients.find((c) => c.id === id)?.nama_client || '(client tidak ditemukan)';
+  const picRows = [...picVisitRows].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 15);
+  const picHtml = picRows.length ? picRows.map((r) => `<div class="item"><strong>${esc(clientName(r.client_id))}</strong><small>${esc(date(r.created_at))} · ${r.visit_stage === 'initial' ? 'Tahap 1' : 'Detail terisi'}</small></div>`).join('') : '<p class="hint">Belum ada Kunjungan PIC.</p>';
+  const salesRows = [...visitCache].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 15);
+  const salesHtml = salesRows.length ? salesRows.map((r) => `<div class="item"><strong>${esc(r.data?.nama_perusahaan || '(belum diisi)')}</strong><small>${esc(date(r.created_at))} · ${r.data?.visit_stage === 'initial' ? 'Tahap 1' : 'Detail terisi'}</small></div>`).join('') : '<p class="hint">Belum ada Kunjungan Marketing.</p>';
+  return `<h3>Kunjungan PIC terbaru (${picVisitRows.length} total)</h3><div class="list">${picHtml}</div>
+    <h3>Kunjungan Marketing terbaru (${visitCache.length} total)</h3><div class="list">${salesHtml}</div>`;
+}
+function renderDashboardDetailMonitoring() {
+  if (!dashboardLoaded) return '<p class="hint">Memuat…</p>';
+  const clientName = (id) => activeClients.find((c) => c.id === id)?.nama_client || '(client tidak ditemukan)';
+  const todayStr = localToday();
+  const rows = [...dashboardMonitoring].filter((r) => !['won', 'lost'].includes(r.stage))
+    .sort((a, b) => (a.next_follow_up || '9999-99-99').localeCompare(b.next_follow_up || '9999-99-99'));
+  const html = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Client</th><th>Tahap</th><th>Follow up</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(clientName(r.client_id))}</td><td>${esc(monitoringStageNames[r.stage] || r.stage)}</td><td>${r.next_follow_up ? (r.next_follow_up < todayStr ? `<span class="badge error">${displayDateId(r.next_follow_up)} · terlewat</span>` : displayDateId(r.next_follow_up)) : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada yang masih berjalan.</p>';
+  return `<p class="hint">Yang masih berjalan (bukan "Disetujui"/"Tidak lanjut"): ${rows.length} dari ${dashboardMonitoring.length} total.</p>${html}`;
+}
+function renderDashboardDetailProgress() {
+  const companyName = (visitId) => progressVisits.find((v) => v.id === visitId)?.data?.nama_perusahaan || '(belum diisi)';
+  const todayStr = localToday();
+  const rows = [...progressCache].filter((r) => !['deal', 'gagal'].includes(r.stage))
+    .sort((a, b) => (a.next_follow_up || '9999-99-99').localeCompare(b.next_follow_up || '9999-99-99'));
+  const html = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Perusahaan</th><th>Tahap</th><th>Follow up</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(companyName(r.visit_id))}</td><td>${esc(stageNames[r.stage] || r.stage)}</td><td>${r.next_follow_up ? (r.next_follow_up < todayStr ? `<span class="badge error">${displayDateId(r.next_follow_up)} · terlewat</span>` : displayDateId(r.next_follow_up)) : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada yang masih berjalan.</p>';
+  return `<p class="hint">Yang masih berjalan (bukan "Deal"/"Gagal"): ${rows.length} dari ${progressCache.length} total.</p>${html}`;
+}
+function renderDashboardDetailPipeline() {
+  const pending = leadCache.filter((r) => r.review_status === 'pending');
+  const pendingHtml = pending.length ? pending.slice(0, 30).map((r) => `<div class="item"><strong>${esc(r.nama_target)}</strong><small>${esc(r.kabupaten_kota || '')}, ${esc(r.provinsi || '')}</small></div>`).join('') : '<p class="hint">Tidak ada lead menunggu review.</p>';
+  const trouble = offerCache.filter((r) => r.status === 'processing' || r.status === 'error');
+  const troubleHtml = trouble.length ? trouble.map((r) => `<div class="item"><strong>${esc(r.client_name)}</strong><small><span class="badge ${esc(r.status)}">${esc(r.status)}</span>${r.error ? ' · ' + esc(r.error) : ''}</small></div>`).join('') : '<p class="hint">Tidak ada penawaran yang masih proses/gagal.</p>';
+  return `<h3>Lead menunggu review (${pending.length})</h3><div class="list">${pendingHtml}</div>
+    <h3>Penawaran proses/gagal</h3><div class="list">${troubleHtml}</div>`;
+}
+function renderDashboardDetailDatabase() {
+  const needsVerify = priceRows.filter((r) => r.perlu_verifikasi);
+  const verifyHtml = needsVerify.length ? `<div class="table-wrap"><table><thead><tr><th>Item</th><th>Kategori</th><th>Harga jual</th></tr></thead><tbody>${needsVerify.map((r) => `<tr><td>${esc(r.item)}</td><td>${esc(r.kategori)}</td><td>${rupiah(r.harga_jual)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada harga yang perlu diverifikasi.</p>';
+  const rabHtml = rabRecapCache.length ? rabRecapCache.map((r) => `<div class="item"><strong>${esc(r.nama)}</strong>${r.catatan ? `<small>${esc(r.catatan)}</small>` : ''}<br><a href="${esc(r.link)}" target="_blank" rel="noopener noreferrer">Buka link</a></div>`).join('') : '<p class="hint">Belum ada RAB final tercatat.</p>';
+  return `<h3>Harga perlu diverifikasi (${needsVerify.length})</h3>${verifyHtml}
+    <h3>Rekap RAB final (${rabRecapCache.length})</h3><div class="list">${rabHtml}</div>`;
+}
+function renderDashboardDetailExpenses() {
+  if (!dashboardLoaded) return '<p class="hint">Memuat…</p>';
+  const rows = [...dashboardExpenseMonth].sort((a, b) => b.tanggal_realisasi.localeCompare(a.tanggal_realisasi));
+  const html = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Nama</th><th>Jenis</th><th>Nominal</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${displayDateId(r.tanggal_realisasi)}</td><td>${esc(r.nama_marketing)}</td><td>${esc(r.jenis_pengeluaran)}</td><td style="text-align:right">${rupiah(r.nominal)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Belum ada pengeluaran bulan ini.</p>';
+  return `<p class="hint">${rows.length} transaksi bulan ini.</p>${html}`;
+}
+function renderDashboardDetailTeam() {
+  const rows = [...allMembers].sort((a, b) => a.role === b.role ? a.display_name.localeCompare(b.display_name) : (a.role === 'admin' ? -1 : 1));
+  return rows.length ? `<div class="table-wrap"><table><thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.display_name)}</td><td>${esc(r.email)}</td><td>${r.role === 'admin' ? 'Admin' : 'Staf'}</td><td>${r.active === false ? '<span class="badge error">Nonaktif</span>' : 'Aktif'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada data akun.</p>';
+}
+const dashboardDetailRenderers = {
+  clients: renderDashboardDetailClients, visits: renderDashboardDetailVisits, monitoring: renderDashboardDetailMonitoring,
+  progress: renderDashboardDetailProgress, pipeline: renderDashboardDetailPipeline, database: renderDashboardDetailDatabase,
+  expenses: renderDashboardDetailExpenses, team: renderDashboardDetailTeam,
+};
+function showDashboardDetail(key) {
+  const renderer = dashboardDetailRenderers[key];
+  if (!renderer) return;
+  $('#dashboard-detail-title').textContent = dashboardDetailTitles[key] || '';
+  $('#dashboard-detail-body').innerHTML = renderer();
+  $('#dashboard-overview').hidden = true;
+  $('#dashboard-detail').hidden = false;
+}
