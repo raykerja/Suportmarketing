@@ -3539,5 +3539,181 @@ export const WILAYAH_DATA = [
       "Umbulharjo",
       "Kotagede"
     ]
+  },
+  {
+    "provinsi": "Nusa Tenggara Barat",
+    "kabupaten": "Kabupaten Lombok Barat",
+    "kecamatan": [
+      "Gerung",
+      "Kediri",
+      "Narmada",
+      "Sekotong",
+      "Labuapi",
+      "Gunungsari",
+      "Lingsar",
+      "Lembar",
+      "Batu Layar",
+      "Kuripan"
+    ]
+  },
+  {
+    "provinsi": "Nusa Tenggara Barat",
+    "kabupaten": "Kabupaten Lombok Tengah",
+    "kecamatan": [
+      "Praya",
+      "Jonggat",
+      "Batukliang",
+      "Pujut",
+      "Praya Barat",
+      "Praya Timur",
+      "Janapria",
+      "Pringgarata",
+      "Kopang",
+      "Praya Tengah",
+      "Praya Barat Daya",
+      "Batukliang Utara"
+    ]
+  },
+  {
+    "provinsi": "Nusa Tenggara Barat",
+    "kabupaten": "Kabupaten Lombok Timur",
+    "kecamatan": [
+      "Keruak",
+      "Sakra",
+      "Terara",
+      "Sikur",
+      "Masbagik",
+      "Sukamulia",
+      "Selong",
+      "Pringgabaya",
+      "Aikmel",
+      "Sambelia",
+      "Montong Gading",
+      "Pringgasela",
+      "Suralaga",
+      "Wanasaba",
+      "Sembalun",
+      "Suwela",
+      "Labuhan Haji",
+      "Sakra Timur",
+      "Sakra Barat",
+      "Jerowaru",
+      "Lenek"
+    ]
+  },
+  {
+    "provinsi": "Nusa Tenggara Barat",
+    "kabupaten": "Kabupaten Sumbawa",
+    "kecamatan": [
+      "Lunyuk",
+      "Alas",
+      "Utan",
+      "Batu Lanteh",
+      "Sumbawa",
+      "Moyo Hilir",
+      "Moyo Hulu",
+      "Ropang",
+      "Lape",
+      "Plampang",
+      "Empang",
+      "Alas Barat",
+      "Labuhan Badas",
+      "Labangka",
+      "Buer",
+      "Rhee",
+      "Unter Iwes",
+      "Moyo Utara",
+      "Maronge",
+      "Tarano",
+      "Lopok",
+      "Lenangguar",
+      "Orong Telu",
+      "Lantung"
+    ]
+  },
+  {
+    "provinsi": "Nusa Tenggara Barat",
+    "kabupaten": "Kabupaten Dompu",
+    "kecamatan": [
+      "Dompu",
+      "Kempo",
+      "Kilo",
+      "Woja",
+      "Pekat",
+      "Manggalewa",
+      "Pajo"
+    ]
+  },
+  {
+    "provinsi": "Nusa Tenggara Barat",
+    "kabupaten": "Kabupaten Bima",
+    "kecamatan": [
+      "Monta",
+      "Bolo",
+      "Woha",
+      "Belo",
+      "Wawo",
+      "Sape",
+      "Wera",
+      "Donggo",
+      "Sanggar",
+      "Ambalawi",
+      "Langgudu",
+      "Lambu",
+      "Madapangga",
+      "Tambora",
+      "Soromandi",
+      "Parado",
+      "Lambitu",
+      "Palibelo"
+    ]
+  },
+  {
+    "provinsi": "Nusa Tenggara Barat",
+    "kabupaten": "Kabupaten Sumbawa Barat",
+    "kecamatan": [
+      "Jereweh",
+      "Taliwang",
+      "Seteluk",
+      "Sekongkang",
+      "Brang Rea",
+      "Poto Tano",
+      "Brang Ene",
+      "Maluk"
+    ]
+  },
+  {
+    "provinsi": "Nusa Tenggara Barat",
+    "kabupaten": "Kabupaten Lombok Utara",
+    "kecamatan": [
+      "Tanjung",
+      "Gangga",
+      "Kayangan",
+      "Bayan",
+      "Pemenang"
+    ]
+  },
+  {
+    "provinsi": "Nusa Tenggara Barat",
+    "kabupaten": "Kota Mataram",
+    "kecamatan": [
+      "Ampenan",
+      "Mataram",
+      "Cakranegara",
+      "Sekarbela",
+      "Selaparang",
+      "Sandubaya"
+    ]
+  },
+  {
+    "provinsi": "Nusa Tenggara Barat",
+    "kabupaten": "Kota Bima",
+    "kecamatan": [
+      "Rasanae Barat",
+      "Rasanae Timur",
+      "Asakota",
+      "Raba",
+      "Mpunda"
+    ]
   }
 ];
