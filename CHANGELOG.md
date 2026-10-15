@@ -1,3 +1,10 @@
+VERSION: 0.8.8 (riset target tidak lagi tampilkan client aktif; bersih data demo)
+DATE: 2026-10-15
+
+FIXED: Hasil "Cari Target" kadang menampilkan nama yang sebenarnya sudah jadi client aktif (kerjasama berjalan). Edge Function marketing kini menyaring targets dari n8n: nama target dinormalisasi (huruf kecil, buang tanda baca) lalu dibandingkan ke SEMUA nama client berstatus aktif (bukan hanya satu wilayah) — cocok (sama atau salah satu bagian dari yang lain, minimal 6 karakter) berarti tidak disimpan sebagai lead baru. Belum menangkap kasus AI menulis nama sangat berbeda dari singkatan di database (butuh fuzzy matching lebih lanjut bila masih ada yang lolos).
+CHANGED: Edge Function marketing v25 (fungsi normalizeClientName + penyaringan di handler callback research).
+REMOVED (data, bukan kode): 5 client demo (source_no 9001-9005, "[DEMO] ...") beserta PIC Visit, Monitoring/offer, dan event terkait — satu batch seed data 10 Okt yang ikut kehitung sebagai "client aktif" dan berisiko muncul di penyaringan riset target. Dihapus lewat Management API (transaksi, bukan scripts/apply_migration.py karena ini hapus data bukan migrasi skema).
+
 VERSION: 0.8.7 (input multi-transaksi Pengeluaran; lampiran nota di PDF)
 DATE: 2026-10-15
 

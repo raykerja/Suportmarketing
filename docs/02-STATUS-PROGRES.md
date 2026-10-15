@@ -16,7 +16,7 @@ Arti penanda:
 | Pembuatan akun staf (form + impor Excel) | 🟡 | Rilis 7 Okt; pembuatan akun nyata lewat UI belum dikonfirmasi ulang |
 | Cadangan Sales Visit + progres ke Drive staf (Apps Script, tanpa n8n) | ✅ | 28/28 akun terbukti 7 Okt |
 | Sinkron Sales Visit ke Google Sheet `DataMarketing` + foto Drive (n8n) | 🟡 | Jalan; uji penuh dari HP (foto → Sheet) belum dikonfirmasi ulang |
-| Riset target, review hasil, surat/penawaran (n8n) | ✅ | Dokumen asli terbukti jadi (Docs + RAB di folder Drive). Tombol setelah login nyata belum dilihat manusia. 15 Okt: batas baru 60 permintaan riset/hari/akun (tabel `marketing_research_daily_usage`, terpisah dari kuota Asisten AI); data wilayah Nusa Tenggara Barat & Bali ditambahkan ke `data/wilayah.mjs` |
+| Riset target, review hasil, surat/penawaran (n8n) | ✅ | Dokumen asli terbukti jadi (Docs + RAB di folder Drive). Tombol setelah login nyata belum dilihat manusia. 15 Okt: batas baru 60 permintaan riset/hari/akun (tabel `marketing_research_daily_usage`, terpisah dari kuota Asisten AI); data wilayah Nusa Tenggara Barat & Bali ditambahkan ke `data/wilayah.mjs`; hasil riset kini disaring agar tidak menampilkan nama yang sudah jadi client aktif (Edge Function v25, cocokkan nama ternormalisasi, belum diuji manusia dengan riset sungguhan) |
 | Asisten AI (OpenAI) membaca data sesuai akses akun | 🟡 | v21 (9 Okt): kini membaca client aktif, PIC Visit, Monitoring. Teruji dengan akun admin & staf sementara (dihapus). Batas 30 pencarian/hari/akun |
 
 ## B. Client Active (dikerjakan 9 Oktober 2026)

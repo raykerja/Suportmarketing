@@ -61,6 +61,9 @@ function folder(value: unknown) {
   const match = input.match(folderPattern);
   return match ? { id: match[1], url: `https://drive.google.com/drive/folders/${match[1]}` } : null;
 }
+function normalizeClientName(value: string): string {
+  return value.toLowerCase().normalize('NFKD').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().replace(/\s+/g, ' ');
+}
 async function callWorkflow(endpoint: string, payload: Record<string, unknown>) {
   const result = await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-RAY-Secret': webhookSecret },
     body: JSON.stringify(payload), signal: AbortSignal.timeout(25000) });
@@ -265,13 +268,24 @@ Deno.serve(async (request) => {
     }
     const id = String(data.research_id || '');
     if (!id) return response({ error: 'research_id wajib' }, 400, origin);
-    const targets = Array.isArray(data.targets) ? data.targets : [];
+    const rawTargets = Array.isArray(data.targets) ? data.targets : [];
     const driveSaved = data.drive_status === 'done' && /^[A-Za-z0-9_-]{10,200}$/.test(String(data.drive_file_id || ''));
     const status = data.ok === true ? (driveSaved ? 'done' : 'partial') : 'error';
     const { data: existing, error: lookupError } = await admin.from('marketing_researches')
       .select('research_id,owner_id').eq('research_id', id).maybeSingle();
     if (lookupError) return response({ error: 'Database gagal dibaca' }, 500, origin);
     if (!existing) return response({ error: 'research_id tidak dikenal' }, 404, origin);
+    let targets = rawTargets;
+    if (data.ok === true && rawTargets.length) {
+      const { data: activeClients } = await admin.from('marketing_clients').select('nama_client').eq('status', 'aktif');
+      const existingNames = (activeClients || []).map((c) => normalizeClientName(c.nama_client)).filter((n) => n.length >= 6);
+      targets = rawTargets.filter((t) => {
+        if (!t || typeof t !== 'object' || !t.nama_target) return true;
+        const name = normalizeClientName(String(t.nama_target));
+        if (name.length < 6) return true;
+        return !existingNames.some((existingName) => name.includes(existingName) || existingName.includes(name));
+      });
+    }
     if (data.ok === true && targets.length) {
       const rows = targets.map((t, i) => ({ t, i })).filter(({ t }) => t && typeof t === 'object' && t.nama_target).map(({ t, i }) => ({
         research_id: id, owner_id: existing.owner_id, result_index: i, nama_target: String(t.nama_target), target_type: String(t.target_type || ''),
