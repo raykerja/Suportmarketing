@@ -3715,5 +3715,116 @@ export const WILAYAH_DATA = [
       "Raba",
       "Mpunda"
     ]
+  },
+  {
+    "provinsi": "Bali",
+    "kabupaten": "Kabupaten Jembrana",
+    "kecamatan": [
+      "Negara",
+      "Mendoyo",
+      "Pekutatan",
+      "Melaya",
+      "Jembrana"
+    ]
+  },
+  {
+    "provinsi": "Bali",
+    "kabupaten": "Kabupaten Tabanan",
+    "kecamatan": [
+      "Selemadeg",
+      "Selemadeg Timur",
+      "Selemadeg Barat",
+      "Kerambitan",
+      "Tabanan",
+      "Kediri",
+      "Marga",
+      "Penebel",
+      "Baturiti",
+      "Pupuan"
+    ]
+  },
+  {
+    "provinsi": "Bali",
+    "kabupaten": "Kabupaten Badung",
+    "kecamatan": [
+      "Kuta",
+      "Mengwi",
+      "Abiansemal",
+      "Petang",
+      "Kuta Selatan",
+      "Kuta Utara"
+    ]
+  },
+  {
+    "provinsi": "Bali",
+    "kabupaten": "Kabupaten Gianyar",
+    "kecamatan": [
+      "Sukawati",
+      "Blahbatuh",
+      "Gianyar",
+      "Tampaksiring",
+      "Ubud",
+      "Tegallalang",
+      "Payangan"
+    ]
+  },
+  {
+    "provinsi": "Bali",
+    "kabupaten": "Kabupaten Klungkung",
+    "kecamatan": [
+      "Nusa Penida",
+      "Banjarangkan",
+      "Klungkung",
+      "Dawan"
+    ]
+  },
+  {
+    "provinsi": "Bali",
+    "kabupaten": "Kabupaten Bangli",
+    "kecamatan": [
+      "Susut",
+      "Bangli",
+      "Tembuku",
+      "Kintamani"
+    ]
+  },
+  {
+    "provinsi": "Bali",
+    "kabupaten": "Kabupaten Karangasem",
+    "kecamatan": [
+      "Rendang",
+      "Sidemen",
+      "Manggis",
+      "Karangasem",
+      "Abang",
+      "Bebandem",
+      "Selat",
+      "Kubu"
+    ]
+  },
+  {
+    "provinsi": "Bali",
+    "kabupaten": "Kabupaten Buleleng",
+    "kecamatan": [
+      "Gerokgak",
+      "Seririt",
+      "Busungbiu",
+      "Banjar",
+      "Sukasada",
+      "Buleleng",
+      "Sawan",
+      "Kubutambahan",
+      "Tejakula"
+    ]
+  },
+  {
+    "provinsi": "Bali",
+    "kabupaten": "Kota Denpasar",
+    "kecamatan": [
+      "Denpasar Selatan",
+      "Denpasar Timur",
+      "Denpasar Barat",
+      "Denpasar Utara"
+    ]
   }
 ];
