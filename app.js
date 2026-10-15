@@ -155,6 +155,7 @@ $('#setup-form').addEventListener('submit', async (event) => {
   showWorkspace(currentUser);
 });
 
+const dashboardTabs = new Set(['dashboard']);
 const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress']);
 const salesTabs = new Set(['visits', 'progress']);
 const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation']);
@@ -168,15 +169,15 @@ function showMobileHome() {
   document.querySelectorAll('.panel').forEach((panel) => { panel.hidden = true; });
   document.querySelectorAll('.sub-tabs').forEach((nav) => { nav.hidden = true; });
   document.querySelectorAll('[data-tab].active').forEach((button) => button.classList.remove('active'));
-  ['active-client-menu', 'sales-menu', 'pipeline-menu', 'database-menu', 'rab-menu', 'expense-menu'].forEach((id) => {
+  ['dashboard-menu', 'active-client-menu', 'sales-menu', 'pipeline-menu', 'database-menu', 'rab-menu', 'expense-menu'].forEach((id) => {
     $('#' + id).classList.remove('active'); $('#' + id).setAttribute('aria-expanded', 'false');
   });
-  ['mobile-menu-active-client', 'mobile-menu-pipeline', 'mobile-menu-sales', 'mobile-menu-database', 'mobile-menu-rab', 'mobile-menu-expense']
+  ['mobile-menu-dashboard', 'mobile-menu-active-client', 'mobile-menu-pipeline', 'mobile-menu-sales', 'mobile-menu-database', 'mobile-menu-rab', 'mobile-menu-expense']
     .forEach((id) => $('#' + id).classList.remove('active'));
   $('#mobile-menu-home').classList.add('active');
 }
 function activateTab(tab, record = true) {
-  if (!$('#' + tab)?.classList.contains('panel')) tab = 'visits';
+  if (!$('#' + tab)?.classList.contains('panel') || (tab === 'dashboard' && !isAdmin())) tab = 'visits';
   $('#mobile-menu-home').classList.remove('active');
   if (isMobileViewport()) { $('.hero').hidden = true; $('.ai-search-card').hidden = true; }
   const current = document.querySelector('.panel:not([hidden])')?.id;
@@ -190,6 +191,10 @@ function activateTab(tab, record = true) {
     history.pushState({ ...history.state, marketingTab: tab }, '');
   }
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
+  const inDashboard = dashboardTabs.has(tab);
+  $('#dashboard-menu').classList.toggle('active', inDashboard);
+  $('#dashboard-menu').setAttribute('aria-expanded', String(inDashboard));
+  $('#mobile-menu-dashboard').classList.toggle('active', inDashboard);
   const inActiveClient = activeClientTabs.has(tab);
   $('#active-client-tabs').hidden = !inActiveClient;
   $('#active-client-menu').classList.toggle('active', inActiveClient);
@@ -224,8 +229,10 @@ function activateTab(tab, record = true) {
   if (tab === 'manual-offer') loadOffers();
   if (tab === 'price-simulation') { if (!priceLoaded) loadPrices(); else renderSimTable(); }
   if (tab === 'rab-recap') loadRabRecap();
+  if (tab === 'dashboard') loadDashboard();
 }
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
+$('#dashboard-menu').addEventListener('click', () => activateTab('dashboard'));
 $('#active-client-menu').addEventListener('click', () => activateTab('clients'));
 $('#sales-menu').addEventListener('click', () => activateTab('visits'));
 $('#pipeline-menu').addEventListener('click', () => activateTab('research'));
@@ -249,6 +256,7 @@ $('#mobile-menu-toggle').addEventListener('click', openMobileDrawer);
 $('#mobile-drawer-backdrop').addEventListener('click', closeMobileDrawer);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#mobile-drawer').classList.contains('open')) closeMobileDrawer(); });
 $('#mobile-menu-home').addEventListener('click', () => { showMobileHome(); closeMobileDrawer(); });
+$('#mobile-menu-dashboard').addEventListener('click', () => { activateTab('dashboard'); closeMobileDrawer(); });
 $('#mobile-menu-active-client').addEventListener('click', () => { activateTab('clients'); closeMobileDrawer(); });
 $('#mobile-menu-pipeline').addEventListener('click', () => { activateTab('research'); closeMobileDrawer(); });
 $('#mobile-menu-sales').addEventListener('click', () => { activateTab('visits'); closeMobileDrawer(); });
@@ -366,6 +374,7 @@ let activeClientLoaded = false;
 let activeClientError = '';
 let picAliases = [];
 let memberOptions = [];
+let allMembers = [];
 let editingClient = null;
 let visitStats = [];
 let changeLog = [];
@@ -454,6 +463,8 @@ function renderActiveClients() {
   for (const id of ['#ac-add', '#ac-alias-toggle', '#ac-history-toggle', '#ac-export']) $(id).hidden = !admin;
   for (const id of ['#ac-status-wrap', '#ac-visited-wrap']) $(id).hidden = !admin;
   $('#ac-dashboard').hidden = !admin;
+  $('#dashboard-menu').hidden = !admin;
+  $('#mobile-menu-dashboard').hidden = !admin;
   if (!admin) { $('#ac-alias-card').hidden = true; $('#ac-history-card').hidden = true; }
   const uniq = (fn) => [...new Set(rows.map(fn).filter(Boolean))].sort();
   fillSelect('#ac-branch', 'Semua cabang', uniq((r) => r.cabang), $('#ac-branch').value);
@@ -1766,6 +1777,7 @@ async function loadSettings() {
   if (error || !data?.ok) { status('#folder-status', data?.error || error?.message || 'Pengaturan gagal dibaca', true); return; }
   currentMember = data.self;
   priceLoaded = false; priceRows = []; if (priceView !== 'target') loadPrices();
+  allMembers = data.members || [];
   memberOptions = (data.members || []).filter((m) => m.active !== false).map((m) => ({ user_id: m.user_id, display_name: m.display_name })).sort((a, b) => a.display_name.localeCompare(b.display_name));
   renderActiveClients();
   existingStaffUsernames = (data.members || []).filter((member) => member.email?.endsWith(`@${staffLoginDomain}`))
@@ -1976,3 +1988,106 @@ $('#ai-search-form').addEventListener('submit', async (event) => {
   $('#ai-sources').innerHTML = (data.sources || []).map((source) => `<div class="item"><strong>${esc(source.title)}</strong><small>${esc(source.type)} · ${esc(source.status || '—')} · ${esc(date(source.updated_at))}</small>${source.detail ? `<p>${esc(source.detail)}</p>` : ''}${safeLink(source.url) ? `<a href="${esc(source.url)}" target="_blank" rel="noopener noreferrer">Buka dokumen Drive</a>` : ''}</div>`).join('');
   status('#ai-search-status', data.sources?.length ? `${data.sources.length} sumber ditemukan.${data.ai_ready ? '' : ' Ringkasan AI belum aktif; API key belum terpasang.'}` : 'Belum ada data yang cocok.');
 });
+
+// Dashboard (khusus admin): ringkasan seluruh menu. Sebagian besar dibaca dari cache yang sudah
+// termuat menu lain; Monitoring, Pengeluaran bulan ini, dan Database Harga diambil ulang di sini
+// karena belum tentu sudah dimuat saat Dashboard dibuka.
+const monitoringStageNames = { review: 'Perlu review', proposal: 'Menyiapkan penawaran', sent: 'Penawaran terkirim',
+  follow_up: 'Negosiasi / follow up', won: 'Disetujui', lost: 'Tidak lanjut' };
+let dashboardMonitoring = [];
+let dashboardExpenseMonth = [];
+let dashboardLoaded = false;
+async function loadDashboard() {
+  if (!client || !currentUser || !isAdmin()) return;
+  status('#dashboard-status', 'Memuat Monitoring, Pengeluaran bulan ini, dan Database Harga…');
+  const now = new Date();
+  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+  const [monitoring, expenseMonth] = await Promise.all([
+    client.from('marketing_client_offers').select('stage,next_follow_up'),
+    client.from('marketing_expenses').select('jenis_pengeluaran,nominal').gte('tanggal_realisasi', monthStart),
+    priceLoaded ? Promise.resolve() : loadPrices(),
+  ]);
+  dashboardMonitoring = monitoring.error ? [] : (monitoring.data || []);
+  dashboardExpenseMonth = expenseMonth.error ? [] : (expenseMonth.data || []);
+  dashboardLoaded = true;
+  const errMsg = [monitoring.error, expenseMonth.error].filter(Boolean).map((e) => e.message).join('; ');
+  status('#dashboard-status', errMsg ? 'Sebagian data gagal dimuat: ' + errMsg : `Diperbarui: ${date(new Date().toISOString())}`, !!errMsg);
+  renderOpsDashboard();
+}
+function renderOpsDashboard() {
+  if (!isAdmin()) return;
+  const live = activeClients.filter((r) => r.status === 'aktif');
+  const soon = live.filter((r) => { const l = daysLeft(r); return l !== null && l >= 0 && l <= 90; }).length;
+  const noDate = live.filter((r) => !r.kontrak_akhir).length;
+  const korlapAliases = picAliases.filter((a) => a.pic_role === 'korlap');
+  const korlapNoAccount = korlapAliases.filter((a) => !a.user_id).length;
+  $('#dash-clients-summary').innerHTML = `<div><strong>${live.length}</strong><small>Client aktif</small></div>
+    <div><strong>${activeClients.length - live.length}</strong><small>Diarsipkan</small></div>
+    <div><strong>${soon}</strong><small>Kontrak &le; 90 hari</small></div>
+    <div><strong>${noDate}</strong><small>Tanpa tanggal kontrak</small></div>
+    <div><strong>${korlapNoAccount}</strong><small>PIC Korlap belum punya akun</small></div>`;
+
+  const picInitial = picVisitRows.filter((r) => r.visit_stage === 'initial').length;
+  const salesInitial = visitCache.filter((r) => r.data?.visit_stage === 'initial').length;
+  $('#dash-visits-summary').innerHTML = `<div><strong>${picVisitRows.length}</strong><small>Kunjungan PIC</small></div>
+    <div><strong>${picInitial}</strong><small>Kunjungan PIC perlu detail</small></div>
+    <div><strong>${visitCache.length}</strong><small>Kunjungan Marketing</small></div>
+    <div><strong>${salesInitial}</strong><small>Kunjungan Marketing perlu detail</small></div>`;
+
+  if (dashboardLoaded) {
+    const monitoringCounts = Object.fromEntries(Object.keys(monitoringStageNames).map((k) => [k, 0]));
+    let overdue = 0;
+    const todayStr = localToday();
+    for (const row of dashboardMonitoring) {
+      if (row.stage in monitoringCounts) monitoringCounts[row.stage]++;
+      if (row.next_follow_up && row.next_follow_up < todayStr && !['won', 'lost'].includes(row.stage)) overdue++;
+    }
+    $('#dash-monitoring-summary').innerHTML = Object.entries(monitoringStageNames)
+      .map(([k, label]) => `<div><strong>${monitoringCounts[k]}</strong><small>${esc(label)}</small></div>`).join('')
+      + `<div><strong>${overdue}</strong><small>Follow up terlewat</small></div>`;
+  } else {
+    $('#dash-monitoring-summary').innerHTML = '<p class="hint">Memuat…</p>';
+  }
+
+  const progressCounts = Object.fromEntries(Object.keys(stageNames).map((k) => [k, 0]));
+  for (const row of progressCache) if (row.stage in progressCounts) progressCounts[row.stage]++;
+  $('#dash-progress-summary').innerHTML = Object.entries(stageNames)
+    .map(([k, label]) => `<div><strong>${progressCounts[k]}</strong><small>${esc(label)}</small></div>`).join('');
+
+  const researchProcessing = researchCache.filter((r) => r.status === 'processing').length;
+  const leadPending = leadCache.filter((r) => r.review_status === 'pending').length;
+  const leadApproved = leadCache.filter((r) => r.review_status === 'approved').length;
+  const offerProcessingOrError = offerCache.filter((r) => r.status === 'processing' || r.status === 'error').length;
+  $('#dash-pipeline-summary').innerHTML = `<div><strong>${researchCache.length}</strong><small>Riset target</small></div>
+    <div><strong>${researchProcessing}</strong><small>Riset masih proses</small></div>
+    <div><strong>${leadPending}</strong><small>Lead perlu direview</small></div>
+    <div><strong>${leadApproved}</strong><small>Lead disetujui</small></div>
+    <div><strong>${offerCache.length}</strong><small>Dokumen penawaran</small></div>
+    <div><strong>${offerProcessingOrError}</strong><small>Penawaran proses/gagal</small></div>`;
+
+  const seragamCount = priceRows.filter((r) => r.kategori === 'seragam').length;
+  const peralatanCount = priceRows.filter((r) => r.kategori === 'peralatan').length;
+  const perluVerifikasi = priceRows.filter((r) => r.perlu_verifikasi).length;
+  $('#dash-database-summary').innerHTML = `<div><strong>${seragamCount}</strong><small>Item harga seragam</small></div>
+    <div><strong>${peralatanCount}</strong><small>Item harga peralatan</small></div>
+    <div><strong>${perluVerifikasi}</strong><small>Harga perlu diverifikasi</small></div>
+    <div><strong>${rabRecapCache.length}</strong><small>RAB final tercatat</small></div>`;
+
+  const totalExpenseMonth = dashboardExpenseMonth.reduce((sum, r) => sum + Number(r.nominal || 0), 0);
+  $('#dash-expense-summary').innerHTML = `<div><strong>${dashboardExpenseMonth.length}</strong><small>Transaksi bulan ini</small></div>
+    <div><strong>${rupiah(totalExpenseMonth)}</strong><small>Total bulan ini</small></div>`;
+  const byType = {};
+  for (const row of dashboardExpenseMonth) byType[row.jenis_pengeluaran] = (byType[row.jenis_pengeluaran] || 0) + Number(row.nominal || 0);
+  $('#dash-expense-breakdown').innerHTML = Object.entries(byType).sort((a, b) => b[1] - a[1])
+    .map(([jenis, total]) => `<div class="item"><strong>${esc(jenis)}</strong><small>${rupiah(total)}</small></div>`).join('')
+    || '<p class="hint">Belum ada pengeluaran bulan ini.</p>';
+
+  const adminCount = allMembers.filter((m) => m.role === 'admin').length;
+  const staffCount = allMembers.filter((m) => m.role !== 'admin').length;
+  const inactiveCount = allMembers.filter((m) => m.active === false).length;
+  $('#dash-team-summary').innerHTML = `<div><strong>${adminCount}</strong><small>Admin</small></div>
+    <div><strong>${staffCount}</strong><small>Staf</small></div>
+    <div><strong>${inactiveCount}</strong><small>Akun nonaktif</small></div>
+    <div><strong>${korlapAliases.length}</strong><small>Total alias PIC Korlap</small></div>`;
+}
+$('#dashboard-refresh').addEventListener('click', loadDashboard);

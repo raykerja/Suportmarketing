@@ -1,3 +1,8 @@
+VERSION: 0.9.0 (menu Dashboard, khusus admin)
+DATE: 2026-10-15
+
+ADDED: Menu "Dashboard" baru di posisi paling atas menu utama (desktop & drawer HP), hanya terlihat untuk admin. 8 kartu ringkasan (gaya kotak statistik yang sudah ada di web): Client Aktif, Kunjungan (PIC & Marketing), Monitoring & Tindaklanjut, Progress Client Baru, Target & Penawaran, Database Harga & Rekap RAB, Pengeluaran Bulan Ini, Tim & Akun. Sebagian besar membaca cache yang sudah termuat menu lain; Monitoring, Pengeluaran bulan ini, dan Database Harga diambil ulang lewat tombol "Muat ulang". Tidak ada migrasi/Edge Function baru — murni frontend (index.html + app.js), draf pertama untuk direview pemilik, belum dicoba manusia dengan akun admin sungguhan.
+
 VERSION: 0.8.9 (akun AZZAHRA DEMO dihapus total; 11 staf dinaikkan jadi admin)
 DATE: 2026-10-15
 
