@@ -731,6 +731,9 @@ Deno.serve(async (request) => {
       (targetType === 'SWASTA' && !bidang) || !Number.isInteger(jumlah) || jumlah < 1 || jumlah > 10) {
     return response({ error: 'Jenis, wilayah, bidang, atau jumlah tidak valid' }, 400, origin);
   }
+  const { data: researchQuota, error: researchQuotaError } = await admin.rpc('marketing_research_reserve', { p_user_id: authData.user.id, p_limit: 60 });
+  if (researchQuotaError) return response({ error: 'Batas pemakaian riset target belum siap' }, 503, origin);
+  if (!researchQuota) return response({ error: 'Batas 60 pencarian target hari ini sudah tercapai. Coba lagi besok.' }, 429, origin);
   const id = 'RK-' + crypto.randomUUID();
   const { error: insertError } = await admin.from('marketing_researches').insert({ research_id: id, owner_id: authData.user.id,
     target_type: targetType, kecamatan, kabupaten_kota: kabupatenKota, provinsi, bidang, jumlah,

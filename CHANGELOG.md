@@ -1,3 +1,11 @@
+VERSION: 0.8.6 (batas harian Cari Target; data wilayah NTB & Bali)
+DATE: 2026-10-15
+
+ADDED: Batas 60 permintaan riset target/hari/akun pada menu "Cari Target" (sebelumnya tidak ada batas sama sekali); tabel+fungsi baru marketing_research_daily_usage/marketing_research_reserve, pola sama seperti marketing_ai_daily_usage tapi terpisah (kuota Asisten AI tetap 30/hari, tidak terpengaruh). Notifikasi di form diubah jadi "Pencarian per hari setiap akun 60 target" (merah).
+ADDED: Data wilayah Nusa Tenggara Barat (10 kabupaten/kota, 116 kecamatan) dan Bali (9 kabupaten/kota, 57 kecamatan) di data/wilayah.mjs, sumber sama (Kepmendagri No 300.2.2-2138 Tahun 2025 via dataset cahyadsn/wilayah) dengan data provinsi lain yang sudah ada.
+CHANGED: Edge Function marketing v24 (pengecekan kuota riset target sebelum permintaan dikirim ke n8n).
+MIGRATIONS: 20261015_marketing_research_daily_limit.
+
 VERSION: 0.8.5 (foto Kunjungan PIC; sesi refresh otomatis; sinkron PIC Korlap/Admin)
 DATE: 2026-10-14
 
