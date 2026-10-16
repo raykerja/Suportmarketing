@@ -176,7 +176,7 @@ function showMobileHome() {
   $('#mobile-menu-home').classList.add('active');
 }
 function activateTab(tab, record = true) {
-  if (!$('#' + tab)?.classList.contains('panel') || (tab === 'dashboard' && !isAdmin())) tab = 'visits';
+  if (!$('#' + tab)?.classList.contains('panel') || (['dashboard', 'offer-recap'].includes(tab) && !isAdmin())) tab = 'visits';
   $('#mobile-menu-home').classList.remove('active');
   if (isMobileViewport()) { $('.hero').hidden = true; $('.ai-search-card').hidden = true; }
   const current = document.querySelector('.panel:not([hidden])')?.id;
@@ -226,6 +226,7 @@ function activateTab(tab, record = true) {
   if (tab === 'price-simulation') { if (!priceLoaded) loadPrices(); else renderSimTable(); }
   if (tab === 'rab-recap') loadRabRecap();
   if (tab === 'dashboard') loadDashboard();
+  if (tab === 'offer-recap') renderOfferRecap();
 }
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
 $('#dashboard-overview').addEventListener('click', (event) => {
@@ -463,6 +464,7 @@ function renderActiveClients() {
   for (const id of ['#ac-status-wrap', '#ac-visited-wrap']) $(id).hidden = !admin;
   $('#ac-dashboard').hidden = !admin;
   $('#settings-menu-dashboard').hidden = !admin;
+  $('#settings-menu-offer-recap').hidden = !admin;
   if (!admin) { $('#ac-alias-card').hidden = true; $('#ac-history-card').hidden = true; }
   const uniq = (fn) => [...new Set(rows.map(fn).filter(Boolean))].sort();
   fillSelect('#ac-branch', 'Semua cabang', uniq((r) => r.cabang), $('#ac-branch').value);
@@ -1595,9 +1597,10 @@ $('#offer-form').addEventListener('submit', async (event) => {
 });
 async function loadOffers() {
   if (!client || !currentUser) return;
-  const { data, error } = await client.from('marketing_offers').select('id,owner_id,client_name,umk,gaji_pokok,status,nomor_surat,doc_file_url,rab_file_url,error,created_at,updated_at').order('created_at', { ascending: false }).limit(100);
+  const { data, error } = await client.from('marketing_offers').select('id,owner_id,client_name,umk,gaji_pokok,status,nomor_surat,doc_file_url,rab_file_url,error,created_at,updated_at,lead_id,manual_input').order('created_at', { ascending: false }).limit(100);
   if (error) { $('#offer-list').textContent = 'Dokumen belum dapat dibaca: ' + error.message; return; }
   offerCache = data || [];
+  renderOfferRecap();
   const recent = (row) => row.status === 'processing' && Date.now() - new Date(row.updated_at).getTime() < 600000;
   const previewUrl = (url) => url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/preview') : '';
   const pdfUrl = (url) => url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/export?format=pdf') : '';
@@ -1619,6 +1622,28 @@ document.addEventListener('click', (event) => {
 });
 $('#offer-preview-close').addEventListener('click', () => $('#offer-preview-dialog').close());
 $('#offer-preview-dialog').addEventListener('close', () => { $('#offer-preview-frame').src = 'about:blank'; });
+
+function offerLocation(row) {
+  if (row.manual_input) {
+    const m = row.manual_input;
+    return [m.kabupaten_kota, m.provinsi].filter(Boolean).join(', ') || m.alamat || '—';
+  }
+  const lead = leadCache.find((l) => l.id === row.lead_id);
+  if (lead) return [lead.kabupaten_kota, lead.provinsi].filter(Boolean).join(', ') || '—';
+  return '—';
+}
+function renderOfferRecap() {
+  if (!isAdmin()) return;
+  const staffName = (id) => allMembers.find((m) => m.user_id === id)?.display_name || '(tidak diketahui)';
+  const q = $('#offer-recap-query').value.trim().toLocaleLowerCase('id');
+  const rows = [...offerCache].map((r) => ({ ...r, pic: staffName(r.owner_id), lokasi: offerLocation(r) }))
+    .filter((r) => !q || [r.pic, r.client_name, r.lokasi, r.nomor_surat].some((v) => String(v || '').toLocaleLowerCase('id').includes(q)));
+  status('#offer-recap-status', offerCache.length ? `Menampilkan ${rows.length} dari ${offerCache.length} surat penawaran.` : 'Belum ada surat penawaran.');
+  $('#offer-recap-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>PIC pembuat</th><th>Client / target</th><th>Lokasi</th><th>Tanggal dibuat</th><th>Nomor surat</th><th>Status</th><th>Preview</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.pic)}</td><td>${esc(r.client_name)}</td><td>${esc(r.lokasi)}</td><td>${esc(date(r.created_at))}</td><td>${esc(r.nomor_surat || '—')}</td><td><span class="badge ${r.status === 'error' ? 'error' : r.status === 'processing' || r.status === 'partial' ? 'processing' : ''}">${esc(r.status.toUpperCase())}</span></td><td>${r.doc_file_url ? `<button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.doc_file_url))}" data-preview-open="${esc(r.doc_file_url)}" data-preview-title="Surat pengantar · ${esc(r.client_name)}">Preview</button>` : '—'}</td></tr>`).join('')}</tbody></table></div>`
+    : `<p class="hint">${offerCache.length ? 'Tidak ada yang cocok dengan pencarian.' : 'Belum ada surat penawaran yang dibuat.'}</p>`;
+}
+$('#offer-recap-query').addEventListener('input', renderOfferRecap);
+$('#offer-recap-refresh').addEventListener('click', async () => { await loadLeads(); await loadOffers(); });
 
 async function loadRabRecap() {
   if (!client || !currentUser) return;
