@@ -155,7 +155,6 @@ $('#setup-form').addEventListener('submit', async (event) => {
   showWorkspace(currentUser);
 });
 
-const dashboardTabs = new Set(['dashboard']);
 const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress']);
 const salesTabs = new Set(['visits', 'progress']);
 const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation']);
@@ -169,10 +168,10 @@ function showMobileHome() {
   document.querySelectorAll('.panel').forEach((panel) => { panel.hidden = true; });
   document.querySelectorAll('.sub-tabs').forEach((nav) => { nav.hidden = true; });
   document.querySelectorAll('[data-tab].active').forEach((button) => button.classList.remove('active'));
-  ['dashboard-menu', 'active-client-menu', 'sales-menu', 'pipeline-menu', 'database-menu', 'rab-menu', 'expense-menu'].forEach((id) => {
+  ['active-client-menu', 'sales-menu', 'pipeline-menu', 'database-menu', 'rab-menu', 'expense-menu'].forEach((id) => {
     $('#' + id).classList.remove('active'); $('#' + id).setAttribute('aria-expanded', 'false');
   });
-  ['mobile-menu-dashboard', 'mobile-menu-active-client', 'mobile-menu-pipeline', 'mobile-menu-sales', 'mobile-menu-database', 'mobile-menu-rab', 'mobile-menu-expense']
+  ['mobile-menu-active-client', 'mobile-menu-pipeline', 'mobile-menu-sales', 'mobile-menu-database', 'mobile-menu-rab', 'mobile-menu-expense']
     .forEach((id) => $('#' + id).classList.remove('active'));
   $('#mobile-menu-home').classList.add('active');
 }
@@ -191,10 +190,6 @@ function activateTab(tab, record = true) {
     history.pushState({ ...history.state, marketingTab: tab }, '');
   }
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
-  const inDashboard = dashboardTabs.has(tab);
-  $('#dashboard-menu').classList.toggle('active', inDashboard);
-  $('#dashboard-menu').setAttribute('aria-expanded', String(inDashboard));
-  $('#mobile-menu-dashboard').classList.toggle('active', inDashboard);
   if (tab === 'dashboard') showDashboardOverview();
   const inActiveClient = activeClientTabs.has(tab);
   $('#active-client-tabs').hidden = !inActiveClient;
@@ -233,7 +228,6 @@ function activateTab(tab, record = true) {
   if (tab === 'dashboard') loadDashboard();
 }
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
-$('#dashboard-menu').addEventListener('click', () => activateTab('dashboard'));
 $('#dashboard-overview').addEventListener('click', (event) => {
   const button = event.target.closest('[data-dash-detail]');
   if (button) showDashboardDetail(button.dataset.dashDetail);
@@ -262,7 +256,6 @@ $('#mobile-menu-toggle').addEventListener('click', openMobileDrawer);
 $('#mobile-drawer-backdrop').addEventListener('click', closeMobileDrawer);
 document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && $('#mobile-drawer').classList.contains('open')) closeMobileDrawer(); });
 $('#mobile-menu-home').addEventListener('click', () => { showMobileHome(); closeMobileDrawer(); });
-$('#mobile-menu-dashboard').addEventListener('click', () => { activateTab('dashboard'); closeMobileDrawer(); });
 $('#mobile-menu-active-client').addEventListener('click', () => { activateTab('clients'); closeMobileDrawer(); });
 $('#mobile-menu-pipeline').addEventListener('click', () => { activateTab('research'); closeMobileDrawer(); });
 $('#mobile-menu-sales').addEventListener('click', () => { activateTab('visits'); closeMobileDrawer(); });
@@ -469,8 +462,7 @@ function renderActiveClients() {
   for (const id of ['#ac-add', '#ac-alias-toggle', '#ac-history-toggle', '#ac-export']) $(id).hidden = !admin;
   for (const id of ['#ac-status-wrap', '#ac-visited-wrap']) $(id).hidden = !admin;
   $('#ac-dashboard').hidden = !admin;
-  $('#dashboard-menu').hidden = !admin;
-  $('#mobile-menu-dashboard').hidden = !admin;
+  $('#settings-menu-dashboard').hidden = !admin;
   if (!admin) { $('#ac-alias-card').hidden = true; $('#ac-history-card').hidden = true; }
   const uniq = (fn) => [...new Set(rows.map(fn).filter(Boolean))].sort();
   fillSelect('#ac-branch', 'Semua cabang', uniq((r) => r.cabang), $('#ac-branch').value);
