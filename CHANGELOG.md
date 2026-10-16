@@ -1,3 +1,8 @@
+VERSION: 0.9.2 (koreksi harga Seragam sesuai Excel pemilik)
+DATE: 2026-10-16
+
+CHANGED (data, bukan kode): 8 harga di kategori "Seragam" (Database → Harga Seragam) dikoreksi agar sesuai acuan file "DAFTRAR HARGA SERAGAM.xlsx" pemilik — ROMPI BIASA (Rp175.000→Rp120.000), ROMPI TEBAL JALA (Rp225.000→Rp245.000), SEPATU PDH DOOF (Rp195.000→Rp205.000), SEPATU PDH HANDYMAN (Rp310.000→Rp315.000), TOPI PDL JALA (Rp35.000→Rp40.000), TOPI PET SAPTAM + EMBLEM (Rp50.000→Rp70.000), SEPATU PDH DENAWARI (Rp305.000→Rp310.000), SEPATU SECWAN PDH SUS (Rp230.000→Rp245.000). Diterapkan lewat migrasi `20261016_perbaikan_harga_seragam_excel.sql` (scripts/apply_migration.py) setelah dry-run transaksi dibatalkan; harga lama tersimpan di `harga_jual_lama`, tiap perubahan tercatat di `marketing_client_changes`. Kategori "Peralatan" TIDAK disentuh — belum ada file Excel acuan untuk peralatan. Item "SEPATU SECWAN PDLSUS" (Rp230.000) tidak punya padanan di Excel, dibiarkan apa adanya.
+
 VERSION: 0.9.1 (detail Dashboard: Client Aktif tanpa batas, Kunjungan & Monitoring lebih lengkap)
 DATE: 2026-10-15
 

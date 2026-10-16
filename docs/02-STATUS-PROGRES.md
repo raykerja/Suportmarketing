@@ -63,6 +63,7 @@ Arti penanda:
 | Admin ubah/tambah item, ekspor Excel, verifikasi harga | 🟡 | Via RPC `marketing_save_price_item` + jejak audit |
 | **6 item seragam ditandai "perlu diverifikasi"** (harga jual disembunyikan dari staf) | ⬜ butuh pemilik | Item no. 20, 22, 24, 25, 26, 27: harga jual di Excel tidak konsisten (mis. jual lebih rendah dari beli, atau angka manual tidak sama dengan lama + kenaikan). Admin memeriksa lalu mencentang "Perlu diverifikasi" dimatikan |
 | Harga dipakai otomatis di pembuatan penawaran/RAB | ⬜ | Belum tersambung; daftar hanya referensi |
+| **8 harga Seragam dikoreksi ulang** sesuai `DAFTRAR HARGA SERAGAM.xlsx` terbaru pemilik (16 Oktober 2026) | ✅ | ROMPI BIASA, ROMPI TEBAL JALA, SEPATU PDH DOOF, SEPATU PDH HANDYMAN, TOPI PDL JALA, TOPI PET SAPTAM + EMBLEM, SEPATU PDH DENAWARI, SEPATU SECWAN PDH SUS. Migrasi `20261016_perbaikan_harga_seragam_excel.sql`, harga lama tersimpan di `harga_jual_lama`. Kategori Peralatan TIDAK diperiksa ulang (belum ada Excel acuan baru). Item "SEPATU SECWAN PDLSUS" tidak punya padanan di Excel, dibiarkan apa adanya |
 
 ## D3. Penyesuaian RAB (9 Oktober 2026)
 
