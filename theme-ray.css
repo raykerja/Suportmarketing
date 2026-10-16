@@ -254,10 +254,10 @@ th { color: var(--ray-muted); background: #f7faff; }
 .dash-card-wide { grid-column: 1 / -1; }
 @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
 
-.dash-mini-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 10px; margin-top: 14px; }
-.dash-mini-stats > div { min-width: 0; border: 1px solid var(--ray-line); background: #f7faff; border-radius: 12px; padding: 12px; }
-.dash-mini-stats strong { display: block; font-size: clamp(16px, 2vw, 20px); line-height: 1.2; color: var(--ray-navy); overflow-wrap: anywhere; word-break: break-word; }
-.dash-mini-stats small { color: var(--ray-muted); overflow-wrap: anywhere; }
+.dash-mini-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-top: 14px; }
+.dash-mini-stats > div { min-width: 0; border: 1px solid var(--ray-line); background: #f7faff; border-radius: 12px; padding: 10px 11px; }
+.dash-mini-stats strong { display: block; font-size: 15px; font-weight: 700; line-height: 1.25; color: var(--ray-navy); overflow-wrap: anywhere; word-break: break-word; }
+.dash-mini-stats small { font-size: 11.5px; color: var(--ray-muted); overflow-wrap: anywhere; }
 
 .dash-bars { display: grid; gap: 10px; margin-top: 14px; }
 .dash-bar-row { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; background: none; border: none; padding: 5px 0; cursor: pointer; font: inherit; text-align: left; position: relative; border-radius: 6px; }
