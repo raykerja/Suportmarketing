@@ -237,12 +237,12 @@ th { color: var(--ray-muted); background: #f7faff; }
 
 /* Dashboard: ringkasan interaktif (kartu KPI, batang tahapan, tren kunjungan) */
 .dash-overview { display: grid; gap: 18px; }
-.dash-hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(168px, 1fr)); gap: 12px; }
-.dash-tile { display: flex; align-items: center; gap: 12px; min-width: 0; background: #fff; border: 1px solid var(--ray-line); border-left: 4px solid var(--ray-blue); border-radius: 14px; padding: 14px 16px; box-shadow: 0 1px 2px rgba(14,27,46,.06); }
-.dash-tile .menu-icon { width: 20px; height: 20px; flex: none; padding: 9px; box-sizing: content-box; border-radius: 11px; background: var(--ray-blue-pale); color: var(--ray-blue); }
+.dash-hero { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; }
+.dash-tile { display: flex; align-items: center; gap: 10px; min-width: 0; background: #fff; border: 1px solid var(--ray-line); border-left: 4px solid var(--ray-blue); border-radius: 13px; padding: 11px 13px; box-shadow: 0 1px 2px rgba(14,27,46,.06); }
+.dash-tile .menu-icon { width: 16px; height: 16px; flex: none; padding: 7px; box-sizing: content-box; border-radius: 10px; background: var(--ray-blue-pale); color: var(--ray-blue); }
 .dash-tile > div { min-width: 0; flex: 1 1 auto; }
-.dash-tile strong { display: block; font-size: clamp(17px, 2.3vw, 24px); line-height: 1.2; color: var(--ray-navy); font-weight: 800; overflow-wrap: anywhere; word-break: break-word; }
-.dash-tile small { display: block; color: var(--ray-muted); font-size: 12.5px; margin-top: 1px; overflow-wrap: anywhere; }
+.dash-tile strong { display: block; font-size: 17px; line-height: 1.25; color: var(--ray-navy); font-weight: 700; overflow-wrap: anywhere; word-break: break-word; }
+.dash-tile small { display: block; color: var(--ray-muted); font-size: 11.5px; margin-top: 1px; overflow-wrap: anywhere; }
 .dash-tile.warning { border-left-color: #c98a1b; }
 .dash-tile.warning .menu-icon { background: #fff2d8; color: #936400; }
 .dash-tile.critical { border-left-color: #b73729; }
