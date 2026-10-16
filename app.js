@@ -2012,81 +2012,169 @@ async function loadDashboard() {
   status('#dashboard-status', errMsg ? 'Sebagian data gagal dimuat: ' + errMsg : `Diperbarui: ${date(new Date().toISOString())}`, !!errMsg);
   renderOpsDashboard();
 }
+const dashOrdinalRamp = ['#8fb6e6', '#6396d8', '#4a7fcc', '#0a4fa6'];
+function dashHeroTile(icon, value, label, tone) {
+  return `<div class="dash-tile${tone ? ' ' + tone : ''}"><svg class="menu-icon"><use href="#icon-${icon}"></use></svg><div><strong>${esc(value)}</strong><small>${esc(label)}</small></div></div>`;
+}
+function dashMiniStats(items) {
+  return `<div class="dash-mini-stats">${items.map(([v, l]) => `<div><strong>${esc(v)}</strong><small>${esc(l)}</small></div>`).join('')}</div>`;
+}
+function dashBarChart(rows, detailKey) {
+  const max = Math.max(1, ...rows.map((r) => r.value));
+  return `<div class="dash-bars">${rows.map((r) => {
+    const pct = r.value ? Math.max(5, Math.round((r.value / max) * 100)) : 0;
+    return `<button type="button" class="dash-bar-row" data-dash-detail="${detailKey}" data-tip="${esc(r.tip || `${r.label}: ${r.value}`)}">
+      <span class="dash-bar-label">${esc(r.label)}</span>
+      <span class="dash-bar-track"><span class="dash-bar-fill" style="width:${pct}%;background:${r.color}"></span></span>
+      <span class="dash-bar-value">${esc(r.value)}</span>
+    </button>`;
+  }).join('')}</div>`;
+}
+function dashChips(chips, detailKey) {
+  return `<div class="dash-chip-row">${chips.map((c) => `<button type="button" class="dash-chip ${c.tone}" data-dash-detail="${detailKey}" data-tip="${esc(c.tip || c.label)}">${esc(c.label)}</button>`).join('')}</div>`;
+}
+function localDateKey(iso) {
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+}
+function buildVisitTrend() {
+  const days = [];
+  const todayDate = new Date(localToday() + 'T00:00:00');
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(todayDate); d.setDate(d.getDate() - i);
+    days.push({ key: d.toISOString().slice(0, 10), axis: d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }), pic: 0, sales: 0 });
+  }
+  const byKey = Object.fromEntries(days.map((d) => [d.key, d]));
+  for (const r of picVisitRows) { const row = byKey[localDateKey(r.created_at)]; if (row) row.pic++; }
+  for (const r of visitCache) { const row = byKey[localDateKey(r.created_at)]; if (row) row.sales++; }
+  return days.map((d) => ({ ...d, value: d.pic + d.sales, tip: `${d.axis}: ${d.pic + d.sales} kunjungan (${d.pic} PIC, ${d.sales} Marketing)` }));
+}
+function dashTrendChart(days) {
+  const max = Math.max(1, ...days.map((d) => d.value));
+  return `<div class="dash-trend">
+    <div class="dash-trend-bars">${days.map((d) => {
+      const h = d.value ? Math.max(6, Math.round((d.value / max) * 100)) : 2;
+      return `<div class="dash-trend-col" tabindex="0" data-tip="${esc(d.tip)}"><span class="dash-trend-fill" style="height:${h}%"></span></div>`;
+    }).join('')}</div>
+    <div class="dash-trend-axis"><span>${esc(days[0]?.axis || '')}</span><span>${esc(days[days.length - 1]?.axis || '')}</span></div>
+  </div>`;
+}
 function renderOpsDashboard() {
   if (!isAdmin()) return;
+  const todayStr = localToday();
   const live = activeClients.filter((r) => r.status === 'aktif');
   const soon = live.filter((r) => { const l = daysLeft(r); return l !== null && l >= 0 && l <= 90; }).length;
   const noDate = live.filter((r) => !r.kontrak_akhir).length;
   const korlapAliases = picAliases.filter((a) => a.pic_role === 'korlap');
   const korlapNoAccount = korlapAliases.filter((a) => !a.user_id).length;
-  $('#dash-clients-summary').innerHTML = `<div><strong>${live.length}</strong><small>Client aktif</small></div>
-    <div><strong>${activeClients.length - live.length}</strong><small>Diarsipkan</small></div>
-    <div><strong>${soon}</strong><small>Kontrak &le; 90 hari</small></div>
-    <div><strong>${noDate}</strong><small>Tanpa tanggal kontrak</small></div>
-    <div><strong>${korlapNoAccount}</strong><small>PIC Korlap belum punya akun</small></div>`;
+  $('#dash-clients-summary').innerHTML = dashMiniStats([
+    [live.length, 'Client aktif'], [activeClients.length - live.length, 'Diarsipkan'],
+    [soon, 'Kontrak ≤ 90 hari'], [noDate, 'Tanpa tanggal kontrak'], [korlapNoAccount, 'PIC Korlap belum punya akun'],
+  ]);
 
   const picInitial = picVisitRows.filter((r) => r.visit_stage === 'initial').length;
   const salesInitial = visitCache.filter((r) => r.data?.visit_stage === 'initial').length;
-  $('#dash-visits-summary').innerHTML = `<div><strong>${picVisitRows.length}</strong><small>Kunjungan PIC</small></div>
-    <div><strong>${picInitial}</strong><small>Kunjungan PIC perlu detail</small></div>
-    <div><strong>${visitCache.length}</strong><small>Kunjungan Marketing</small></div>
-    <div><strong>${salesInitial}</strong><small>Kunjungan Marketing perlu detail</small></div>`;
+  const trend = buildVisitTrend();
+  $('#dash-visits-trend').innerHTML = dashTrendChart(trend);
+  $('#dash-visits-summary').innerHTML = dashMiniStats([
+    [picVisitRows.length, 'Kunjungan PIC'], [picInitial, 'PIC perlu detail'],
+    [visitCache.length, 'Kunjungan Marketing'], [salesInitial, 'Marketing perlu detail'],
+  ]);
 
+  let monitoringOverdue = 0;
   if (dashboardLoaded) {
     const monitoringCounts = Object.fromEntries(Object.keys(monitoringStageNames).map((k) => [k, 0]));
-    let overdue = 0;
-    const todayStr = localToday();
     for (const row of dashboardMonitoring) {
       if (row.stage in monitoringCounts) monitoringCounts[row.stage]++;
-      if (row.next_follow_up && row.next_follow_up < todayStr && !['won', 'lost'].includes(row.stage)) overdue++;
+      if (row.next_follow_up && row.next_follow_up < todayStr && !['won', 'lost'].includes(row.stage)) monitoringOverdue++;
     }
-    $('#dash-monitoring-summary').innerHTML = Object.entries(monitoringStageNames)
-      .map(([k, label]) => `<div><strong>${monitoringCounts[k]}</strong><small>${esc(label)}</small></div>`).join('')
-      + `<div><strong>${overdue}</strong><small>Follow up terlewat</small></div>`;
+    const total = dashboardMonitoring.length || 1;
+    const funnelKeys = ['review', 'proposal', 'sent', 'follow_up'];
+    const bars = funnelKeys.map((k, i) => ({ label: monitoringStageNames[k], value: monitoringCounts[k], color: dashOrdinalRamp[i],
+      tip: `${monitoringStageNames[k]}: ${monitoringCounts[k]} dari ${total} (${Math.round(monitoringCounts[k] / total * 100)}%)` }));
+    $('#dash-monitoring-summary').innerHTML = dashBarChart(bars, 'monitoring') + dashChips([
+      { label: `${monitoringCounts.won} ${monitoringStageNames.won}`, tone: 'good' },
+      { label: `${monitoringCounts.lost} ${monitoringStageNames.lost}`, tone: 'neutral' },
+      { label: `${monitoringOverdue} Follow up terlewat`, tone: monitoringOverdue ? 'critical' : 'neutral' },
+    ], 'monitoring');
   } else {
     $('#dash-monitoring-summary').innerHTML = '<p class="hint">Memuat…</p>';
   }
 
   const progressCounts = Object.fromEntries(Object.keys(stageNames).map((k) => [k, 0]));
-  for (const row of progressCache) if (row.stage in progressCounts) progressCounts[row.stage]++;
-  $('#dash-progress-summary').innerHTML = Object.entries(stageNames)
-    .map(([k, label]) => `<div><strong>${progressCounts[k]}</strong><small>${esc(label)}</small></div>`).join('');
+  let progressOverdue = 0;
+  for (const row of progressCache) {
+    if (row.stage in progressCounts) progressCounts[row.stage]++;
+    if (row.next_follow_up && row.next_follow_up < todayStr && !['deal', 'gagal'].includes(row.stage)) progressOverdue++;
+  }
+  const progressTotal = progressCache.length || 1;
+  const progressFunnelKeys = ['kunjungan', 'proposal', 'penawaran', 'follow_up'];
+  const progressBars = progressFunnelKeys.map((k, i) => ({ label: stageNames[k], value: progressCounts[k], color: dashOrdinalRamp[i],
+    tip: `${stageNames[k]}: ${progressCounts[k]} dari ${progressTotal} (${Math.round(progressCounts[k] / progressTotal * 100)}%)` }));
+  $('#dash-progress-summary').innerHTML = dashBarChart(progressBars, 'progress') + dashChips([
+    { label: `${progressCounts.deal} ${stageNames.deal}`, tone: 'good' },
+    { label: `${progressCounts.gagal} ${stageNames.gagal}`, tone: 'neutral' },
+    { label: `${progressOverdue} Follow up terlewat`, tone: progressOverdue ? 'critical' : 'neutral' },
+  ], 'progress');
 
   const researchProcessing = researchCache.filter((r) => r.status === 'processing').length;
   const leadPending = leadCache.filter((r) => r.review_status === 'pending').length;
   const leadApproved = leadCache.filter((r) => r.review_status === 'approved').length;
   const offerProcessingOrError = offerCache.filter((r) => r.status === 'processing' || r.status === 'error').length;
-  $('#dash-pipeline-summary').innerHTML = `<div><strong>${researchCache.length}</strong><small>Riset target</small></div>
-    <div><strong>${researchProcessing}</strong><small>Riset masih proses</small></div>
-    <div><strong>${leadPending}</strong><small>Lead perlu direview</small></div>
-    <div><strong>${leadApproved}</strong><small>Lead disetujui</small></div>
-    <div><strong>${offerCache.length}</strong><small>Dokumen penawaran</small></div>
-    <div><strong>${offerProcessingOrError}</strong><small>Penawaran proses/gagal</small></div>`;
+  $('#dash-pipeline-summary').innerHTML = dashMiniStats([
+    [researchCache.length, 'Riset target'], [researchProcessing, 'Riset masih proses'],
+    [leadPending, 'Lead perlu direview'], [leadApproved, 'Lead disetujui'],
+    [offerCache.length, 'Dokumen penawaran'], [offerProcessingOrError, 'Penawaran proses/gagal'],
+  ]);
 
   const seragamCount = priceRows.filter((r) => r.kategori === 'seragam').length;
   const peralatanCount = priceRows.filter((r) => r.kategori === 'peralatan').length;
   const perluVerifikasi = priceRows.filter((r) => r.perlu_verifikasi).length;
-  $('#dash-database-summary').innerHTML = `<div><strong>${seragamCount}</strong><small>Item harga seragam</small></div>
-    <div><strong>${peralatanCount}</strong><small>Item harga peralatan</small></div>
-    <div><strong>${perluVerifikasi}</strong><small>Harga perlu diverifikasi</small></div>
-    <div><strong>${rabRecapCache.length}</strong><small>RAB final tercatat</small></div>`;
+  $('#dash-database-summary').innerHTML = dashMiniStats([
+    [seragamCount, 'Item harga seragam'], [peralatanCount, 'Item harga peralatan'],
+    [perluVerifikasi, 'Harga perlu diverifikasi'], [rabRecapCache.length, 'RAB final tercatat'],
+  ]);
 
   const totalExpenseMonth = dashboardExpenseMonth.reduce((sum, r) => sum + Number(r.nominal || 0), 0);
-  $('#dash-expense-summary').innerHTML = `<div><strong>${dashboardExpenseMonth.length}</strong><small>Transaksi bulan ini</small></div>
-    <div><strong>${rupiah(totalExpenseMonth)}</strong><small>Total bulan ini</small></div>`;
+  $('#dash-expense-summary').innerHTML = dashMiniStats([
+    [dashboardExpenseMonth.length, 'Transaksi bulan ini'], [rupiah(totalExpenseMonth), 'Total bulan ini'],
+  ]);
   const byType = {};
   for (const row of dashboardExpenseMonth) byType[row.jenis_pengeluaran] = (byType[row.jenis_pengeluaran] || 0) + Number(row.nominal || 0);
-  $('#dash-expense-breakdown').innerHTML = Object.entries(byType).sort((a, b) => b[1] - a[1])
-    .map(([jenis, total]) => `<div class="item"><strong>${esc(jenis)}</strong><small>${rupiah(total)}</small></div>`).join('')
-    || '<p class="hint">Belum ada pengeluaran bulan ini.</p>';
+  const expenseRows = Object.entries(byType).sort((a, b) => b[1] - a[1])
+    .map(([jenis, total]) => ({ label: jenis, value: rupiah(total), color: 'var(--ray-blue)', tip: `${jenis}: ${rupiah(total)}` }));
+  if (expenseRows.length) {
+    const maxAmount = Math.max(1, ...Object.values(byType));
+    $('#dash-expense-breakdown').innerHTML = `<div class="dash-bars">${expenseRows.map((r) => {
+      const amount = byType[r.label];
+      const pct = Math.max(5, Math.round((amount / maxAmount) * 100));
+      return `<button type="button" class="dash-bar-row" data-dash-detail="expenses" data-tip="${esc(r.tip)}">
+        <span class="dash-bar-label">${esc(r.label)}</span>
+        <span class="dash-bar-track"><span class="dash-bar-fill" style="width:${pct}%;background:${r.color}"></span></span>
+        <span class="dash-bar-value">${esc(rupiah(amount))}</span>
+      </button>`;
+    }).join('')}</div>`;
+  } else {
+    $('#dash-expense-breakdown').innerHTML = '<p class="hint">Belum ada pengeluaran bulan ini.</p>';
+  }
 
   const adminCount = allMembers.filter((m) => m.role === 'admin').length;
   const staffCount = allMembers.filter((m) => m.role !== 'admin').length;
   const inactiveCount = allMembers.filter((m) => m.active === false).length;
-  $('#dash-team-summary').innerHTML = `<div><strong>${adminCount}</strong><small>Admin</small></div>
-    <div><strong>${staffCount}</strong><small>Staf</small></div>
-    <div><strong>${inactiveCount}</strong><small>Akun nonaktif</small></div>
-    <div><strong>${korlapAliases.length}</strong><small>Total alias PIC Korlap</small></div>`;
+  $('#dash-team-summary').innerHTML = dashMiniStats([
+    [adminCount, 'Admin'], [staffCount, 'Staf'], [inactiveCount, 'Akun nonaktif'], [korlapAliases.length, 'Total alias PIC Korlap'],
+  ]);
+
+  const visits7d = trend.slice(7).reduce((sum, d) => sum + d.value, 0);
+  const overdueTotal = monitoringOverdue + progressOverdue;
+  $('#dash-hero').innerHTML = [
+    dashHeroTile('users', live.length, 'Client aktif'),
+    dashHeroTile('pin', soon, 'Kontrak ≤ 90 hari', soon ? 'warning' : ''),
+    dashHeroTile('activity', overdueTotal, 'Follow up terlewat', overdueTotal ? 'critical' : 'good'),
+    dashHeroTile('user-plus', visits7d, 'Kunjungan 7 hari terakhir'),
+    dashHeroTile('wallet', rupiah(totalExpenseMonth), 'Pengeluaran bulan ini'),
+    dashHeroTile('search', leadPending, 'Lead perlu direview', leadPending ? 'warning' : ''),
+  ].join('');
 }
 $('#dashboard-refresh').addEventListener('click', loadDashboard);
 function showDashboardOverview() {
