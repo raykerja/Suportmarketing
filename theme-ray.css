@@ -90,8 +90,8 @@ button#mobile-menu-toggle:hover { filter: none; }
   .mobile-drawer-head { display: flex; align-items: center; justify-content: center; padding: 6px 4px; border-bottom: 1px solid rgba(255,255,255,.14); }
   .mobile-drawer-head .brand-logo { width: 22px; height: 17px; padding: 1px; flex: none; }
   .mobile-drawer-grid { display: grid; grid-template-columns: auto; justify-content: stretch; gap: 1px; padding: 3px; }
-  .mobile-drawer-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; width: 100%; border: none; border-radius: 10px; background: none; padding: 8px 2px; font-size: 9px; font-weight: 700; color: rgba(255,255,255,.62); text-align: center; line-height: 1.1; white-space: nowrap; }
-  .mobile-drawer-item .menu-icon { width: 17px; height: 17px; color: rgba(255,255,255,.78); }
+  .mobile-drawer-item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; width: 100%; border: none; border-radius: 10px; background: none; padding: 10px 3px; font-size: 10px; font-weight: 700; color: rgba(255,255,255,.62); text-align: center; line-height: 1.15; white-space: nowrap; }
+  .mobile-drawer-item .menu-icon { width: 19px; height: 19px; color: rgba(255,255,255,.78); }
   .mobile-drawer-item.active { background: rgba(255,255,255,.1); color: #fff; }
   .mobile-drawer-item.active .menu-icon { color: var(--ray-gold); }
   .sub-tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; margin: 0; display: flex; flex-wrap: nowrap; align-items: stretch; gap: 0; background: linear-gradient(115deg, #14204a, #071c45); border-top: 1px solid rgba(255,255,255,.08); box-shadow: 0 -8px 22px rgba(8,16,30,.3); padding: 7px 2px max(7px, env(safe-area-inset-bottom)); }
