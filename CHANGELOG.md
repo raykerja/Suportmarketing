@@ -1,3 +1,8 @@
+VERSION: 0.9.9 (fix: Foto Kunjungan Marketing tidak bisa pilih dari galeri)
+DATE: 2026-10-20
+
+FIXED: Field "Foto kunjungan" di submenu Kunjungan Marketing (`#visit-photo`, index.html) dan field "Foto" di baris bukti Transaksi Pengeluaran (`data-tx-photo`, app.js) punya atribut `capture="environment"` yang di kebanyakan browser Android memaksa langsung buka kamera, menyembunyikan opsi pilih dari galeri — padahal hint text di kedua field sudah bilang "Ambil dengan kamera HP atau pilih dari galeri". Dihapus atributnya supaya sama seperti field "Foto kunjungan" di Kunjungan PIC (`#pic-visit-photo`) yang sudah benar sejak awal. `app.js?v=` dinaikkan ke `20261020-5` supaya staf dapat versi baru (bukan cache lama).
+
 VERSION: 0.9.8 (Durasi kontrak RAB jadi dropdown)
 DATE: 2026-10-20
 

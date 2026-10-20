@@ -1067,7 +1067,7 @@ function addExpenseTxPhotoRow(block) {
   const rows = block.querySelector('[data-tx-photo-rows]');
   if (rows.children.length >= 3) return;
   const row = document.createElement('div'); row.className = 'visit-service';
-  row.innerHTML = '<label>Foto<input type="file" accept="image/*" capture="environment" data-tx-photo></label>' +
+  row.innerHTML = '<label>Foto<input type="file" accept="image/*" data-tx-photo></label>' +
     (rows.children.length ? '<button type="button" data-remove-tx-photo aria-label="Hapus foto">Hapus</button>' : '');
   rows.appendChild(row);
   block.querySelector('[data-tx-add-photo]').hidden = rows.children.length >= 3;

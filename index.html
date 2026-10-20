@@ -29,7 +29,7 @@
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261020-4"></script>
+  <script type="module" src="app.js?v=20261020-5"></script>
   <script defer src="pwa.js?v=20261010-1"></script>
 </head>
 <body>
@@ -114,7 +114,7 @@
                 <label>Nama perusahaan / instansi <span class="required">*</span><input id="visit-company" name="nama_perusahaan" list="target-suggestions" maxlength="180" autocomplete="organization" required placeholder="Ketik nama target"></label><datalist id="target-suggestions"></datalist>
                 <label>Kategori <span class="required">*</span><select name="kategori" required><option value="">Pilih kategori</option><option>Swasta</option><option>Pemerintah</option><option>Hotel</option><option>Pabrik</option><option>Rumah Sakit</option><option>Pendidikan</option><option value="Lainnya">Lainnya</option></select></label>
                 <div class="form-grid"><label>Nama PIC yang ditemui <span class="required">*</span><input name="nama_pejabat_pic_1" maxlength="150" required></label><label>Jabatan PIC <span class="required">*</span><input name="jabatan_pic" maxlength="100" required placeholder="HRD / Purchasing"></label></div>
-                <label>Foto kunjungan <small>Ambil dengan kamera HP atau pilih dari galeri</small><input id="visit-photo" type="file" accept="image/*" capture="environment"></label><p id="photo-note" class="hint"></p>
+                <label>Foto kunjungan <small>Ambil dengan kamera HP atau pilih dari galeri</small><input id="visit-photo" type="file" accept="image/*"></label><p id="photo-note" class="hint"></p>
                 <label>Koordinat kunjungan<input id="visit-coordinates" name="koordinat_target" maxlength="100" readonly placeholder="Tekan Ambil lokasi HP"></label><button id="get-location" type="button">Ambil lokasi HP</button><p id="location-status" class="hint" role="status"></p>
               </fieldset></section>
               <section id="visit-step-2" class="visit-step" data-visit-step-panel="2" aria-labelledby="visit-step-button-2" hidden><fieldset><legend class="sr-only">Lengkapi detail</legend>
