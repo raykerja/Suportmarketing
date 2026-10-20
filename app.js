@@ -1725,7 +1725,7 @@ $('#offer-recap-refresh').addEventListener('click', async () => { await loadLead
 async function loadRabRecap() {
   if (!client || !currentUser) return;
   $('#rab-recap-admin').hidden = !isAdmin();
-  const { data, error } = await client.from('marketing_rab_recap').select('*').order('nama');
+  const { data, error } = await client.from('marketing_rab_recap_view').select('*').order('nama');
   if (error) { status('#rab-recap-status', 'Daftar belum dapat dimuat: ' + error.message, true); return; }
   rabRecapCache = data || [];
   $('#rab-recap-suggestions').innerHTML = rabRecapCache.map((r) => `<option value="${esc(r.nama)}"></option>`).join('');
@@ -1754,6 +1754,37 @@ function renderRabRecap() {
 }
 $('#refresh-rab-recap').addEventListener('click', loadRabRecap);
 $('#rab-recap-query').addEventListener('input', renderRabRecap);
+const RAB_RINCIAN_FIELDS = {
+  jumlah_anggota: 'rab-r-jumlah', gaji_pokok: 'rab-r-gaji', thr: 'rab-r-thr', kompensasi_uuck: 'rab-r-uuck', lembur: 'rab-r-lembur',
+  acuan_bpjs: 'rab-r-acuan-bpjs', jkk: 'rab-r-jkk', jkm: 'rab-r-jkm', jht: 'rab-r-jht', jp: 'rab-r-jp', bpjs_kesehatan: 'rab-r-kesehatan',
+  seragam_kerja: 'rab-r-seragam', peralatan_kerja: 'rab-r-peralatan', pelatihan_supervisi: 'rab-r-pelatihan', pembinaan_monitoring: 'rab-r-pembinaan',
+  management_fee_rupiah: 'rab-r-fee-rupiah', ppn_ps23: 'rab-r-ppn', pph: 'rab-r-pph',
+  total_per_orang_per_bulan: 'rab-r-total-orang', biaya_total_kontrak: 'rab-r-total-kontrak',
+};
+const RAB_BPJS_RATES = { jkk: 0.0024, jkm: 0.0030, jht: 0.0370, jp: 0.0200, bpjs_kesehatan: 0.0400 };
+function recomputeRabBpjs() {
+  const acuan = Number(digitsOnly($('#rab-r-acuan-bpjs').value));
+  for (const key of Object.keys(RAB_BPJS_RATES)) {
+    $('#' + RAB_RINCIAN_FIELDS[key]).value = acuan ? groupThousands(String(Math.round(acuan * RAB_BPJS_RATES[key]))) : '';
+  }
+}
+$('#rab-r-acuan-bpjs').addEventListener('input', recomputeRabBpjs);
+$('#rab-recap-form').addEventListener('input', (event) => {
+  const field = event.target.closest('.rab-rp-field');
+  if (field && !field.readOnly) field.value = groupThousands(field.value);
+  if (event.target.id === 'rab-r-jumlah') event.target.value = digitsOnly(event.target.value);
+});
+function buildRabRincianPayload() {
+  const out = {};
+  for (const [key, id] of Object.entries(RAB_RINCIAN_FIELDS)) out[key] = Number(digitsOnly($('#' + id).value)) || 0;
+  out.management_fee_persen = Number(String($('#rab-r-fee-persen').value).trim().replace(',', '.')) || 0;
+  return out;
+}
+function fillRabRincianForm(rincian) {
+  const r = rincian || {};
+  for (const [key, id] of Object.entries(RAB_RINCIAN_FIELDS)) $('#' + id).value = r[key] ? groupThousands(String(r[key])) : '';
+  $('#rab-r-fee-persen').value = r.management_fee_persen || '';
+}
 function resetRabRecapForm() {
   editingRabRecap = null;
   $('#rab-recap-form-title').textContent = 'Tambah RAB';
@@ -1769,7 +1800,8 @@ $('#rab-recap-form').addEventListener('submit', async (event) => {
   status('#rab-recap-form-status', 'Menyimpan…');
   const payload = { id: editingRabRecap?.id || null, expected_updated_at: editingRabRecap?.updated_at,
     nama: $('#rab-recap-f-nama').value.trim(), link: $('#rab-recap-f-link').value.trim(), catatan: $('#rab-recap-f-catatan').value.trim(),
-    durasi_kontrak: $('#rab-recap-f-durasi').value.trim(), nilai_kontrak: Number(digitsOnly($('#rab-recap-f-nilai').value)) || 0 };
+    durasi_kontrak: $('#rab-recap-f-durasi').value.trim(), nilai_kontrak: Number(digitsOnly($('#rab-recap-f-nilai').value)) || 0,
+    rincian: buildRabRincianPayload() };
   const { error } = await client.rpc('marketing_save_rab_recap', { p: payload });
   button.disabled = false;
   if (error) { status('#rab-recap-form-status', error.message, true); return; }
@@ -1788,6 +1820,7 @@ $('#rab-recap-list').addEventListener('click', async (event) => {
     $('#rab-recap-f-durasi').value = editingRabRecap.durasi_kontrak || '';
     $('#rab-recap-f-nilai').value = editingRabRecap.nilai_kontrak ? groupThousands(String(editingRabRecap.nilai_kontrak)) : '';
     $('#rab-recap-f-catatan').value = editingRabRecap.catatan || '';
+    fillRabRincianForm(editingRabRecap.rincian);
     $('#rab-recap-form-cancel').hidden = false;
     status('#rab-recap-form-status', '');
     $('#rab-recap-f-nama').scrollIntoView({ behavior: 'smooth', block: 'center' });

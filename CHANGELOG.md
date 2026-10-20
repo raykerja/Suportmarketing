@@ -1,3 +1,10 @@
+VERSION: 0.9.10 (Rincian RAB: breakdown gaji/BPJS/fee/pajak, admin-only)
+DATE: 2026-10-20
+
+ADDED: Bagian baru "Rincian RAB" di bawah form "Tambah RAB" (submenu 1. Input RAB Fix), tombol Simpan dipindah ke paling bawah setelah bagian ini. Berisi: Jumlah Anggota; Komponen Gaji (Gaji Pokok, THR, Kompensasi UUCK, Lembur); Komponen BPJS (Acuan Nilai BPJS + JKK/JKM/JHT/JP/BPJS Kesehatan — 5 kolom ini **otomatis** terisi = Acuan × persentase masing-masing (0.24%/0.30%/3.70%/2.00%/4.00%), tidak bisa diketik manual); Komponen Fasilitas Kerja (Seragam, Peralatan); Peningkatan Kemampuan (Pelatihan dan Supervisi, Pembinaan dan Monitoring); Biaya Pengelolaan (Management Fee % dan Rp, keduanya diisi manual — tidak saling mengalikan otomatis sesuai arahan pemilik); Pajak (PPN Ps 23 11%, PPH 2%, manual); Biaya Akhir (Total Biaya Per Orang Per Bulan, Biaya Total Kontrak, manual, tidak terhubung otomatis ke field "Nilai kontrak" di atasnya). Semua field Rupiah diformat otomatis pakai titik ribuan (kecuali Management Fee % dan Jumlah Anggota).
+
+**Akses dibatasi admin-only** (data margin/harga internal) — disimpan 1 kolom `rincian` (jsonb) di `marketing_rab_recap`, dibaca lewat VIEW baru `marketing_rab_recap_view` yang mengosongkan (null) kolom `rincian` untuk akun bukan admin; staf biasa tetap bisa baca Nama/Link/Catatan/Durasi/Nilai kontrak seperti sebelumnya di submenu "2. Rekapitulasi RAB" (tidak menampilkan Rincian RAB). Grant SELECT langsung ke tabel asli dicabut dari role `authenticated`, diganti grant SELECT ke VIEW saja. Migrasi `20261020_marketing_rab_recap_rincian.sql`; logika masking (membership + admin check) sudah diuji lewat query simulasi 3 identitas (admin/staf/orang luar) sebelum diterapkan — staf dapat baris tapi `rincian` null, orang luar (bukan anggota tim aktif) 0 baris, admin dapat `rincian` lengkap.
+
 VERSION: 0.9.9 (fix: Foto Kunjungan Marketing tidak bisa pilih dari galeri)
 DATE: 2026-10-20
 
