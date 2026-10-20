@@ -301,7 +301,7 @@ function localToday() {
 function visitPayload() {
   const form = $('#visit-form'); const result = {};
   for (const name of visitFields) result[name] = String(form.elements[name]?.value || '').trim();
-  const services = Array.from(document.querySelectorAll('.visit-service')).map((row) => ({
+  const services = Array.from(document.querySelectorAll('#visit-services .visit-service')).map((row) => ({
     bagian: row.querySelector('[data-service-name]').value.trim(), jumlah: row.querySelector('[data-service-count]').value.trim(),
   })).filter((row) => row.bagian || row.jumlah);
   result.layanan_outsourcing = services;
@@ -1006,7 +1006,7 @@ $('#visit-form').addEventListener('submit', async (event) => {
   if (activeVisitStep === '2' && !editingVisitId) {
     status('#visit-status', 'Pilih kunjungan yang sudah disimpan terlebih dahulu.', true); $('#visit-saved').focus(); return;
   }
-  const serviceRows = Array.from(document.querySelectorAll('.visit-service'));
+  const serviceRows = Array.from(document.querySelectorAll('#visit-services .visit-service'));
   if (activeVisitStep === '2' && serviceRows.some((row) => !!row.querySelector('[data-service-name]').value.trim() !== !!row.querySelector('[data-service-count]').value.trim())) {
     status('#visit-status', 'Setiap bagian kerja harus memiliki nama dan jumlah orang.', true); return;
   }
