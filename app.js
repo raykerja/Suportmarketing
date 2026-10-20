@@ -857,11 +857,11 @@ async function loadRepitch() {
   if (isAdmin()) renderOpsDashboard();
 }
 const repitchStatus = (clientId) => repitchRows.find((r) => r.client_id === clientId);
+const myAdminAliases = () => picAliases.filter((a) => a.pic_role === 'admin' && a.user_id === currentUser?.id).map((a) => a.alias);
 function myRepitchClients() {
-  const live = activeClients.filter((r) => r.status === 'aktif' && r.admin_raw);
-  if (isAdmin()) return live;
-  const mine = picAliases.filter((a) => a.pic_role === 'admin' && a.user_id === currentUser?.id).map((a) => a.alias);
+  const mine = myAdminAliases();
   if (!mine.length) return [];
+  const live = activeClients.filter((r) => r.status === 'aktif' && r.admin_raw);
   return live.filter((r) => adminTokens(r).some((t) => mine.includes(t)));
 }
 function repitchAdminStats() {
@@ -875,17 +875,16 @@ function repitchAdminStats() {
   }).filter((s) => s.total);
 }
 function renderRepitch() {
-  const admin = isAdmin();
-  const allAdminAliases = [...new Set(picAliases.filter((a) => a.pic_role === 'admin').map((a) => a.alias))].sort();
-  $('#repitch-pic-wrap').hidden = !admin;
-  if (admin) fillSelect('#repitch-pic', 'Semua PIC Admin', allAdminAliases, $('#repitch-pic').value);
+  const mine = myAdminAliases();
+  $('#repitch-pic-wrap').hidden = mine.length <= 1;
+  if (mine.length > 1) fillSelect('#repitch-pic', 'Semua PIC saya', mine, $('#repitch-pic').value);
   let rows = myRepitchClients();
-  if (admin && $('#repitch-pic').value !== 'all') rows = rows.filter((r) => adminTokens(r).includes($('#repitch-pic').value));
+  if (mine.length > 1 && $('#repitch-pic').value !== 'all') rows = rows.filter((r) => adminTokens(r).includes($('#repitch-pic').value));
   const q = $('#repitch-search').value.trim().toLocaleLowerCase('id');
   if (q) rows = rows.filter((r) => (r.nama_client || '').toLocaleLowerCase('id').includes(q));
-  $('#repitch-scope').textContent = !activeClientLoaded ? 'Memuat daftar client…' : admin
-    ? 'Akun admin: menampilkan semua client yang punya PIC Admin.'
-    : 'Menampilkan client aktif yang PIC Admin-nya adalah akun ini.';
+  $('#repitch-scope').textContent = !activeClientLoaded ? 'Memuat daftar client…'
+    : mine.length ? 'Menampilkan client aktif yang PIC Admin-nya adalah akun ini.'
+    : 'Akun ini belum terdaftar sebagai PIC Admin client manapun.';
   const done = rows.filter((r) => repitchStatus(r.id)?.offer_made).length;
   const total = rows.length;
   const pct = total ? Math.round((done / total) * 100) : 0;
