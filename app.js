@@ -1771,7 +1771,10 @@ async function exportRabRecapSummary() {
   try { await loadXlsx(); } catch (error) { status('#rab-recap-summary-status', error.message, true); return; }
   const data = rows.map((r, i) => {
     const out = { 'No': i + 1, 'Nama Lokasi': r.nama, 'Durasi Kontrak': r.durasi_kontrak || '' };
-    if (admin) for (const [key, label] of RAB_RINCIAN_COLUMNS) out[label] = rabRincianRawValue(r.rincian, key);
+    if (admin) for (const [key, label] of RAB_RINCIAN_COLUMNS) {
+      const v = rabRincianRawValue(r.rincian, key);
+      out[label] = key === 'management_fee_persen' ? (v ? v + '%' : '') : v;
+    }
     out['Nilai Kontrak'] = r.nilai_kontrak || 0;
     out['Link Spreadsheet'] = r.link;
     return out;

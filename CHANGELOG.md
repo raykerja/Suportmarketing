@@ -1,3 +1,8 @@
+VERSION: 0.9.13 (Excel Rekapitulasi RAB: Management Fee tampil %)
+DATE: 2026-10-20
+
+FIXED: Kolom "Management Fee (%)" di file Excel hasil unduhan submenu Rekapitulasi RAB sekarang tampil dengan tanda % langsung di belakang nilai (contoh "10%"), sebelumnya cuma angka polos ("10") sehingga ambigu dengan kolom Rupiah lain. Field input di form "Rincian RAB" tidak diubah (tetap seperti semula, tanpa % otomatis saat mengetik).
+
 VERSION: 0.9.12 (Rekapitulasi RAB: kolom Rincian lengkap + unduh Excel)
 DATE: 2026-10-20
 
