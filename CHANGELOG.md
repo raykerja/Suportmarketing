@@ -1,3 +1,8 @@
+VERSION: 0.9.11 (5 kolom BPJS di Rincian RAB bisa diedit manual)
+DATE: 2026-10-20
+
+CHANGED: 5 kolom paket BPJS (JKK/JKM/JHT/JP/BPJS Kesehatan) di "Rincian RAB" tetap otomatis terisi begitu "Acuan Nilai BPJS" diisi, tapi sekarang tidak lagi `readonly` — admin bisa klik dan mengubah nilainya sendiri kalau perlu. Catatan: mengisi ulang "Acuan Nilai BPJS" akan menghitung ulang dan menimpa nilai yang sudah diedit manual di 5 kolom itu.
+
 VERSION: 0.9.10 (Rincian RAB: breakdown gaji/BPJS/fee/pajak, admin-only)
 DATE: 2026-10-20
 
