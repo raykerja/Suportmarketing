@@ -1734,16 +1734,57 @@ async function loadRabRecap() {
 }
 function previewUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/preview') : ''; }
 function pdfUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/export?format=pdf') : ''; }
+// [kunci, label kolom, true=format Rupiah] — urutan sama persis dengan form Rincian RAB.
+const RAB_RINCIAN_COLUMNS = [
+  ['jumlah_anggota', 'Jumlah Anggota', false], ['gaji_pokok', 'Gaji Pokok', true], ['thr', 'Tunjangan Hari Raya', true],
+  ['kompensasi_uuck', 'Kompensasi UUCK', true], ['lembur', 'Lembur', true], ['acuan_bpjs', 'Acuan Nilai BPJS', true],
+  ['jkk', 'JKK (0.24%)', true], ['jkm', 'JKM (0.30%)', true], ['jht', 'JHT (3.70%)', true], ['jp', 'JP (2.00%)', true],
+  ['bpjs_kesehatan', 'BPJS Kesehatan (4.00%)', true], ['seragam_kerja', 'Seragam Kerja', true], ['peralatan_kerja', 'Peralatan Kerja', true],
+  ['pelatihan_supervisi', 'Pelatihan dan Supervisi', true], ['pembinaan_monitoring', 'Pembinaan dan Monitoring', true],
+  ['management_fee_persen', 'Management Fee (%)', false], ['management_fee_rupiah', 'Management Fee (Rp)', true],
+  ['ppn_ps23', 'PPN Ps 23 (11%)', true], ['pph', 'PPH (2%)', true],
+  ['total_per_orang_per_bulan', 'Total Biaya Per Orang Per Bulan', true], ['biaya_total_kontrak', 'Biaya Total Kontrak', true],
+];
+function rabRincianRawValue(rincian, key) { return Number((rincian || {})[key]) || 0; }
+function rabRincianDisplay(rincian, key, isRupiah) {
+  const v = rabRincianRawValue(rincian, key);
+  if (!v) return '—';
+  return isRupiah ? 'Rp' + v.toLocaleString('id-ID') : (key === 'management_fee_persen' ? v + '%' : String(v));
+}
 function renderRabRecapSummary() {
+  const admin = isAdmin();
   const q = $('#rab-recap-summary-query').value.trim().toLocaleLowerCase('id');
   const rows = rabRecapCache.filter((r) => !q || r.nama.toLocaleLowerCase('id').includes(q))
     .slice().sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
   status('#rab-recap-summary-status', rabRecapCache.length ? `Menampilkan ${rows.length} dari ${rabRecapCache.length} RAB.` : 'Belum ada RAB final yang ditambahkan.');
-  $('#rab-recap-summary-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th><th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td><td>${r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`).join('')}</tbody></table></div>`
+  const rincianHead = admin ? RAB_RINCIAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') : '';
+  $('#rab-recap-summary-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th>${rincianHead}<th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${rows.map((r, i) => {
+    const rincianCells = admin ? RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') : '';
+    return `<tr><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
+  }).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
+}
+async function exportRabRecapSummary() {
+  const admin = isAdmin();
+  const rows = [...rabRecapCache].sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
+  if (!rows.length) { status('#rab-recap-summary-status', 'Tidak ada baris untuk diekspor.', true); return; }
+  try { await loadXlsx(); } catch (error) { status('#rab-recap-summary-status', error.message, true); return; }
+  const data = rows.map((r, i) => {
+    const out = { 'No': i + 1, 'Nama Lokasi': r.nama, 'Durasi Kontrak': r.durasi_kontrak || '' };
+    if (admin) for (const [key, label] of RAB_RINCIAN_COLUMNS) out[label] = rabRincianRawValue(r.rincian, key);
+    out['Nilai Kontrak'] = r.nilai_kontrak || 0;
+    out['Link Spreadsheet'] = r.link;
+    return out;
+  });
+  const sheet = window.XLSX.utils.json_to_sheet(data);
+  const book = window.XLSX.utils.book_new();
+  window.XLSX.utils.book_append_sheet(book, sheet, 'Rekapitulasi RAB');
+  window.XLSX.writeFile(book, `rekapitulasi-rab-${todayIso()}.xlsx`);
+  status('#rab-recap-summary-status', `${rows.length} baris diekspor.`);
 }
 $('#rab-recap-summary-query').addEventListener('input', renderRabRecapSummary);
 $('#refresh-rab-recap-summary').addEventListener('click', loadRabRecap);
+$('#rab-recap-summary-export').addEventListener('click', exportRabRecapSummary);
 function renderRabRecap() {
   const admin = isAdmin();
   const q = $('#rab-recap-query').value.trim().toLocaleLowerCase('id');

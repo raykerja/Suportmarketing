@@ -1,3 +1,9 @@
+VERSION: 0.9.12 (Rekapitulasi RAB: kolom Rincian lengkap + unduh Excel)
+DATE: 2026-10-20
+
+CHANGED: Tabel "2. Rekapitulasi RAB" — khusus akun **admin**, kolom diperluas: No, Nama lokasi, Durasi kontrak, lalu SEMUA kolom Rincian RAB berurutan (Jumlah Anggota s.d. Biaya Total Kontrak), baru Nilai kontrak di paling akhir, lalu Preview dan Download. Akun staf biasa tetap melihat versi sederhana seperti sebelumnya (No/Nama/Durasi/Nilai/Preview/Download) — kolom Rincian tidak ditampilkan karena tetap data margin internal (tidak ada perubahan database/akses; sumber datanya sudah di-mask oleh VIEW `marketing_rab_recap_view` yang dibuat untuk fitur 0.9.10).
+ADDED: Tombol "Unduh Excel" di submenu Rekapitulasi RAB — selalu mengekspor SEMUA data (tidak terpengaruh kotak pencarian), pakai pustaka SheetJS yang sudah ada di repo (`vendor/xlsx-0.18.5.full.min.js`, sama seperti ekspor Database Client Aktif). Admin dapat kolom lengkap (termasuk link Spreadsheet sebagai pengganti tombol Preview/Download yang tidak relevan di Excel); staf dapat versi sederhana.
+
 VERSION: 0.9.11 (5 kolom BPJS di Rincian RAB bisa diedit manual)
 DATE: 2026-10-20
 
