@@ -53,6 +53,7 @@ Arti penanda:
 | Menu 3 **Monitoring & Tindaklanjut** (progres penawaran ulang, pengingat, riwayat) | 🟡 | Daftar "kontrak segera berakhir tanpa penawaran" butuh tanggal kontrak terisi. Tabel produksi masih 0 baris |
 | PIC Visit yang mengisi status penawaran otomatis tercatat ke Monitoring | 🟡 | |
 | Cadangan PIC Visit & penawaran ke Sheet/Drive per staf | ⬜ | Hanya di Supabase |
+| Menu 4 **Progres Penawaran Ulang** (centang manual per client, per PIC Admin) + kartu Dashboard admin | 🟡 | 20 Okt: tabel `marketing_client_repitch` + RPC `marketing_set_client_repitch`. Migrasi diterapkan & diverifikasi di produksi (tabel/RLS/policy/fungsi/grant sesuai), tabel masih 0 baris. Terpisah dari tahap Monitoring & Tindaklanjut (D) — centang ini murni manual, bukan turunan status Monitoring. Belum dicoba manusia (login staf PIC Admin & admin) |
 
 ## D2. Daftar harga (dikerjakan 9 Oktober 2026)
 
@@ -121,3 +122,4 @@ Arti penanda:
 4. Buat akun untuk empat PIC yang belum punya akun, lalu petakan.
 5. Isi tanggal kontrak (manual atau minta impor massal dari Excel).
 6. Sisa ±56 baris `[UJI SISTEM]` di Sheet `DataMarketing` masih perlu dihapus manual (tidak bisa dari kode).
+7. Satu staf PIC Admin asli mencoba menu "4. Progres Penawaran Ulang": hanya melihat client yang PIC Admin-nya dirinya, centang "Sudah dibuatkan penawaran" tersimpan dan persentase di bawah berubah. Satu admin asli buka kartu "Progres Penawaran Ulang" di Dashboard, cek tabel per PIC Admin dan filter PIC di menu 4.

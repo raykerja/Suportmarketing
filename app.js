@@ -92,6 +92,7 @@ function showWorkspace(user) {
     researchCache = []; leadCache = []; letterCache = []; offerCache = []; offerRequestId = null; manualOfferRequestId = null;
     rabRecapCache = []; editingRabRecap = null; $('#rab-recap-list').textContent = ''; $('#rab-recap-admin').hidden = true;
     activeClients = []; picAliases = []; memberOptions = []; priceRows = []; priceLoaded = false; showDbView('target'); renderActiveClients(); publishActiveClients(); picVisitRows = []; publishPicVisits(); publishOffers([], []);
+    repitchRows = []; repitchLoaded = false; repitchError = ''; renderRepitch();
     visitCache = []; $('#visit-list').textContent = ''; $('#visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>';
     publishVisitSnapshot();
     expenseCache = []; $('#expense-list').textContent = '';
@@ -114,7 +115,7 @@ function showWorkspace(user) {
   if (user && !invitePending) {
     if (isMobileViewport() && !history.state?.marketingTab) showMobileHome();
     else activateTab(history.state?.marketingTab || 'visits', false);
-    loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); loadExpenses(); loadExpenseRecap(); loadActiveClients().then(() => { loadPicVisits(); loadClientOffers(); });
+    loadSettings(); loadResearches(); loadLeads(); loadLetters(); loadOffers(); loadVisits(); loadProgress(); loadExpenses(); loadExpenseRecap(); loadActiveClients().then(() => { loadPicVisits(); loadClientOffers(); loadRepitch(); });
   }
   else {
     if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
@@ -155,7 +156,7 @@ $('#setup-form').addEventListener('submit', async (event) => {
   showWorkspace(currentUser);
 });
 
-const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress']);
+const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress', 'repitch']);
 const salesTabs = new Set(['visits', 'progress']);
 const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation']);
 const databaseTabs = new Set(['leads']);
@@ -224,6 +225,7 @@ function activateTab(tab, record = true) {
   if (tab === 'letters') { loadLeads(); loadOffers(); }
   if (tab === 'manual-offer') loadOffers();
   if (tab === 'price-simulation') { if (!priceLoaded) loadPrices(); else renderSimTable(); }
+  if (tab === 'repitch') { if (!repitchLoaded) loadRepitch(); else renderRepitch(); }
   if (tab === 'rab-recap') loadRabRecap();
   if (tab === 'dashboard') loadDashboard();
   if (tab === 'offer-recap') renderOfferRecap();
@@ -377,6 +379,10 @@ let memberOptions = [];
 let allMembers = [];
 let editingClient = null;
 let visitStats = [];
+// Progres Penawaran Ulang (data produksi): centang manual per client, terpisah dari tahap Monitoring & Tindaklanjut.
+let repitchRows = [];
+let repitchLoaded = false;
+let repitchError = '';
 let changeLog = [];
 const isAdmin = () => currentMember?.role === 'admin';
 const picTokens = (row) => {
@@ -384,6 +390,7 @@ const picTokens = (row) => {
   return [...new Set([...split(row.korlap_raw), ...split(row.admin_raw)])];
 };
 const korlapTokens = (row) => picTokens({ korlap_raw: row.korlap_raw });
+const adminTokens = (row) => picTokens({ admin_raw: row.admin_raw });
 const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 const daysLeft = (r) => r.kontrak_akhir ? Math.round((new Date(r.kontrak_akhir + 'T00:00:00') - new Date(todayIso() + 'T00:00:00')) / 86400000) : null;
 const shortDate = (v) => v ? new Date(v + 'T12:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
@@ -838,6 +845,76 @@ async function loadClientOffers() {
   const failed = offers.error || events.error;
   publishOffers(failed ? [] : offers.data || [], failed ? [] : events.data || [], failed ? 'Monitoring belum dapat dimuat: ' + failed.message : '');
 }
+async function loadRepitch() {
+  if (!client || !currentUser) return;
+  const requestedUserId = currentUser.id;
+  const { data, error } = await client.from('marketing_client_repitch').select('*').limit(2000);
+  if (currentUser?.id !== requestedUserId) return;
+  if (error) { repitchRows = []; repitchError = 'Progres penawaran ulang belum dapat dimuat: ' + error.message; }
+  else { repitchRows = data || []; repitchError = ''; }
+  repitchLoaded = true;
+  renderRepitch();
+  if (isAdmin()) renderOpsDashboard();
+}
+const repitchStatus = (clientId) => repitchRows.find((r) => r.client_id === clientId);
+function myRepitchClients() {
+  const live = activeClients.filter((r) => r.status === 'aktif' && r.admin_raw);
+  if (isAdmin()) return live;
+  const mine = picAliases.filter((a) => a.pic_role === 'admin' && a.user_id === currentUser?.id).map((a) => a.alias);
+  if (!mine.length) return [];
+  return live.filter((r) => adminTokens(r).some((t) => mine.includes(t)));
+}
+function repitchAdminStats() {
+  const aliases = [...new Map(picAliases.filter((a) => a.pic_role === 'admin').map((a) => [a.alias, a])).values()].sort((a, b) => a.alias.localeCompare(b.alias));
+  const live = activeClients.filter((r) => r.status === 'aktif' && r.admin_raw);
+  return aliases.map((a) => {
+    const mine = live.filter((r) => adminTokens(r).includes(a.alias));
+    const done = mine.filter((r) => repitchStatus(r.id)?.offer_made).length;
+    const member = memberOptions.find((m) => m.user_id === a.user_id);
+    return { alias: a.alias, name: member?.display_name || a.alias, total: mine.length, done };
+  }).filter((s) => s.total);
+}
+function renderRepitch() {
+  const admin = isAdmin();
+  const allAdminAliases = [...new Set(picAliases.filter((a) => a.pic_role === 'admin').map((a) => a.alias))].sort();
+  $('#repitch-pic-wrap').hidden = !admin;
+  if (admin) fillSelect('#repitch-pic', 'Semua PIC Admin', allAdminAliases, $('#repitch-pic').value);
+  let rows = myRepitchClients();
+  if (admin && $('#repitch-pic').value !== 'all') rows = rows.filter((r) => adminTokens(r).includes($('#repitch-pic').value));
+  const q = $('#repitch-search').value.trim().toLocaleLowerCase('id');
+  if (q) rows = rows.filter((r) => (r.nama_client || '').toLocaleLowerCase('id').includes(q));
+  $('#repitch-scope').textContent = !activeClientLoaded ? 'Memuat daftar client…' : admin
+    ? 'Akun admin: menampilkan semua client yang punya PIC Admin.'
+    : 'Menampilkan client aktif yang PIC Admin-nya adalah akun ini.';
+  const done = rows.filter((r) => repitchStatus(r.id)?.offer_made).length;
+  const total = rows.length;
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  $('#repitch-status').textContent = repitchError || (repitchLoaded ? `Menampilkan ${total} client.` : 'Memuat progres…');
+  $('#repitch-status').classList.toggle('error', !!repitchError);
+  $('#repitch-table').innerHTML = `<thead><tr><th>No</th><th>Nama client</th><th>Cabang</th><th>PIC Admin</th><th>Sudah dibuatkan penawaran</th></tr></thead><tbody>${rows.length ? rows.map((r) => {
+    const st = repitchStatus(r.id);
+    const checked = st?.offer_made ? 'checked' : '';
+    const marker = st?.offer_made && st.marked_at ? `<br><small>Ditandai ${date(st.marked_at)}</small>` : '';
+    return `<tr><td class="num">${esc(r.source_no)}</td><td>${esc(r.nama_client)}</td><td>${esc(r.cabang)}</td><td>${esc(r.admin_raw)}</td><td><label class="ac-check"><input type="checkbox" data-repitch-id="${esc(r.id)}" ${checked}> Sudah dibuat${marker}</label></td></tr>`;
+  }).join('') : `<tr><td colspan="5" class="hint">${repitchLoaded ? 'Tidak ada client yang cocok. Jika akun ini seharusnya jadi PIC Admin client tertentu, hubungi admin untuk memeriksa pemetaan PIC.' : ''}</td></tr>`}</tbody>`;
+  $('#repitch-summary').innerHTML = `<div><strong>${done}</strong><small>Sudah dibuatkan penawaran</small></div><div><strong>${total - done}</strong><small>Belum</small></div><div><strong>${total}</strong><small>Total client</small></div><div><strong>${pct}%</strong><small>Progres</small></div>`;
+}
+$('#repitch-search').addEventListener('input', renderRepitch);
+$('#repitch-pic').addEventListener('input', renderRepitch);
+$('#repitch-refresh').addEventListener('click', loadRepitch);
+$('#repitch-table').addEventListener('change', async (event) => {
+  const box = event.target.closest('[data-repitch-id]');
+  if (!box) return;
+  const id = box.dataset.repitchId;
+  box.disabled = true;
+  const { error } = await client.rpc('marketing_set_client_repitch', { p_client_id: id, p_offer_made: box.checked });
+  if (error) { box.checked = !box.checked; box.disabled = false; status('#repitch-status', error.message, true); return; }
+  const existing = repitchRows.find((r) => r.client_id === id);
+  if (existing) { existing.offer_made = box.checked; existing.marked_at = box.checked ? new Date().toISOString() : existing.marked_at; }
+  else repitchRows.push({ client_id: id, offer_made: box.checked, marked_by: currentUser?.id, marked_at: box.checked ? new Date().toISOString() : null });
+  renderRepitch();
+  if (isAdmin()) renderOpsDashboard();
+});
 window.marketingApi = {
   async saveOffer({ clientId, stage, offerType, activityDate, note, next }) {
     if (!client || !currentUser) return { error: 'Belum login.' };
@@ -2106,6 +2183,18 @@ function renderOpsDashboard() {
     [visitCache.length, 'Kunjungan Marketing'], [salesInitial, 'Marketing perlu detail'],
   ]);
 
+  if (repitchLoaded) {
+    const stats = repitchAdminStats();
+    const totalDone = stats.reduce((sum, s) => sum + s.done, 0);
+    const totalAll = stats.reduce((sum, s) => sum + s.total, 0);
+    const overallPct = totalAll ? Math.round((totalDone / totalAll) * 100) : 0;
+    $('#dash-repitch-summary').innerHTML = (stats.length ? `<div class="table-wrap"><table><thead><tr><th>Admin (PIC)</th><th>Surat penawaran dibuat</th><th>Total client PIC</th><th>Progres</th></tr></thead><tbody>${stats.map((s) => `<tr><td><strong>${esc(s.name)}</strong></td><td>${s.done}</td><td>${s.total}</td><td>${s.total ? Math.round((s.done / s.total) * 100) : 0}%</td></tr>`).join('')}</tbody></table></div>`
+      : '<p class="hint">Belum ada PIC Admin dengan client aktif.</p>')
+      + `<p class="hint">Total: <strong>${totalDone}</strong> dari <strong>${totalAll}</strong> client sudah dibuatkan penawaran ulang &middot; progres keseluruhan <strong>${overallPct}%</strong>.</p>`;
+  } else {
+    $('#dash-repitch-summary').innerHTML = '<p class="hint">Memuat…</p>';
+  }
+
   let monitoringOverdue = 0;
   if (dashboardLoaded) {
     const monitoringCounts = Object.fromEntries(Object.keys(monitoringStageNames).map((k) => [k, 0]));
@@ -2207,7 +2296,7 @@ function showDashboardOverview() {
   $('#dashboard-detail').hidden = true;
 }
 const dashboardDetailTitles = {
-  clients: 'Client Aktif', visits: 'Kunjungan', monitoring: 'Monitoring & Tindaklanjut (Client Lama)',
+  clients: 'Client Aktif', visits: 'Kunjungan', repitch: 'Progres Penawaran Ulang', monitoring: 'Monitoring & Tindaklanjut (Client Lama)',
   progress: 'Progress (Client Baru)', pipeline: 'Target & Penawaran', database: 'Database Harga & Rekap RAB',
   expenses: 'Pengeluaran Bulan Ini', team: 'Tim & Akun',
 };
@@ -2242,6 +2331,14 @@ function renderDashboardDetailVisits() {
   const salesHtml = salesRows.length ? salesRows.map((r) => itemHtml(r.data?.nama_perusahaan || '(belum diisi)', r.data?.tanggal_realisasi_kunjungan ? displayDateId(r.data.tanggal_realisasi_kunjungan) : date(r.created_at), staffName(r.owner_id), r.data?.visit_stage === 'initial' ? 'Tahap 1' : 'Detail terisi', r.data)).join('') : '<p class="hint">Belum ada Kunjungan Marketing.</p>';
   return `<h3>Kunjungan PIC terbaru (${picVisitRows.length} total, menampilkan 15)</h3><div class="list">${picHtml}</div>
     <h3>Kunjungan Marketing terbaru (${visitCache.length} total, menampilkan 15)</h3><div class="list">${salesHtml}</div>`;
+}
+function renderDashboardDetailRepitch() {
+  if (!repitchLoaded) return '<p class="hint">Memuat…</p>';
+  const rows = [...activeClients.filter((r) => r.status === 'aktif' && r.admin_raw)].sort((a, b) => a.admin_raw.localeCompare(b.admin_raw) || a.nama_client.localeCompare(b.nama_client));
+  const html = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Client</th><th>PIC Admin</th><th>Status</th></tr></thead><tbody>${rows.map((r) => { const st = repitchStatus(r.id);
+    return `<tr><td>${esc(r.nama_client)}</td><td>${esc(r.admin_raw)}</td><td>${st?.offer_made ? '<span class="badge">Sudah dibuat</span>' : '<span class="badge error">Belum</span>'}</td></tr>`; }).join('')}</tbody></table></div>` : '<p class="hint">Belum ada client dengan PIC Admin.</p>';
+  const done = rows.filter((r) => repitchStatus(r.id)?.offer_made).length;
+  return `<p class="hint">${done} dari ${rows.length} client sudah dibuatkan penawaran ulang.</p>${html}`;
 }
 function renderDashboardDetailMonitoring() {
   if (!dashboardLoaded) return '<p class="hint">Memuat…</p>';
@@ -2287,7 +2384,7 @@ function renderDashboardDetailTeam() {
   return rows.length ? `<div class="table-wrap"><table><thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.display_name)}</td><td>${esc(r.email)}</td><td>${r.role === 'admin' ? 'Admin' : 'Staf'}</td><td>${r.active === false ? '<span class="badge error">Nonaktif</span>' : 'Aktif'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada data akun.</p>';
 }
 const dashboardDetailRenderers = {
-  clients: renderDashboardDetailClients, visits: renderDashboardDetailVisits, monitoring: renderDashboardDetailMonitoring,
+  clients: renderDashboardDetailClients, visits: renderDashboardDetailVisits, repitch: renderDashboardDetailRepitch, monitoring: renderDashboardDetailMonitoring,
   progress: renderDashboardDetailProgress, pipeline: renderDashboardDetailPipeline, database: renderDashboardDetailDatabase,
   expenses: renderDashboardDetailExpenses, team: renderDashboardDetailTeam,
 };

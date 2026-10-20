@@ -1,3 +1,9 @@
+VERSION: 0.9.4 (submenu & dashboard baru: Progres Penawaran Ulang)
+DATE: 2026-10-20
+
+ADDED: Submenu baru "4. Progres Penawaran Ulang" di grup Client Aktif — daftar client aktif yang punya PIC Admin, dengan centang manual "Sudah dibuatkan penawaran" per client (independen dari tahap Monitoring & Tindaklanjut yang sudah ada), plus ringkasan jumlah & persentase di bawah tabel. Staf hanya melihat client yang PIC Admin-nya akun itu sendiri; admin melihat semua dan bisa filter per PIC Admin. Tabel baru `marketing_client_repitch` (RLS: baca hanya PIC Admin pemilik client atau admin) + RPC `marketing_set_client_repitch` (security definer, boleh dicentang oleh PIC Admin pemilik client atau admin sistem, bukan lewat RLS insert/update tabel). Migrasi `20261020_marketing_client_repitch.sql` sudah diterapkan ke produksi dan diverifikasi (tabel ada, RLS aktif, 1 policy SELECT, fungsi ada dengan security definer, grant `authenticated` hanya SELECT di tabel + EXECUTE di fungsi, 0 baris awal).
+ADDED: Kartu dashboard admin baru "Progres Penawaran Ulang" (di atas "Monitoring & Tindaklanjut") — tabel per PIC Admin (nama, jumlah surat penawaran dibuat, total client PIC-nya) + total keseluruhan dan persentase progres. Tombol "Lihat detail →" menampilkan daftar lengkap per client dan statusnya.
+
 VERSION: 0.9.3 (folder klien per akun untuk RAB & Surat Pengantar)
 DATE: 2026-10-20
 
