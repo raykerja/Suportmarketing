@@ -1,3 +1,8 @@
+VERSION: 0.9.8 (Durasi kontrak RAB jadi dropdown)
+DATE: 2026-10-20
+
+CHANGED: Field "Durasi kontrak" di submenu "1. Input RAB Fix" diubah dari teks bebas jadi dropdown pilihan tetap (1 bulan s.d. 12 bulan), supaya nilainya seragam dan tampilannya konsisten di tabel "2. Rekapitulasi RAB". Tidak ada perubahan database — kolom `durasi_kontrak` tetap `text` bebas di skema, cuma dibatasi lewat pilihan di form.
+
 VERSION: 0.9.7 (submenu baru: Rekapitulasi RAB)
 DATE: 2026-10-20
 
