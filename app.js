@@ -160,7 +160,7 @@ const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress', 'r
 const salesTabs = new Set(['visits', 'progress']);
 const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation']);
 const databaseTabs = new Set(['leads']);
-const rabTabs = new Set(['rab-recap']);
+const rabTabs = new Set(['rab-recap', 'rab-recap-summary']);
 const expenseTabs = new Set(['expenses']);
 const isMobileViewport = () => window.matchMedia('(max-width: 760px)').matches;
 function showMobileHome() {
@@ -213,6 +213,7 @@ function activateTab(tab, record = true) {
   $('#database-menu').setAttribute('aria-expanded', String(inDatabase));
   $('#mobile-menu-database').classList.toggle('active', inDatabase);
   const inRab = rabTabs.has(tab);
+  $('#rab-tabs').hidden = !inRab;
   $('#rab-menu').classList.toggle('active', inRab);
   $('#rab-menu').setAttribute('aria-expanded', String(inRab));
   $('#mobile-menu-rab').classList.toggle('active', inRab);
@@ -226,7 +227,7 @@ function activateTab(tab, record = true) {
   if (tab === 'manual-offer') loadOffers();
   if (tab === 'price-simulation') { if (!priceLoaded) loadPrices(); else renderSimTable(); }
   if (tab === 'repitch') { if (!repitchLoaded) loadRepitch(); else renderRepitch(); }
-  if (tab === 'rab-recap') loadRabRecap();
+  if (tab === 'rab-recap' || tab === 'rab-recap-summary') loadRabRecap();
   if (tab === 'dashboard') loadDashboard();
   if (tab === 'offer-recap') renderOfferRecap();
 }
@@ -1729,14 +1730,26 @@ async function loadRabRecap() {
   rabRecapCache = data || [];
   $('#rab-recap-suggestions').innerHTML = rabRecapCache.map((r) => `<option value="${esc(r.nama)}"></option>`).join('');
   renderRabRecap();
+  renderRabRecapSummary();
 }
 function previewUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/preview') : ''; }
+function pdfUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/export?format=pdf') : ''; }
+function renderRabRecapSummary() {
+  const q = $('#rab-recap-summary-query').value.trim().toLocaleLowerCase('id');
+  const rows = rabRecapCache.filter((r) => !q || r.nama.toLocaleLowerCase('id').includes(q))
+    .slice().sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
+  status('#rab-recap-summary-status', rabRecapCache.length ? `Menampilkan ${rows.length} dari ${rabRecapCache.length} RAB.` : 'Belum ada RAB final yang ditambahkan.');
+  $('#rab-recap-summary-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th><th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${rows.map((r, i) => `<tr><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td><td>${r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`).join('')}</tbody></table></div>`
+    : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
+}
+$('#rab-recap-summary-query').addEventListener('input', renderRabRecapSummary);
+$('#refresh-rab-recap-summary').addEventListener('click', loadRabRecap);
 function renderRabRecap() {
   const admin = isAdmin();
   const q = $('#rab-recap-query').value.trim().toLocaleLowerCase('id');
   const rows = rabRecapCache.filter((r) => !q || [r.nama, r.catatan].some((v) => (v || '').toLocaleLowerCase('id').includes(q)));
   status('#rab-recap-status', rabRecapCache.length ? `Menampilkan ${rows.length} dari ${rabRecapCache.length} RAB.` : '');
-  $('#rab-recap-list').innerHTML = rows.length ? rows.map((r) => `<div class="item"><strong>${esc(r.nama)}</strong>${r.catatan ? `<br><small>${esc(r.catatan)}</small>` : ''}<br><small>Diperbarui ${esc(date(r.updated_at))}</small><div class="actions"><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button>${admin ? `<button type="button" data-rab-edit="${esc(r.id)}">Ubah</button><button type="button" data-rab-delete="${esc(r.id)}">Hapus</button>` : ''}</div></div>`).join('')
+  $('#rab-recap-list').innerHTML = rows.length ? rows.map((r) => `<div class="item"><strong>${esc(r.nama)}</strong>${r.durasi_kontrak || r.nilai_kontrak ? `<br><small>${esc(r.durasi_kontrak || '')}${r.durasi_kontrak && r.nilai_kontrak ? ' · ' : ''}${r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : ''}</small>` : ''}${r.catatan ? `<br><small>${esc(r.catatan)}</small>` : ''}<br><small>Diperbarui ${esc(date(r.updated_at))}</small><div class="actions"><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button>${admin ? `<button type="button" data-rab-edit="${esc(r.id)}">Ubah</button><button type="button" data-rab-delete="${esc(r.id)}">Hapus</button>` : ''}</div></div>`).join('')
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
 }
 $('#refresh-rab-recap').addEventListener('click', loadRabRecap);
@@ -1749,12 +1762,14 @@ function resetRabRecapForm() {
   status('#rab-recap-form-status', '');
 }
 $('#rab-recap-form-cancel').addEventListener('click', resetRabRecapForm);
+$('#rab-recap-f-nilai').addEventListener('input', () => { $('#rab-recap-f-nilai').value = groupThousands($('#rab-recap-f-nilai').value); });
 $('#rab-recap-form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = $('#rab-recap-form-save'); button.disabled = true;
   status('#rab-recap-form-status', 'Menyimpan…');
   const payload = { id: editingRabRecap?.id || null, expected_updated_at: editingRabRecap?.updated_at,
-    nama: $('#rab-recap-f-nama').value.trim(), link: $('#rab-recap-f-link').value.trim(), catatan: $('#rab-recap-f-catatan').value.trim() };
+    nama: $('#rab-recap-f-nama').value.trim(), link: $('#rab-recap-f-link').value.trim(), catatan: $('#rab-recap-f-catatan').value.trim(),
+    durasi_kontrak: $('#rab-recap-f-durasi').value.trim(), nilai_kontrak: Number(digitsOnly($('#rab-recap-f-nilai').value)) || 0 };
   const { error } = await client.rpc('marketing_save_rab_recap', { p: payload });
   button.disabled = false;
   if (error) { status('#rab-recap-form-status', error.message, true); return; }
@@ -1770,6 +1785,8 @@ $('#rab-recap-list').addEventListener('click', async (event) => {
     $('#rab-recap-form-title').textContent = `Ubah RAB · ${editingRabRecap.nama}`;
     $('#rab-recap-f-nama').value = editingRabRecap.nama;
     $('#rab-recap-f-link').value = editingRabRecap.link;
+    $('#rab-recap-f-durasi').value = editingRabRecap.durasi_kontrak || '';
+    $('#rab-recap-f-nilai').value = editingRabRecap.nilai_kontrak ? groupThousands(String(editingRabRecap.nilai_kontrak)) : '';
     $('#rab-recap-f-catatan').value = editingRabRecap.catatan || '';
     $('#rab-recap-form-cancel').hidden = false;
     status('#rab-recap-form-status', '');

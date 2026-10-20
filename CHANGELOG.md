@@ -1,5 +1,7 @@
-VERSION: 0.9.6 (fix lanjutan: naikkan versi cache app.js)
+VERSION: 0.9.7 (submenu baru: Rekapitulasi RAB)
 DATE: 2026-10-20
+
+ADDED: Menu "Rekap RAB" dipecah jadi 2 submenu. **1. Input RAB Fix** — form admin yang sudah ada (Nama, Link Spreadsheet, Catatan), ditambah 2 field baru: Durasi kontrak (teks bebas) dan Nilai kontrak (Rp, diformat otomatis pakai titik ribuan). **2. Rekapitulasi RAB** (baru) — tabel read-only untuk semua staf aktif: No, Nama lokasi, Durasi kontrak, Nilai kontrak, tombol Preview (buka Spreadsheet di tab baru), tombol Download (export PDF langsung dari link Google Sheets, pola yang sama dipakai Rekap Surat Penawaran). Daftar diurutkan alfabetik nama; kolom cari gabungan dropdown + ketik bebas (`datalist`, dibagi dengan submenu 1). Migrasi `20261020_marketing_rab_recap_kontrak.sql` menambah kolom `durasi_kontrak`/`nilai_kontrak` ke `marketing_rab_recap` (opsional, default kosong/0 — entri lama tidak perlu diisi ulang) dan memperbarui RPC `marketing_save_rab_recap` untuk memvalidasi & menyimpan keduanya. Migrasi sudah diterapkan & diverifikasi di produksi (kolom ada, RPC ter-update, 0 baris terdampak karena default kosong/0). Belum dicoba manusia; lihat `docs/02-STATUS-PROGRES.md` § D4.
 
 FIXED: Fix 0.9.5 (crash Simpan Kunjungan Marketing) sempat tidak kerasa di browser staf karena commit sebelumnya lupa menaikkan query version `app.js?v=...` di `index.html` — browser tetap memakai `app.js` versi lama dari cache HTTP walau isi filenya sudah berubah di server. Dinaikkan ke `?v=20261020-3`. Staf yang masih kena error lama perlu refresh/reload penuh (bukan cuma buka ulang tab) agar dapat `app.js` versi baru.
 

@@ -82,6 +82,7 @@ Arti penanda:
 | --- | --- | --- |
 | Menu utama "Rekap RAB": daftar bebas nama + link Spreadsheet RAB final + catatan | 🟡 | Tabel `marketing_rab_recap`; RLS: semua staf aktif baca, hanya admin tulis lewat RPC `marketing_save_rab_recap`/`marketing_delete_rab_recap`. Migrasi diterapkan ke produksi, belum dicoba manusia |
 | Pencarian dengan datalist (ketik bebas atau pilih dari dropdown nama yang sudah ada) | 🟡 | Sama seperti field "Nama perusahaan" di form Kunjungan Marketing |
+| **20 Okt**: Rekap RAB dipecah jadi 2 submenu — "1. Input RAB Fix" (form lama, kini + field Durasi & Nilai kontrak) dan "2. Rekapitulasi RAB" (tabel No/Nama lokasi/Durasi/Nilai/Preview/Download, cari + sortir alfabetik) | 🟡 | Migrasi `20261020_marketing_rab_recap_kontrak.sql` (kolom `durasi_kontrak`, `nilai_kontrak` + update RPC) sudah diterapkan & diverifikasi di produksi (kolom ada, RPC ter-update). Kode (index.html + app.js) sudah di-push. Belum dicoba manusia sama sekali — field Durasi/Nilai masih kosong/0 untuk semua entri lama |
 | Staf: hanya lihat & pratinjau (dialog sama dengan pratinjau dokumen penawaran); Admin: tambah/ubah/hapus | 🟡 | Belum dicoba manusia dengan akun staf/admin sungguhan |
 | Khusus tampilan HP (≤760px, web tidak berubah): logo RAY buka drawer menu samping dengan ikon; sub-menu jadi bilah ikon tetap di bawah (latar biru tua, label ringkas tanpa nomor); layar Beranda (hero + Asisten Marketing) hanya sebelum pilih menu, bisa diakses ulang lewat drawer | 🟡 | Belum dicoba di HP sungguhan sepenuhnya oleh pemilik |
 
