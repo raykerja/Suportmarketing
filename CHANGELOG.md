@@ -1,3 +1,8 @@
+VERSION: 0.9.6 (fix lanjutan: naikkan versi cache app.js)
+DATE: 2026-10-20
+
+FIXED: Fix 0.9.5 (crash Simpan Kunjungan Marketing) sempat tidak kerasa di browser staf karena commit sebelumnya lupa menaikkan query version `app.js?v=...` di `index.html` — browser tetap memakai `app.js` versi lama dari cache HTTP walau isi filenya sudah berubah di server. Dinaikkan ke `?v=20261020-3`. Staf yang masih kena error lama perlu refresh/reload penuh (bukan cuma buka ulang tab) agar dapat `app.js` versi baru.
+
 VERSION: 0.9.5 (fix: Kunjungan Marketing Tahap 1 gagal tersimpan sejak 10 Okt)
 DATE: 2026-10-20
 
