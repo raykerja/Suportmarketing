@@ -10,6 +10,16 @@ Untuk lingkungan baru: impor template sebagai workflow **nonaktif**, pilih ulang
 
 Workflow production saat ini sudah aktif dengan ID pada `PROJECT_HANDOFF.md`. Template ini merupakan bahan pemulihan/migrasi, bukan backup credential atau export execution history. Script `scripts/export_portable_workflows.py` dapat membuat ulang template dari draft privat bila draft tersebut tersedia secara lokal.
 
+## Folder klien per akun (2026-10-20)
+
+RAB dan Surat Pengantar setiap penawaran kini otomatis masuk ke **subfolder per klien** di dalam folder Drive akun, bukan langsung ke root folder akun (sebelumnya semua klien tercampur jadi satu). Workflow baru `Raykerja Marketing - Resolve Folder Client` (`resolve-folder-client.template.json`) dipanggil via node `Resolve Folder Client` (Execute Workflow) yang disisipkan setelah `Perbarui Counter Nomor Surat`: cari folder bernama klien di dalam folder akun (query Drive API mentah dengan `supportsAllDrives`/`includeItemsFromAllDrives`/`corpora=allDrives` karena folder akun berada di Shared Drive, bukan "My Drive") — kalau ketemu, dipakai; kalau tidak, dibuat baru (juga via HTTP Request mentah ke `files.create`, bukan node Google Drive native — node native pada instance ini mengabaikan parameter `name` untuk operasi create-folder). Kedua node `Pindahkan RAB/Surat ke Folder Akun` sekarang memakai `clientFolderId` hasil resolve, dengan fallback ke `drive_folder_id` lama bila resolve gagal.
+
+Sub-workflow ini juga dipakai ulang oleh migrasi sekali-jalan yang merapikan file lama yang sudah tercampur di 31 folder akun (±125 grup klien, memakai pola yang sama: cari dulu, baru buat). Dua hal penting kalau menyentuh node Execute Workflow di instance ini: (1) sub-workflow yang dipanggil **harus ikut diaktifkan** sebelum workflow pemanggil bisa aktif ("Cannot publish workflow: ... which is not published"); (2) default mode Execute Workflow adalah **"jalankan sekali untuk semua item"**, bukan sekali per item — kalau pemanggil mengirim banyak item dan membutuhkan satu panggilan sub-workflow per item, set `"mode": "each"` secara eksplisit, atau sub-workflow hanya akan menerima 1 dari N item. Bug ini sempat lolos tes karena tes awal hanya memakai 1 item.
+
+Sambungan yang sama (`Resolve Folder Client` sub-workflow) dipanggil dari workflow sementara migrasi melalui field generik `extra` pada skema trigger (`executeWorkflowTrigger`'s `workflowInputs.values`) — field yang tidak didaftarkan di skema trigger otomatis dibuang n8n, jadi data pemanggil yang perlu ikut (file RAB/Surat, dsb.) harus lewat field yang didaftarkan, tidak bisa "nebeng" field bebas.
+
+Panggilan webhook sinkron ke endpoint yang memproses banyak akun/grup sekaligus berisiko 504 gateway timeout pada instance ini; proses dalam batch kecil (atau satu akun per panggilan) kalau memanggil endpoint serupa untuk volume besar.
+
 ## Penyesuaian RAB (2026-10-09)
 
 Node `Isi Data RAB` pada `offer-documents.template.json` kini juga: mengosongkan `I13:L13` (Kompensasi) dan `G19`, `I19:L19` (JP, persentase dan nilai), mengisi `M13`/`M19` dengan "Sesuai Kebijakan Client", dan `M16:M18`, `M20` dengan "Dihitung dari UMK Setempat <kota> <tahun>". Rumus template (`G10` = UMK Setempat; BPJS = `G10 × persentase`; subtotal memakai `SUM`) tidak diubah, sehingga subtotal A/B dan persentase subtotal menyesuaikan otomatis.

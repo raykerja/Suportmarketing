@@ -1,3 +1,9 @@
+VERSION: 0.9.3 (folder klien per akun untuk RAB & Surat Pengantar)
+DATE: 2026-10-20
+
+CHANGED (workflow n8n, bukan kode frontend): Workflow aktif "Raykerja Marketing - Generator Penawaran Web" (`R7kXoTLBk8X0d4cy`) kini membuat/memakai **subfolder per klien** di dalam folder Drive tiap akun staf, bukan menaruh RAB dan Surat Pengantar langsung di root folder akun — sebelumnya semua klien tercampur jadi satu di sana. Node baru `Resolve Folder Client` (Execute Workflow) memanggil sub-workflow baru "Raykerja Marketing - Resolve Folder Client" yang cari-atau-buat folder klien; 2 node pemindahan file memakai folder hasil resolve dengan fallback ke folder akun lama bila gagal. Lihat `n8n/README.md` § "Folder klien per akun" untuk detail teknis (Shared Drive, mode Execute Workflow, dsb).
+ADDED (migrasi data satu kali, bukan skema): File RAB/Surat Pengantar lama yang sudah tercampur di 31 folder akun dirapikan ke subfolder per klien yang sama (±125 grup klien dipindah, ~50 file duplikat RAB/Surat untuk klien yang sama ikut terselesaikan lewat beberapa kali re-run; 177 file lain seperti riset target/riwayat kunjungan/backup/gambar dibiarkan tidak disentuh). Dilakukan lewat workflow n8n sementara (dibuat, dipakai, dihapus lagi) yang menggunakan kredensial Google Drive yang sama dengan workflow produksi — tidak memakai service-account/kunci JSON baru.
+
 VERSION: 0.9.2 (koreksi harga Seragam sesuai Excel pemilik)
 DATE: 2026-10-16
 

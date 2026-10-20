@@ -1,0 +1,237 @@
+{
+  "name": "Raykerja Marketing - Resolve Folder Client",
+  "nodes": [
+    {
+      "id": "e81d289b-4823-4ba9-be01-ace339aa0ab5",
+      "name": "Mulai Resolve Folder Client",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "parentFolderId"
+            },
+            {
+              "name": "namaClient"
+            },
+            {
+              "name": "extra"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "f66acfd3-39c1-41c2-a175-30087268574d",
+      "name": "Siapkan Nama Escaped",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const input = $json;\nconst namaClient = String(input.namaClient || '');\nconst parentFolderId = String(input.parentFolderId || '');\nconst BACKSLASH = String.fromCharCode(92);\nconst SQUOTE = String.fromCharCode(39);\nconst namaClientEscaped = namaClient.split(BACKSLASH).join(BACKSLASH + BACKSLASH).split(SQUOTE).join(BACKSLASH + SQUOTE);\nconst driveQuery = `name = '${namaClientEscaped}' and '${parentFolderId}' in parents and mimeType = 'application/vnd.google-apps.folder' and trashed = false`;\nreturn {json: {...input, namaClient, parentFolderId, namaClientEscaped, driveQuery}};"
+      }
+    },
+    {
+      "id": "a32fea59-f8c6-4eca-866c-d64e640dfdaa",
+      "name": "Cari Folder Client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        440,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "q",
+              "value": "={{ $json.driveQuery }}"
+            },
+            {
+              "name": "fields",
+              "value": "files(id,name)"
+            },
+            {
+              "name": "pageSize",
+              "value": "1"
+            },
+            {
+              "name": "supportsAllDrives",
+              "value": "true"
+            },
+            {
+              "name": "includeItemsFromAllDrives",
+              "value": "true"
+            },
+            {
+              "name": "corpora",
+              "value": "allDrives"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "c0280288-f5db-4321-a511-0819c274f424",
+      "name": "Folder Client Ditemukan?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ Array.isArray($json.files) && $json.files.length > 0 }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "dca85a66-9388-4129-a4c8-b47df3cb286b",
+      "name": "Buat Folder Client",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "onError": "continueRegularOutput",
+      "position": [
+        880,
+        140
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "fields",
+              "value": "id,name,parents"
+            },
+            {
+              "name": "supportsAllDrives",
+              "value": "true"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {name: $('Siapkan Nama Escaped').item.json.namaClient, mimeType: 'application/vnd.google-apps.folder', parents: [$('Siapkan Nama Escaped').item.json.parentFolderId]} }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "0e1e3320-3989-4d42-93e9-eb286ca91735",
+      "name": "Tetapkan Folder Client",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1100,
+        0
+      ],
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const j = $json;\nconst clientFolderId = Array.isArray(j.files) ? (j.files[0] && j.files[0].id) : j.id;\nif (!clientFolderId) throw new Error('Folder client tidak ditemukan/tidak dapat dibuat');\nconst input = $('Siapkan Nama Escaped').item.json;\nreturn {json: {...input, clientFolderId}};"
+      }
+    }
+  ],
+  "connections": {
+    "Mulai Resolve Folder Client": {
+      "main": [
+        [
+          {
+            "node": "Siapkan Nama Escaped",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Siapkan Nama Escaped": {
+      "main": [
+        [
+          {
+            "node": "Cari Folder Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cari Folder Client": {
+      "main": [
+        [
+          {
+            "node": "Folder Client Ditemukan?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Folder Client Ditemukan?": {
+      "main": [
+        [
+          {
+            "node": "Tetapkan Folder Client",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Buat Folder Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buat Folder Client": {
+      "main": [
+        [
+          {
+            "node": "Tetapkan Folder Client",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

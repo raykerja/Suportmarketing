@@ -57,7 +57,7 @@
       "parameters": {
         "documentId": {
           "__rl": true,
-          "value": "SET_COUNTER_SHEET_ID",
+          "value": "1x5ert4jl7FrHv-0ah-1DjpP3JmMCTr1YBf7ge3N1N6M",
           "mode": "id"
         },
         "sheetName": {
@@ -102,7 +102,7 @@
         "operation": "update",
         "documentId": {
           "__rl": true,
-          "value": "SET_COUNTER_SHEET_ID",
+          "value": "1x5ert4jl7FrHv-0ah-1DjpP3JmMCTr1YBf7ge3N1N6M",
           "mode": "id"
         },
         "sheetName": {
@@ -163,6 +163,7 @@
       "name": "Salin Template RAB",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
+      "onError": "continueRegularOutput",
       "position": [
         1320,
         0
@@ -171,19 +172,19 @@
         "operation": "copy",
         "fileId": {
           "__rl": true,
-          "value": "SET_RAB_TEMPLATE_ID",
+          "value": "1Vr28wzvwCJx57K7IhDPXHjL1UKYOInLiGAiLRojg16A",
           "mode": "id"
         },
         "name": "={{ 'RAB - ' + $('Siapkan Penawaran Web').first().json.namaClient }}",
         "options": {}
-      },
-      "onError": "continueRegularOutput"
+      }
     },
     {
       "id": "37572d4d-dc50-45d3-a5f3-fbf3e7b65a16",
       "name": "Isi Data RAB",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
+      "onError": "continueRegularOutput",
       "position": [
         1540,
         0
@@ -195,16 +196,16 @@
         "nodeCredentialType": "googleSheetsOAuth2Api",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {valueInputOption:'USER_ENTERED',data:[{range:'Sheet1!A4',values:[['LOKASI : '+$('Siapkan Penawaran Web').first().json.namaClient]]},{range:'Sheet1!G10',values:[[$('Siapkan Penawaran Web').first().json.gaji_pokok]]},{range:'Sheet1!B10',values:[[$('Siapkan Penawaran Web').first().json.gaji_pokok === $('Siapkan Penawaran Web').first().json.umk ? 'Gaji Pokok (UMK '+$('Siapkan Penawaran Web').first().json.kotaClient+' '+$('Siapkan Penawaran Web').first().json.tahun+')' : 'Gaji Pokok']]},{range:'Sheet1!J36',values:[['Semarang, '+$('Siapkan Penawaran Web').first().json.tanggal]]},{range:'Sheet1!I13:L13',values:[['','','','']]},{range:'Sheet1!G19',values:[['']]},{range:'Sheet1!I19:L19',values:[['','','','']]},{range:'Sheet1!M13',values:[['Sesuai Kebijakan Client']]},{range:'Sheet1!M16:M20',values:[['Dihitung dari UMK Setempat '+$('Siapkan Penawaran Web').first().json.kotaClient+' '+$('Siapkan Penawaran Web').first().json.tahun+' (Rp '+Number($('Siapkan Penawaran Web').first().json.umk).toLocaleString('id-ID')+')'],['Dihitung dari UMK Setempat '+$('Siapkan Penawaran Web').first().json.kotaClient+' '+$('Siapkan Penawaran Web').first().json.tahun+' (Rp '+Number($('Siapkan Penawaran Web').first().json.umk).toLocaleString('id-ID')+')'],['Dihitung dari UMK Setempat '+$('Siapkan Penawaran Web').first().json.kotaClient+' '+$('Siapkan Penawaran Web').first().json.tahun+' (Rp '+Number($('Siapkan Penawaran Web').first().json.umk).toLocaleString('id-ID')+')'],['Sesuai Kebijakan Client'],['Dihitung dari UMK Setempat '+$('Siapkan Penawaran Web').first().json.kotaClient+' '+$('Siapkan Penawaran Web').first().json.tahun+' (Rp '+Number($('Siapkan Penawaran Web').first().json.umk).toLocaleString('id-ID')+')']]},{range:'Sheet1!I16:L18',values:[1,2,3].map(i => [0,1,2,3].map(() => '='+$('Siapkan Penawaran Web').first().json.umk+'*$G$'+(15+i)))},{range:'Sheet1!I20:L20',values:[[0,1,2,3].map(() => '='+$('Siapkan Penawaran Web').first().json.umk+'*$G$20')]}].concat($('Validasi Penawaran Web').first().json.mode === 'manual' ? [{range:'Sheet1!I9:L9',values:[$('Validasi Penawaran Web').first().json.jumlah_personel]}] : [])} }}",
+        "jsonBody": "={{ {valueInputOption:'USER_ENTERED',data:[{range:'Sheet1!A4',values:[['LOKASI : '+$('Siapkan Penawaran Web').first().json.namaClient]]},{range:'Sheet1!G10',values:[[$('Siapkan Penawaran Web').first().json.gaji_pokok]]},{range:'Sheet1!B10',values:[[$('Siapkan Penawaran Web').first().json.gaji_pokok === $('Siapkan Penawaran Web').first().json.umk ? 'Gaji Pokok (UMK '+$('Siapkan Penawaran Web').first().json.kotaClient+' '+$('Siapkan Penawaran Web').first().json.tahun+')' : 'Gaji Pokok']]},{range:'Sheet1!J36',values:[['Semarang, '+$('Siapkan Penawaran Web').first().json.tanggal]]},{range:'Sheet1!I13:L13',values:[['','','','']]},{range:'Sheet1!G19',values:[['']]},{range:'Sheet1!I19:L19',values:[['','','','']]},{range:'Sheet1!M13',values:[['Sesuai Kebijakan Client']]},{range:'Sheet1!M16:M20',values:[[''],[''],[''],['Sesuai Kebijakan Client'],['']]},{range:'Sheet1!I16:L18',values:[1,2,3].map(i => [0,1,2,3].map(() => '='+$('Siapkan Penawaran Web').first().json.umk+'*$G$'+(15+i)))},{range:'Sheet1!I20:L20',values:[[0,1,2,3].map(() => '='+$('Siapkan Penawaran Web').first().json.umk+'*$G$20')]}].concat($('Validasi Penawaran Web').first().json.mode === 'manual' ? [{range:'Sheet1!I9:L9',values:[$('Validasi Penawaran Web').first().json.jumlah_personel]}] : [])} }}",
         "options": {}
-      },
-      "onError": "continueRegularOutput"
+      }
     },
     {
       "id": "b05dc9af-95ad-4116-9094-5e02d329e36c",
       "name": "Pindahkan RAB ke Folder Akun",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
+      "onError": "continueRegularOutput",
       "position": [
         1760,
         0
@@ -223,17 +224,17 @@
         },
         "folderId": {
           "__rl": true,
-          "value": "={{ $('Validasi Penawaran Web').first().json.drive_folder_id }}",
+          "value": "={{ $('Resolve Folder Client').first().json.clientFolderId || $('Validasi Penawaran Web').first().json.drive_folder_id }}",
           "mode": "id"
         }
-      },
-      "onError": "continueRegularOutput"
+      }
     },
     {
       "id": "82fa8bdf-af70-4b4c-9245-ddb997254876",
       "name": "Salin Template Surat",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
+      "onError": "continueRegularOutput",
       "position": [
         1980,
         0
@@ -242,19 +243,19 @@
         "operation": "copy",
         "fileId": {
           "__rl": true,
-          "value": "SET_DOC_TEMPLATE_ID",
+          "value": "1Bskb7thGjhO9zDTbYBihIRwPlDm_xfGWVYv_Y_W4jNY",
           "mode": "id"
         },
         "name": "={{ 'Surat Pengantar - ' + $('Siapkan Penawaran Web').first().json.namaClient }}",
         "options": {}
-      },
-      "onError": "continueRegularOutput"
+      }
     },
     {
       "id": "8b707a60-6de0-4c0d-b5dc-9cc094aa3fcd",
       "name": "Isi Surat Pengantar",
       "type": "n8n-nodes-base.googleDocs",
       "typeVersion": 2,
+      "onError": "continueRegularOutput",
       "position": [
         2200,
         0
@@ -296,14 +297,14 @@
             }
           ]
         }
-      },
-      "onError": "continueRegularOutput"
+      }
     },
     {
       "id": "74ed607c-6187-4c0b-b45d-c38296cdc38e",
       "name": "Pindahkan Surat ke Folder Akun",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
+      "onError": "continueRegularOutput",
       "position": [
         2420,
         0
@@ -322,11 +323,23 @@
         },
         "folderId": {
           "__rl": true,
-          "value": "={{ $('Validasi Penawaran Web').first().json.drive_folder_id }}",
+          "value": "={{ $('Resolve Folder Client').first().json.clientFolderId || $('Validasi Penawaran Web').first().json.drive_folder_id }}",
           "mode": "id"
         }
-      },
-      "onError": "continueRegularOutput"
+      }
+    },
+    {
+      "id": "cc657a86-0f58-4c3b-83a2-56542a889227",
+      "name": "Siapkan Payload Callback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2530,
+        0
+      ],
+      "parameters": {
+        "jsCode": "const val = (name) => {\n  try { return $(name).first().json; } catch (e) { return { error: `Node ${name} tidak terbaca: ${e.message}` }; }\n};\ntry {\n  const validasi = val('Validasi Penawaran Web');\n  const siapkan = val('Siapkan Penawaran Web');\n  const isiRab = val('Isi Data RAB');\n  const pindahRab = val('Pindahkan RAB ke Folder Akun');\n  const isiSurat = val('Isi Surat Pengantar');\n  const pindahSurat = val('Pindahkan Surat ke Folder Akun');\n\n  const errors = [isiRab?.error, pindahRab?.error, isiSurat?.error, pindahSurat?.error]\n    .map((e) => e ? String(e.message || e) : '')\n    .filter(Boolean);\n\n  return [{\n    json: {\n      kind: 'offer',\n      offer_id: validasi?.offer_id || null,\n      nomor_surat: siapkan?.nomorSurat || null,\n      rab_file_id: (!isiRab?.error && pindahRab?.id) || null,\n      doc_file_id: (!isiSurat?.error && pindahSurat?.id) || null,\n      error: errors.join('; ') || null,\n    },\n  }];\n} catch (e) {\n  let offerId = null;\n  try { offerId = $('Validasi Penawaran Web').first().json.offer_id || null; } catch (_) {}\n  return [{\n    json: {\n      kind: 'offer',\n      offer_id: offerId,\n      nomor_surat: null,\n      rab_file_id: null,\n      doc_file_id: null,\n      error: `Gagal menyusun payload callback: ${e.message}`,\n    },\n  }];\n}\n"
+      }
     },
     {
       "id": "aefb1ec6-a732-4fa7-8ba8-6e494ed3d53e",
@@ -355,9 +368,34 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({kind:'offer',offer_id:$('Validasi Penawaran Web').first().json.offer_id,nomor_surat:$('Siapkan Penawaran Web').first().json.nomorSurat,rab_file_id:(!$('Isi Data RAB').first().json.error && $('Pindahkan RAB ke Folder Akun').first().json.id) || null,doc_file_id:(!$('Isi Surat Pengantar').first().json.error && $('Pindahkan Surat ke Folder Akun').first().json.id) || null,error:[$('Isi Data RAB').first().json.error,$('Pindahkan RAB ke Folder Akun').first().json.error,$('Isi Surat Pengantar').first().json.error,$('Pindahkan Surat ke Folder Akun').first().json.error].map(e => e ? String(e.message || e) : '').filter(Boolean).join('; ') || null}) }}",
+        "jsonBody": "={{ JSON.stringify($json) }}",
         "options": {
           "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "b1a6c0b2-7e0a-4c1d-9b7a-7d7a6c0f2d1a",
+      "name": "Resolve Folder Client",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "onError": "continueRegularOutput",
+      "position": [
+        1320,
+        140
+      ],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SET_RESOLVE_FOLDER_CLIENT_WORKFLOW_ID"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "parentFolderId": "={{ $('Validasi Penawaran Web').first().json.drive_folder_id }}",
+            "namaClient": "={{ $('Siapkan Penawaran Web').first().json.namaClient }}"
+          }
         }
       }
     }
@@ -422,7 +460,7 @@
       "main": [
         [
           {
-            "node": "Salin Template RAB",
+            "node": "Resolve Folder Client",
             "type": "main",
             "index": 0
           }
@@ -488,7 +526,29 @@
       "main": [
         [
           {
+            "node": "Siapkan Payload Callback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Siapkan Payload Callback": {
+      "main": [
+        [
+          {
             "node": "Callback Penawaran Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Folder Client": {
+      "main": [
+        [
+          {
+            "node": "Salin Template RAB",
             "type": "main",
             "index": 0
           }
