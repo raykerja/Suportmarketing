@@ -1,3 +1,12 @@
+VERSION: 0.9.15 (Rincian RAB: jadwal & lokasi pembayaran THR/UUCK/Seragam/Peralatan + submenu Pembayaran Diluar RAB)
+DATE: 2026-10-21
+
+ADDED: Di "Rincian RAB" (submenu 1. Input RAB Fix), 4 komponen — Tunjangan Hari Raya, Kompensasi UUCK, Seragam Kerja, Peralatan Kerja — masing-masing sekarang punya 2 menu baru di bawah kolom Rupiah-nya: "Lokasi Pembayaran" (Dalam RAB / Luar RAB) dan "Jadwal Pembayaran" (Sesuai termin per bulan / Dibayar sekali / Dibayar 2x). Kalau jadwal dipilih "Dibayar sekali" atau "Dibayar 2x", muncul 1 atau 2 menu "Dibayarkan Bulan ke-" (Januari s.d. Desember). Layout Komponen Gaji & Komponen Fasilitas Kerja diubah dari 2 kolom jadi 1 kolom per baris supaya menu-menu baru ini tidak sempit.
+ADDED: Submenu baru "3. Pembayaran Diluar RAB" di menu Rekap RAB (khusus admin) — tabel No/Nama Lokasi/Jenis yang Dibayarkan Diluar RAB/Berapa Kali Pembayaran/Dibayarkan Bulan, diambil otomatis dari komponen yang ditandai "Luar RAB" pada Input RAB Fix.
+CHANGED: Di "2. Rekapitulasi RAB" (tabel & Unduh Excel, khusus admin), kolom THR/Kompensasi UUCK/Seragam Kerja/Peralatan Kerja tidak lagi menampilkan nilai Rupiah kalau komponen itu ditandai "Luar RAB" — datanya sudah dipindah ke submenu "3. Pembayaran Diluar RAB" supaya tidak tercatat dua kali. Field lain pada baris yang sama tetap tampil seperti biasa.
+
+Data lokasi/jadwal/bulan pembayaran disimpan di kolom `rincian` (jsonb) yang sudah ada — tidak ada migrasi database baru.
+
 VERSION: 0.9.14 (Rincian RAB: Bagian Kerja, Jabatan, Tunjangan Jabatan + label komponen dipercantik)
 DATE: 2026-10-21
 

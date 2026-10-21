@@ -160,7 +160,7 @@ const activeClientTabs = new Set(['clients', 'pic-visits', 'client-progress', 'r
 const salesTabs = new Set(['visits', 'progress']);
 const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', 'price-simulation']);
 const databaseTabs = new Set(['leads']);
-const rabTabs = new Set(['rab-recap', 'rab-recap-summary']);
+const rabTabs = new Set(['rab-recap', 'rab-recap-summary', 'rab-recap-luar']);
 const expenseTabs = new Set(['expenses']);
 const isMobileViewport = () => window.matchMedia('(max-width: 760px)').matches;
 function showMobileHome() {
@@ -177,7 +177,7 @@ function showMobileHome() {
   $('#mobile-menu-home').classList.add('active');
 }
 function activateTab(tab, record = true) {
-  if (!$('#' + tab)?.classList.contains('panel') || (['dashboard', 'offer-recap'].includes(tab) && !isAdmin())) tab = 'visits';
+  if (!$('#' + tab)?.classList.contains('panel') || (['dashboard', 'offer-recap', 'rab-recap-luar'].includes(tab) && !isAdmin())) tab = 'visits';
   $('#mobile-menu-home').classList.remove('active');
   if (isMobileViewport()) { $('.hero').hidden = true; $('.ai-search-card').hidden = true; }
   const current = document.querySelector('.panel:not([hidden])')?.id;
@@ -227,7 +227,7 @@ function activateTab(tab, record = true) {
   if (tab === 'manual-offer') loadOffers();
   if (tab === 'price-simulation') { if (!priceLoaded) loadPrices(); else renderSimTable(); }
   if (tab === 'repitch') { if (!repitchLoaded) loadRepitch(); else renderRepitch(); }
-  if (tab === 'rab-recap' || tab === 'rab-recap-summary') loadRabRecap();
+  if (tab === 'rab-recap' || tab === 'rab-recap-summary' || tab === 'rab-recap-luar') loadRabRecap();
   if (tab === 'dashboard') loadDashboard();
   if (tab === 'offer-recap') renderOfferRecap();
 }
@@ -1725,12 +1725,14 @@ $('#offer-recap-refresh').addEventListener('click', async () => { await loadLead
 async function loadRabRecap() {
   if (!client || !currentUser) return;
   $('#rab-recap-admin').hidden = !isAdmin();
+  $('[data-tab="rab-recap-luar"]').hidden = !isAdmin();
   const { data, error } = await client.from('marketing_rab_recap_view').select('*').order('nama');
   if (error) { status('#rab-recap-status', 'Daftar belum dapat dimuat: ' + error.message, true); return; }
   rabRecapCache = data || [];
   $('#rab-recap-suggestions').innerHTML = rabRecapCache.map((r) => `<option value="${esc(r.nama)}"></option>`).join('');
   renderRabRecap();
   renderRabRecapSummary();
+  renderRabRecapLuar();
 }
 function previewUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/preview') : ''; }
 function pdfUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/export?format=pdf') : ''; }
@@ -1748,8 +1750,19 @@ const RAB_RINCIAN_COLUMNS = [
   ['total_per_orang_per_bulan', 'Total Biaya Per Orang Per Bulan', true], ['biaya_total_kontrak', 'Biaya Total Kontrak', true],
 ];
 const RAB_RINCIAN_TEXT_KEYS = new Set(['bagian_kerja', 'jabatan']);
+// Komponen yang punya pilihan "dibayar di luar RAB" — kalau ditandai luar_rab, nilainya tidak ikut tampil
+// di Rekapitulasi RAB (sudah dipindah ke submenu "3. Pembayaran Diluar RAB").
+const RAB_PAYMENT_ITEMS = [
+  { suffix: 'thr', key: 'thr', label: 'Tunjangan Hari Raya' },
+  { suffix: 'uuck', key: 'kompensasi_uuck', label: 'Kompensasi UUCK' },
+  { suffix: 'seragam', key: 'seragam_kerja', label: 'Seragam Kerja' },
+  { suffix: 'peralatan', key: 'peralatan_kerja', label: 'Peralatan Kerja' },
+];
+const RAB_PAYMENT_OUTSIDE_KEYS = new Set(RAB_PAYMENT_ITEMS.map((i) => i.key));
+const RAB_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 function rabRincianRawValue(rincian, key) {
   if (RAB_RINCIAN_TEXT_KEYS.has(key)) return (rincian || {})[key] || '';
+  if (RAB_PAYMENT_OUTSIDE_KEYS.has(key) && (rincian || {})[key + '_lokasi'] === 'luar_rab') return 0;
   return Number((rincian || {})[key]) || 0;
 }
 function rabRincianDisplay(rincian, key, isRupiah) {
@@ -1794,6 +1807,32 @@ async function exportRabRecapSummary() {
 $('#rab-recap-summary-query').addEventListener('input', renderRabRecapSummary);
 $('#refresh-rab-recap-summary').addEventListener('click', loadRabRecap);
 $('#rab-recap-summary-export').addEventListener('click', exportRabRecapSummary);
+function rabJadwalLabel(jadwal) { return jadwal === 'sekali' ? '1x' : jadwal === 'dua_kali' ? '2x' : 'Bulanan'; }
+function rabBulanLabel(rincian, key, jadwal) {
+  const name = (n) => RAB_MONTHS[Number(n) - 1] || '';
+  if (jadwal === 'dua_kali') { const label = [name(rincian[key + '_bulan1']), name(rincian[key + '_bulan2'])].filter(Boolean).join(' & '); return label || '—'; }
+  if (jadwal === 'sekali') return name(rincian[key + '_bulan1']) || '—';
+  return '—';
+}
+function renderRabRecapLuar() {
+  if (!isAdmin()) return;
+  const q = $('#rab-recap-luar-query').value.trim().toLocaleLowerCase('id');
+  const rows = [];
+  rabRecapCache.filter((r) => !q || r.nama.toLocaleLowerCase('id').includes(q)).slice().sort((a, b) => a.nama.localeCompare(b.nama, 'id'))
+    .forEach((r) => {
+      const rincian = r.rincian || {};
+      for (const item of RAB_PAYMENT_ITEMS) {
+        if (rincian[item.key + '_lokasi'] !== 'luar_rab') continue;
+        const jadwal = rincian[item.key + '_jadwal'] || 'bulanan';
+        rows.push({ nama: r.nama, jenis: item.label, kali: rabJadwalLabel(jadwal), bulan: rabBulanLabel(rincian, item.key, jadwal) });
+      }
+    });
+  status('#rab-recap-luar-status', rows.length ? `Menampilkan ${rows.length} pembayaran di luar RAB.` : (rabRecapCache.length ? 'Belum ada komponen yang ditandai dibayar di luar RAB.' : 'Belum ada RAB final yang ditambahkan.'));
+  $('#rab-recap-luar-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama Lokasi</th><th>Jenis yang Dibayarkan Diluar RAB</th><th>Berapa Kali Pembayaran</th><th>Dibayarkan Bulan</th></tr></thead><tbody>${rows.map((row, i) => `<tr><td>${i + 1}</td><td>${esc(row.nama)}</td><td>${esc(row.jenis)}</td><td>${esc(row.kali)}</td><td>${esc(row.bulan)}</td></tr>`).join('')}</tbody></table></div>`
+    : `<p class="hint">${rabRecapCache.length ? 'Tidak ada pembayaran di luar RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
+}
+$('#rab-recap-luar-query').addEventListener('input', renderRabRecapLuar);
+$('#refresh-rab-recap-luar').addEventListener('click', loadRabRecap);
 function renderRabRecap() {
   const admin = isAdmin();
   const q = $('#rab-recap-query').value.trim().toLocaleLowerCase('id');
@@ -1812,6 +1851,24 @@ const RAB_RINCIAN_FIELDS = {
   management_fee_rupiah: 'rab-r-fee-rupiah', ppn_ps23: 'rab-r-ppn', pph: 'rab-r-pph',
   total_per_orang_per_bulan: 'rab-r-total-orang', biaya_total_kontrak: 'rab-r-total-kontrak',
 };
+function rabPaymentFieldIds(suffix) {
+  return { lokasi: `rab-r-${suffix}-lokasi`, jadwal: `rab-r-${suffix}-jadwal`, wrap: `rab-r-${suffix}-bulan-wrap`, bulan1: `rab-r-${suffix}-bulan1`, bulan2: `rab-r-${suffix}-bulan2`, bulan2Field: `rab-r-${suffix}-bulan2-field` };
+}
+function updateRabPaymentVisibility(suffix) {
+  const ids = rabPaymentFieldIds(suffix);
+  const jadwal = $('#' + ids.jadwal).value;
+  $('#' + ids.wrap).hidden = jadwal === 'bulanan';
+  $('#' + ids.bulan2Field).hidden = jadwal !== 'dua_kali';
+}
+(function initRabPaymentFields() {
+  const monthOptions = '<option value="">Pilih bulan</option>' + RAB_MONTHS.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+  for (const item of RAB_PAYMENT_ITEMS) {
+    const ids = rabPaymentFieldIds(item.suffix);
+    $('#' + ids.bulan1).innerHTML = monthOptions;
+    $('#' + ids.bulan2).innerHTML = monthOptions;
+    $('#' + ids.jadwal).addEventListener('change', () => updateRabPaymentVisibility(item.suffix));
+  }
+})();
 const RAB_BPJS_RATES = { jkk: 0.0024, jkm: 0.0030, jht: 0.0370, jp: 0.0200, bpjs_kesehatan: 0.0400 };
 function recomputeRabBpjs() {
   const acuan = Number(digitsOnly($('#rab-r-acuan-bpjs').value));
@@ -1831,6 +1888,13 @@ function buildRabRincianPayload() {
   out.management_fee_persen = Number(String($('#rab-r-fee-persen').value).trim().replace(',', '.')) || 0;
   out.bagian_kerja = $('#rab-r-bagian-kerja').value;
   out.jabatan = $('#rab-r-jabatan').value;
+  for (const item of RAB_PAYMENT_ITEMS) {
+    const ids = rabPaymentFieldIds(item.suffix);
+    out[item.key + '_lokasi'] = $('#' + ids.lokasi).value;
+    out[item.key + '_jadwal'] = $('#' + ids.jadwal).value;
+    out[item.key + '_bulan1'] = $('#' + ids.bulan1).value;
+    out[item.key + '_bulan2'] = $('#' + ids.bulan2).value;
+  }
   return out;
 }
 function fillRabRincianForm(rincian) {
@@ -1839,6 +1903,14 @@ function fillRabRincianForm(rincian) {
   $('#rab-r-fee-persen').value = r.management_fee_persen || '';
   $('#rab-r-bagian-kerja').value = r.bagian_kerja || '';
   $('#rab-r-jabatan').value = r.jabatan || '';
+  for (const item of RAB_PAYMENT_ITEMS) {
+    const ids = rabPaymentFieldIds(item.suffix);
+    $('#' + ids.lokasi).value = r[item.key + '_lokasi'] || 'dalam_rab';
+    $('#' + ids.jadwal).value = r[item.key + '_jadwal'] || 'bulanan';
+    $('#' + ids.bulan1).value = r[item.key + '_bulan1'] || '';
+    $('#' + ids.bulan2).value = r[item.key + '_bulan2'] || '';
+    updateRabPaymentVisibility(item.suffix);
+  }
 }
 function resetRabRecapForm() {
   editingRabRecap = null;
@@ -1846,6 +1918,7 @@ function resetRabRecapForm() {
   $('#rab-recap-form').reset();
   $('#rab-recap-form-cancel').hidden = true;
   status('#rab-recap-form-status', '');
+  for (const item of RAB_PAYMENT_ITEMS) updateRabPaymentVisibility(item.suffix);
 }
 $('#rab-recap-form-cancel').addEventListener('click', resetRabRecapForm);
 $('#rab-recap-f-nilai').addEventListener('input', () => { $('#rab-recap-f-nilai').value = groupThousands($('#rab-recap-f-nilai').value); });
