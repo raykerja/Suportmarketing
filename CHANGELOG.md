@@ -1,3 +1,9 @@
+VERSION: 0.9.14 (Rincian RAB: Bagian Kerja, Jabatan, Tunjangan Jabatan + label komponen dipercantik)
+DATE: 2026-10-21
+
+ADDED: Di form "Tambah RAB" (submenu 1. Input RAB Fix), bawah field "Link Spreadsheet" sekarang ada 2 menu dropdown baru: "Bagian Kerja" (Keamanan/Kebersihan/Pramubakti-Administrasi/Pengemudi) dan "Jabatan" (Anggota/Danru/Chief/Supervisor). Di bagian "Komponen Gaji" ditambah 1 kolom isian baru "Tunjangan Jabatan (Rp)". Ketiga field baru ini tersimpan di kolom `rincian` (jsonb) yang sudah ada — tidak ada migrasi database baru — dan otomatis ikut tampil di tabel "2. Rekapitulasi RAB" (khusus admin) serta ikut ke file Excel hasil "Unduh Excel".
+CHANGED: Tulisan label tiap komponen di "Rincian RAB" (Komponen Gaji, Komponen BPJS, Komponen Fasilitas Kerja, Peningkatan Kemampuan, Biaya Pengelolaan, Pajak, Biaya Akhir) dibuat lebih besar, tebal, dan berwarna biru, dengan garis pemisah biru di atas tiap label supaya lebih mudah dipindai saat mengisi form panjang ini. Class CSS global `.eyebrow` yang dipakai di tab-tab lain tidak berubah (dibuat class baru `.rab-component-label` khusus bagian ini).
+
 VERSION: 0.9.13 (Excel Rekapitulasi RAB: Management Fee tampil %)
 DATE: 2026-10-20
 
