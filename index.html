@@ -24,12 +24,12 @@
     });
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
-  <link rel="stylesheet" href="style.css?v=20261010-1">
+  <link rel="stylesheet" href="style.css?v=20261022-1">
   <link rel="stylesheet" href="theme-ray.css?v=20261012-10">
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261022-3"></script>
+  <script type="module" src="app.js?v=20261022-4"></script>
   <script defer src="pwa.js?v=20261010-1"></script>
 </head>
 <body>
@@ -313,8 +313,8 @@
             <h3>Rincian RAB</h3>
             <p class="hint">Data margin/harga internal — hanya admin yang bisa melihat dan mengisi bagian ini.</p>
 
-            <p class="eyebrow rab-component-label">Komponen Gaji, BPJS &amp; Biaya per Jabatan</p>
-            <p class="hint">Tambah 1 baris per jabatan kalau RAB ini mencakup lebih dari satu jabatan sekaligus (misal Anggota, Danru, dan Chief dalam 1 kontrak yang sama) — Acuan BPJS dan Total Biaya Per Orang Per Bulan juga beda-beda per jabatan. Kalau RAB ini cuma 1 jabatan, isi 1 baris saja seperti biasa — tampilan di Rekapitulasi RAB tidak berubah.</p>
+            <p class="eyebrow rab-component-label">Komponen Gaji, BPJS &amp; Biaya Akhir per Jabatan</p>
+            <p class="hint">Tambah 1 baris per jabatan kalau RAB ini mencakup lebih dari satu jabatan sekaligus (misal Anggota, Danru, dan Chief dalam 1 kontrak yang sama) — baris-barisnya tampil berjejer. Acuan BPJS, Total Biaya Per Orang Per Bulan, dan Biaya Total Kontrak juga diisi per baris karena beda-beda per jabatan. Kalau RAB ini cuma 1 jabatan, isi 1 baris saja seperti biasa — tampilan di Rekapitulasi RAB tidak berubah.</p>
             <div id="rab-jabatan-rows"></div>
             <button type="button" id="rab-jabatan-add">+ Tambah Jabatan</button>
 
@@ -349,9 +349,7 @@
             <p class="eyebrow rab-component-label">Pajak</p>
             <div class="form-grid"><label>PPN Ps 23 (11%) (Rp)<input id="rab-r-ppn" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label><label>PPH (2%) (Rp)<input id="rab-r-pph" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label></div>
 
-            <p class="eyebrow rab-component-label">Biaya Akhir</p>
-            <p class="hint">Total Biaya Per Orang Per Bulan sudah diisi per baris jabatan di atas (beda per jabatan). Biaya Total Kontrak di bawah ini untuk keseluruhan RAB.</p>
-            <label>Biaya Total Kontrak (Rp)<input id="rab-r-total-kontrak" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
+            <p class="hint">Total Biaya Per Orang Per Bulan dan Biaya Total Kontrak sudah diisi per baris jabatan di atas. Kalau cuma salah satu baris yang diisi Biaya Total Kontrak-nya, nilai itu otomatis jadi total biaya kontrak untuk keseluruhan RAB; kalau lebih dari satu baris diisi, semuanya dijumlah.</p>
 
             <p id="rab-recap-form-status" class="hint" role="status"></p>
             <div class="actions"><button class="primary" id="rab-recap-form-save" type="submit">Simpan</button><button id="rab-recap-form-cancel" type="button" hidden>Batal ubah</button></div>

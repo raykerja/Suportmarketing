@@ -1743,7 +1743,6 @@ const RAB_RINCIAN_COLUMNS = [
   ['pelatihan_supervisi', 'Pelatihan dan Supervisi', true], ['pembinaan_monitoring', 'Pembinaan dan Monitoring', true],
   ['management_fee_persen', 'Management Fee (%)', false], ['management_fee_rupiah', 'Management Fee (Rp)', true],
   ['ppn_ps23', 'PPN Ps 23 (11%)', true], ['pph', 'PPH (2%)', true],
-  ['biaya_total_kontrak', 'Biaya Total Kontrak', true],
 ];
 // Komponen yang punya pilihan "dibayar di luar RAB" — kalau ditandai luar_rab, nilainya tidak ikut tampil
 // di Rekapitulasi RAB (sudah dipindah ke submenu "3. Pembayaran Diluar RAB"). Lokasi/jadwal berlaku untuk seluruh RAB.
@@ -1769,9 +1768,11 @@ function rabRincianDisplay(rincian, key, isRupiah) {
 const RAB_JABATAN_ROW_FIELDS = [
   'bagian_kerja', 'jabatan', 'jumlah_anggota', 'gaji_pokok', 'thr', 'kompensasi_uuck', 'lembur', 'tunjangan_jabatan',
   'acuan_bpjs', 'jkk', 'jkm', 'jht', 'jp', 'bpjs_kesehatan', 'total_per_orang_per_bulan',
-  'item_tambahan_keterangan', 'item_tambahan_nominal',
+  'item_tambahan_keterangan', 'item_tambahan_nominal', 'biaya_total_kontrak',
 ];
-// [kunci, label kolom, mode] — mode: 'text' (gabung nilai unik dipisah koma), 'jumlah', 'rupiah', 'rupiah-masked' (disamarkan kalau Lokasi Pembayaran = Luar RAB).
+// [kunci, label kolom, mode] — mode: 'text' (gabung nilai unik dipisah koma), 'jumlah', 'rupiah', 'rupiah-masked' (disamarkan kalau
+// Lokasi Pembayaran = Luar RAB), 'sum-rupiah' (dijumlah semua baris jadi 1 angka — dipakai Biaya Total Kontrak: kalau cuma 1 baris
+// diisi, hasilnya = nilai baris itu; kalau beberapa baris diisi, semuanya dijumlah jadi total kontrak keseluruhan RAB).
 const RAB_JABATAN_COLUMNS = [
   ['bagian_kerja', 'Bagian Kerja', 'text'], ['jabatan', 'Jabatan', 'text'], ['jumlah_anggota', 'Jumlah Anggota', 'jumlah'],
   ['gaji_pokok', 'Gaji Pokok', 'rupiah'], ['thr', 'Tunjangan Hari Raya', 'rupiah-masked'], ['kompensasi_uuck', 'Kompensasi UUCK', 'rupiah-masked'],
@@ -1794,6 +1795,10 @@ function rabJabatanLabel(row) { return (row.jabatan || '').trim() || 'Item Koson
 function rabJabatanFieldText(rincian, key, mode) {
   const rows = rabJabatanRowsOf(rincian);
   if (!rows.length) return '—';
+  if (mode === 'sum-rupiah') {
+    const total = rows.reduce((sum, row) => sum + (Number(row[key]) || 0), 0);
+    return total ? 'Rp' + total.toLocaleString('id-ID') : '—';
+  }
   const masked = mode === 'rupiah-masked' && (rincian || {})[key + '_lokasi'] === 'luar_rab';
   if (mode === 'text') {
     const vals = [...new Set(rows.map((row) => (row[key] || '').trim()).filter(Boolean))];
@@ -1821,9 +1826,9 @@ function renderRabRecapSummary() {
   const rows = rabRecapCache.filter((r) => !q || r.nama.toLocaleLowerCase('id').includes(q))
     .slice().sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
   status('#rab-recap-summary-status', rabRecapCache.length ? `Menampilkan ${rows.length} dari ${rabRecapCache.length} RAB.` : 'Belum ada RAB final yang ditambahkan.');
-  const rincianHead = admin ? RAB_JABATAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Item Tambahan (Keterangan)</th><th>Item Tambahan (Nominal)</th>' + RAB_RINCIAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') : '';
+  const rincianHead = admin ? RAB_JABATAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Item Tambahan (Keterangan)</th><th>Item Tambahan (Nominal)</th>' + RAB_RINCIAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Biaya Total Kontrak</th>' : '';
   $('#rab-recap-summary-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th>${rincianHead}<th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${rows.map((r, i) => {
-    const rincianCells = admin ? RAB_JABATAN_COLUMNS.map(([key, , mode]) => `<td>${esc(rabJabatanFieldText(r.rincian, key, mode))}</td>`).join('') + `<td>${esc(rabJabatanKeteranganText(r.rincian))}</td><td>${esc(rabJabatanFieldText(r.rincian, 'item_tambahan_nominal', 'rupiah'))}</td>` + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') : '';
+    const rincianCells = admin ? RAB_JABATAN_COLUMNS.map(([key, , mode]) => `<td>${esc(rabJabatanFieldText(r.rincian, key, mode))}</td>`).join('') + `<td>${esc(rabJabatanKeteranganText(r.rincian))}</td><td>${esc(rabJabatanFieldText(r.rincian, 'item_tambahan_nominal', 'rupiah'))}</td>` + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') + `<td>${esc(rabJabatanFieldText(r.rincian, 'biaya_total_kontrak', 'sum-rupiah'))}</td>` : '';
     return `<tr><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
   }).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
@@ -1843,6 +1848,7 @@ async function exportRabRecapSummary() {
         const v = rabRincianRawValue(r.rincian, key);
         out[label] = key === 'management_fee_persen' ? (v ? v + '%' : '') : v;
       }
+      out['Biaya Total Kontrak'] = rabJabatanFieldText(r.rincian, 'biaya_total_kontrak', 'sum-rupiah');
     }
     out['Nilai Kontrak'] = r.nilai_kontrak || 0;
     out['Link Spreadsheet'] = r.link;
@@ -1896,7 +1902,6 @@ $('#rab-recap-query').addEventListener('input', renderRabRecap);
 const RAB_RINCIAN_FIELDS = {
   seragam_kerja: 'rab-r-seragam', peralatan_kerja: 'rab-r-peralatan', pelatihan_supervisi: 'rab-r-pelatihan', pembinaan_monitoring: 'rab-r-pembinaan',
   management_fee_rupiah: 'rab-r-fee-rupiah', ppn_ps23: 'rab-r-ppn', pph: 'rab-r-pph',
-  biaya_total_kontrak: 'rab-r-total-kontrak',
 };
 function rabPaymentFieldIds(suffix) {
   return { lokasi: `rab-r-${suffix}-lokasi`, jadwal: `rab-r-${suffix}-jadwal`, wrap: `rab-r-${suffix}-bulan-wrap`, bulan1: `rab-r-${suffix}-bulan1`, bulan2: `rab-r-${suffix}-bulan2`, bulan2Field: `rab-r-${suffix}-bulan2-field` };
@@ -1933,7 +1938,8 @@ function rabJabatanRowTemplate(data) {
     <label>BPJS Kesehatan (4.00%)<input data-field="bpjs_kesehatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('bpjs_kesehatan')}"></label>
     <label>Total Biaya Per Orang Per Bulan (Rp)<input data-field="total_per_orang_per_bulan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('total_per_orang_per_bulan')}"></label>
     <p class="hint">Item tambahan di luar penamaan RAB standar untuk jabatan ini (opsional) — kalau keterangan tidak diisi, tampil "Item Kosong" di Rekapitulasi RAB.</p>
-    <div class="form-grid"><label>Item Tambahan (Keterangan)<input data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" value="${esc(d.item_tambahan_keterangan || '')}"></label><label>Item Tambahan (Nominal) (Rp)<input data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('item_tambahan_nominal')}"></label></div>`;
+    <div class="form-grid"><label>Item Tambahan (Keterangan)<input data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" value="${esc(d.item_tambahan_keterangan || '')}"></label><label>Item Tambahan (Nominal) (Rp)<input data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('item_tambahan_nominal')}"></label></div>
+    <label>Biaya Total Kontrak (Rp) <small>isi di 1 baris saja kalau nilainya untuk keseluruhan RAB</small><input data-field="biaya_total_kontrak" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('biaya_total_kontrak')}"></label>`;
 }
 function renumberRabJabatanRows() {
   $('#rab-jabatan-rows').querySelectorAll('.rab-jabatan-row').forEach((row, i) => {

@@ -1,3 +1,11 @@
+VERSION: 0.9.19 (Baris Jabatan berjejer + Biaya Total Kontrak per Jabatan + tampilan diperlebar)
+DATE: 2026-10-22
+
+CHANGED: Baris Jabatan di "Komponen Gaji, BPJS & Biaya Akhir per Jabatan" (submenu 1. Input RAB Fix) sekarang **tampil berjejer bersebelahan** (grid responsif, otomatis 3 kolom kalau ada 3 baris jabatan dan layar cukup lebar, menyempit ke 1 kolom di HP) — sebelumnya tersusun ke bawah satu-satu.
+ADDED: "Biaya Total Kontrak" (sebelumnya 1 nilai untuk seluruh RAB) ikut dipindah jadi isian per baris Jabatan, konsisten dengan Acuan BPJS dan Total Biaya Per Orang Per Bulan. **Aturan pengisian**: kalau cuma 1 baris yang diisi Biaya Total Kontrak-nya, nilai itu otomatis jadi total biaya kontrak untuk keseluruhan RAB (dipakai kalau admin cuma mau isi 1 angka total seperti biasa); kalau lebih dari 1 baris diisi, semuanya **dijumlah** jadi total kontrak keseluruhan. Ditampilkan di Rekapitulasi RAB &amp; Excel sebagai kolom "Biaya Total Kontrak" (1 angka, bukan rincian per jabatan, karena memang maksudnya 1 total untuk seluruh RAB).
+CHANGED: Lebar tampilan situs diperlebar dari 1180px ke 1480px (`main`, `header`) supaya baris-baris Jabatan yang berjejer tidak sempit.
+Data tetap di `rincian.jabatan_rows` (jsonb) — tidak ada migrasi database baru.
+
 VERSION: 0.9.18 (Acuan BPJS & Total Biaya Per Orang Per Bulan ikut per Jabatan)
 DATE: 2026-10-22
 
