@@ -1921,65 +1921,34 @@ function updateRabPaymentVisibility(suffix) {
     $('#' + ids.jadwal).addEventListener('change', () => updateRabPaymentVisibility(item.suffix));
   }
 })();
-function rabJabatanRowTemplate(data) {
-  const d = data || {};
-  const val = (key) => Number(d[key]) ? groupThousands(String(d[key])) : '';
-  const opt = (current, label) => `<option${current === label ? ' selected' : ''}>${label}</option>`;
-  return `<div class="form-grid"><label>Bagian Kerja<select data-field="bagian_kerja"><option value="">Pilih bagian kerja</option>${['Keamanan', 'Kebersihan', 'Pramubakti/Administrasi', 'Pengemudi'].map((o) => opt(d.bagian_kerja, o)).join('')}</select></label><label>Jabatan<select data-field="jabatan"><option value="">Pilih jabatan</option>${['Anggota', 'Danru', 'Chief', 'Supervisor'].map((o) => opt(d.jabatan, o)).join('')}</select></label></div>
-    <label>Jumlah Anggota<input data-field="jumlah_anggota" class="rab-int-field" type="text" inputmode="numeric" autocomplete="off" placeholder="Contoh: 10" value="${esc(d.jumlah_anggota || '')}"></label>
-    <label>Gaji Pokok (Rp)<input data-field="gaji_pokok" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('gaji_pokok')}"></label>
-    <label>Tunjangan Hari Raya (Rp)<input data-field="thr" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('thr')}"></label>
-    <label>Kompensasi UUCK (Rp)<input data-field="kompensasi_uuck" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('kompensasi_uuck')}"></label>
-    <label>Lembur (Rp)<input data-field="lembur" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('lembur')}"></label>
-    <label>Tunjangan Jabatan (Rp)<input data-field="tunjangan_jabatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('tunjangan_jabatan')}"></label>
-    <label>Acuan Nilai BPJS (Rp)<input data-field="acuan_bpjs" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('acuan_bpjs')}"></label>
-    <div class="form-grid"><label>JKK (0.24%)<input data-field="jkk" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('jkk')}"></label><label>JKM (0.30%)<input data-field="jkm" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('jkm')}"></label></div>
-    <div class="form-grid"><label>JHT (3.70%)<input data-field="jht" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('jht')}"></label><label>JP (2.00%)<input data-field="jp" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('jp')}"></label></div>
-    <label>BPJS Kesehatan (4.00%)<input data-field="bpjs_kesehatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('bpjs_kesehatan')}"></label>
-    <label>Total Biaya Per Orang Per Bulan (Rp)<input data-field="total_per_orang_per_bulan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('total_per_orang_per_bulan')}"></label>
-    <p class="hint">Item tambahan di luar penamaan RAB standar untuk jabatan ini (opsional) — kalau keterangan tidak diisi, tampil "Item Kosong" di Rekapitulasi RAB.</p>
-    <div class="form-grid"><label>Item Tambahan (Keterangan)<input data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" value="${esc(d.item_tambahan_keterangan || '')}"></label><label>Item Tambahan (Nominal) (Rp)<input data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('item_tambahan_nominal')}"></label></div>
-    <label>Biaya Total Kontrak (Rp) <small>isi di 1 baris saja kalau nilainya untuk keseluruhan RAB</small><input data-field="biaya_total_kontrak" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('biaya_total_kontrak')}"></label>`;
-}
-function renumberRabJabatanRows() {
-  $('#rab-jabatan-rows').querySelectorAll('.rab-jabatan-row').forEach((row, i) => {
-    row.querySelector('.rab-jabatan-row-title').textContent = `Jabatan ${i + 1}`;
-  });
-}
-function addRabJabatanRow(data) {
-  const row = document.createElement('div');
-  row.className = 'rab-jabatan-row rab-payment-opts';
-  row.innerHTML = `<div class="section-head"><strong class="rab-jabatan-row-title"></strong><button type="button" data-remove-jabatan-row>Hapus baris</button></div>${rabJabatanRowTemplate(data)}`;
-  $('#rab-jabatan-rows').appendChild(row);
-  renumberRabJabatanRows();
-}
-$('#rab-jabatan-add').addEventListener('click', () => addRabJabatanRow());
-$('#rab-jabatan-rows').addEventListener('click', (event) => {
-  const btn = event.target.closest('[data-remove-jabatan-row]');
-  if (!btn) return;
-  btn.closest('.rab-jabatan-row').remove();
-  renumberRabJabatanRows();
-});
+// 3 kolom tetap (Jabatan 1/2/3) — field-nya diidentifikasi lewat atribut data-jabatan-col + data-field di index.html,
+// bukan dibuat dinamis lewat JS, supaya tampilannya persis seperti field lain di form ini (berjejer, tanpa kotak/kartu).
+function rabJabatanField(col, key) { return $(`#rab-recap-form [data-jabatan-col="${col}"][data-field="${key}"]`); }
 function collectRabJabatanRows() {
-  return Array.from($('#rab-jabatan-rows').querySelectorAll('.rab-jabatan-row')).map((rowEl) => {
+  const rows = [];
+  for (const col of [1, 2, 3]) {
     const row = {};
+    let filled = false;
     for (const key of RAB_JABATAN_ROW_FIELDS) {
-      const field = rowEl.querySelector(`[data-field="${key}"]`);
+      const field = rabJabatanField(col, key);
       if (!field) continue;
-      row[key] = (key === 'bagian_kerja' || key === 'jabatan' || key === 'item_tambahan_keterangan') ? field.value.trim() : (Number(digitsOnly(field.value)) || 0);
+      const v = (key === 'bagian_kerja' || key === 'jabatan' || key === 'item_tambahan_keterangan') ? field.value.trim() : (Number(digitsOnly(field.value)) || 0);
+      row[key] = v;
+      if (v) filled = true;
     }
-    return row;
-  });
+    if (filled) rows.push(row);
+  }
+  return rows;
 }
 const RAB_BPJS_RATES = { jkk: 0.0024, jkm: 0.0030, jht: 0.0370, jp: 0.0200, bpjs_kesehatan: 0.0400 };
-function recomputeRabJabatanBpjs(rowEl) {
-  const acuan = Number(digitsOnly(rowEl.querySelector('[data-field="acuan_bpjs"]').value));
+function recomputeRabJabatanBpjs(col) {
+  const acuan = Number(digitsOnly(rabJabatanField(col, 'acuan_bpjs').value));
   for (const key of Object.keys(RAB_BPJS_RATES)) {
-    rowEl.querySelector(`[data-field="${key}"]`).value = acuan ? groupThousands(String(Math.round(acuan * RAB_BPJS_RATES[key]))) : '';
+    rabJabatanField(col, key).value = acuan ? groupThousands(String(Math.round(acuan * RAB_BPJS_RATES[key]))) : '';
   }
 }
-$('#rab-jabatan-rows').addEventListener('input', (event) => {
-  if (event.target.dataset.field === 'acuan_bpjs') recomputeRabJabatanBpjs(event.target.closest('.rab-jabatan-row'));
+$('#rab-recap-form').addEventListener('input', (event) => {
+  if (event.target.dataset.field === 'acuan_bpjs') recomputeRabJabatanBpjs(event.target.dataset.jabatanCol);
 });
 $('#rab-recap-form').addEventListener('input', (event) => {
   const field = event.target.closest('.rab-rp-field');
@@ -2004,9 +1973,15 @@ function fillRabRincianForm(rincian) {
   const r = rincian || {};
   for (const [key, id] of Object.entries(RAB_RINCIAN_FIELDS)) $('#' + id).value = r[key] ? groupThousands(String(r[key])) : '';
   $('#rab-r-fee-persen').value = r.management_fee_persen || '';
-  $('#rab-jabatan-rows').replaceChildren();
   const jabatanRows = rabJabatanRowsOf(r);
-  (jabatanRows.length ? jabatanRows : [{}]).forEach((row) => addRabJabatanRow(row));
+  for (const col of [1, 2, 3]) {
+    const row = jabatanRows[col - 1] || {};
+    for (const key of RAB_JABATAN_ROW_FIELDS) {
+      const field = rabJabatanField(col, key);
+      if (!field) continue;
+      field.value = (key === 'bagian_kerja' || key === 'jabatan' || key === 'item_tambahan_keterangan') ? (row[key] || '') : (row[key] ? groupThousands(String(row[key])) : '');
+    }
+  }
   for (const item of RAB_PAYMENT_ITEMS) {
     const ids = rabPaymentFieldIds(item.suffix);
     $('#' + ids.lokasi).value = r[item.key + '_lokasi'] || 'dalam_rab';
@@ -2020,8 +1995,6 @@ function resetRabRecapForm() {
   editingRabRecap = null;
   $('#rab-recap-form-title').textContent = 'Tambah RAB';
   $('#rab-recap-form').reset();
-  $('#rab-jabatan-rows').replaceChildren();
-  addRabJabatanRow();
   $('#rab-recap-form-cancel').hidden = true;
   status('#rab-recap-form-status', '');
   for (const item of RAB_PAYMENT_ITEMS) updateRabPaymentVisibility(item.suffix);

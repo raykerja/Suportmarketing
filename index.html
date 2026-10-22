@@ -24,12 +24,12 @@
     });
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
-  <link rel="stylesheet" href="style.css?v=20261022-1">
+  <link rel="stylesheet" href="style.css?v=20261022-2">
   <link rel="stylesheet" href="theme-ray.css?v=20261012-10">
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261022-4"></script>
+  <script type="module" src="app.js?v=20261022-5"></script>
   <script defer src="pwa.js?v=20261010-1"></script>
 </head>
 <body>
@@ -313,10 +313,80 @@
             <h3>Rincian RAB</h3>
             <p class="hint">Data margin/harga internal — hanya admin yang bisa melihat dan mengisi bagian ini.</p>
 
-            <p class="eyebrow rab-component-label">Komponen Gaji, BPJS &amp; Biaya Akhir per Jabatan</p>
-            <p class="hint">Tambah 1 baris per jabatan kalau RAB ini mencakup lebih dari satu jabatan sekaligus (misal Anggota, Danru, dan Chief dalam 1 kontrak yang sama) — baris-barisnya tampil berjejer. Acuan BPJS, Total Biaya Per Orang Per Bulan, dan Biaya Total Kontrak juga diisi per baris karena beda-beda per jabatan. Kalau RAB ini cuma 1 jabatan, isi 1 baris saja seperti biasa — tampilan di Rekapitulasi RAB tidak berubah.</p>
-            <div id="rab-jabatan-rows"></div>
-            <button type="button" id="rab-jabatan-add">+ Tambah Jabatan</button>
+            <p class="eyebrow rab-component-label">Komponen Gaji &amp; BPJS per Jabatan</p>
+            <p class="hint">Sampai 3 jabatan sekaligus dalam 1 RAB (misal Anggota, Danru, Chief). Kalau RAB ini cuma 1-2 jabatan, biarkan kolom Jabatan 2/3 kosong — tampilan di Rekapitulasi RAB tidak berubah kalau cuma 1 kolom yang diisi.</p>
+            <div class="rab-jabatan-grid">
+              <span></span><strong>Jabatan 1</strong><strong>Jabatan 2</strong><strong>Jabatan 3</strong>
+              <span class="rab-jabatan-label">Bagian Kerja</span>
+              <select id="rab-r-j1-bagian-kerja" data-jabatan-col="1" data-field="bagian_kerja" aria-label="Bagian Kerja Jabatan 1"><option value="">Pilih bagian kerja</option><option>Keamanan</option><option>Kebersihan</option><option>Pramubakti/Administrasi</option><option>Pengemudi</option></select>
+              <select id="rab-r-j2-bagian-kerja" data-jabatan-col="2" data-field="bagian_kerja" aria-label="Bagian Kerja Jabatan 2"><option value="">Pilih bagian kerja</option><option>Keamanan</option><option>Kebersihan</option><option>Pramubakti/Administrasi</option><option>Pengemudi</option></select>
+              <select id="rab-r-j3-bagian-kerja" data-jabatan-col="3" data-field="bagian_kerja" aria-label="Bagian Kerja Jabatan 3"><option value="">Pilih bagian kerja</option><option>Keamanan</option><option>Kebersihan</option><option>Pramubakti/Administrasi</option><option>Pengemudi</option></select>
+              <span class="rab-jabatan-label">Jabatan</span>
+              <select id="rab-r-j1-jabatan" data-jabatan-col="1" data-field="jabatan" aria-label="Jabatan 1"><option value="">Pilih jabatan</option><option>Anggota</option><option>Danru</option><option>Chief</option><option>Supervisor</option></select>
+              <select id="rab-r-j2-jabatan" data-jabatan-col="2" data-field="jabatan" aria-label="Jabatan 2"><option value="">Pilih jabatan</option><option>Anggota</option><option>Danru</option><option>Chief</option><option>Supervisor</option></select>
+              <select id="rab-r-j3-jabatan" data-jabatan-col="3" data-field="jabatan" aria-label="Jabatan 3"><option value="">Pilih jabatan</option><option>Anggota</option><option>Danru</option><option>Chief</option><option>Supervisor</option></select>
+              <span class="rab-jabatan-label">Jumlah Anggota</span>
+              <input id="rab-r-j1-jumlah" data-jabatan-col="1" data-field="jumlah_anggota" class="rab-int-field" type="text" inputmode="numeric" autocomplete="off" placeholder="Contoh: 10" aria-label="Jumlah Anggota Jabatan 1">
+              <input id="rab-r-j2-jumlah" data-jabatan-col="2" data-field="jumlah_anggota" class="rab-int-field" type="text" inputmode="numeric" autocomplete="off" placeholder="Contoh: 1" aria-label="Jumlah Anggota Jabatan 2">
+              <input id="rab-r-j3-jumlah" data-jabatan-col="3" data-field="jumlah_anggota" class="rab-int-field" type="text" inputmode="numeric" autocomplete="off" placeholder="Contoh: 1" aria-label="Jumlah Anggota Jabatan 3">
+              <span class="rab-jabatan-label">Gaji Pokok (Rp)</span>
+              <input id="rab-r-j1-gaji" data-jabatan-col="1" data-field="gaji_pokok" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Gaji Pokok Jabatan 1">
+              <input id="rab-r-j2-gaji" data-jabatan-col="2" data-field="gaji_pokok" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Gaji Pokok Jabatan 2">
+              <input id="rab-r-j3-gaji" data-jabatan-col="3" data-field="gaji_pokok" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Gaji Pokok Jabatan 3">
+              <span class="rab-jabatan-label">Tunjangan Hari Raya (Rp)</span>
+              <input id="rab-r-j1-thr" data-jabatan-col="1" data-field="thr" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Hari Raya Jabatan 1">
+              <input id="rab-r-j2-thr" data-jabatan-col="2" data-field="thr" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Hari Raya Jabatan 2">
+              <input id="rab-r-j3-thr" data-jabatan-col="3" data-field="thr" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Hari Raya Jabatan 3">
+              <span class="rab-jabatan-label">Kompensasi UUCK (Rp)</span>
+              <input id="rab-r-j1-uuck" data-jabatan-col="1" data-field="kompensasi_uuck" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Kompensasi UUCK Jabatan 1">
+              <input id="rab-r-j2-uuck" data-jabatan-col="2" data-field="kompensasi_uuck" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Kompensasi UUCK Jabatan 2">
+              <input id="rab-r-j3-uuck" data-jabatan-col="3" data-field="kompensasi_uuck" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Kompensasi UUCK Jabatan 3">
+              <span class="rab-jabatan-label">Lembur (Rp)</span>
+              <input id="rab-r-j1-lembur" data-jabatan-col="1" data-field="lembur" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Lembur Jabatan 1">
+              <input id="rab-r-j2-lembur" data-jabatan-col="2" data-field="lembur" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Lembur Jabatan 2">
+              <input id="rab-r-j3-lembur" data-jabatan-col="3" data-field="lembur" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Lembur Jabatan 3">
+              <span class="rab-jabatan-label">Tunjangan Jabatan (Rp)</span>
+              <input id="rab-r-j1-tunjangan-jabatan" data-jabatan-col="1" data-field="tunjangan_jabatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Jabatan Jabatan 1">
+              <input id="rab-r-j2-tunjangan-jabatan" data-jabatan-col="2" data-field="tunjangan_jabatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Jabatan Jabatan 2">
+              <input id="rab-r-j3-tunjangan-jabatan" data-jabatan-col="3" data-field="tunjangan_jabatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Jabatan Jabatan 3">
+              <span class="rab-jabatan-label">Acuan Nilai BPJS (Rp)</span>
+              <input id="rab-r-j1-acuan-bpjs" data-jabatan-col="1" data-field="acuan_bpjs" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Acuan Nilai BPJS Jabatan 1">
+              <input id="rab-r-j2-acuan-bpjs" data-jabatan-col="2" data-field="acuan_bpjs" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Acuan Nilai BPJS Jabatan 2">
+              <input id="rab-r-j3-acuan-bpjs" data-jabatan-col="3" data-field="acuan_bpjs" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Acuan Nilai BPJS Jabatan 3">
+              <span class="rab-jabatan-label">JKK (0.24%)</span>
+              <input id="rab-r-j1-jkk" data-jabatan-col="1" data-field="jkk" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JKK Jabatan 1">
+              <input id="rab-r-j2-jkk" data-jabatan-col="2" data-field="jkk" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JKK Jabatan 2">
+              <input id="rab-r-j3-jkk" data-jabatan-col="3" data-field="jkk" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JKK Jabatan 3">
+              <span class="rab-jabatan-label">JKM (0.30%)</span>
+              <input id="rab-r-j1-jkm" data-jabatan-col="1" data-field="jkm" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JKM Jabatan 1">
+              <input id="rab-r-j2-jkm" data-jabatan-col="2" data-field="jkm" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JKM Jabatan 2">
+              <input id="rab-r-j3-jkm" data-jabatan-col="3" data-field="jkm" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JKM Jabatan 3">
+              <span class="rab-jabatan-label">JHT (3.70%)</span>
+              <input id="rab-r-j1-jht" data-jabatan-col="1" data-field="jht" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JHT Jabatan 1">
+              <input id="rab-r-j2-jht" data-jabatan-col="2" data-field="jht" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JHT Jabatan 2">
+              <input id="rab-r-j3-jht" data-jabatan-col="3" data-field="jht" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JHT Jabatan 3">
+              <span class="rab-jabatan-label">JP (2.00%)</span>
+              <input id="rab-r-j1-jp" data-jabatan-col="1" data-field="jp" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JP Jabatan 1">
+              <input id="rab-r-j2-jp" data-jabatan-col="2" data-field="jp" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JP Jabatan 2">
+              <input id="rab-r-j3-jp" data-jabatan-col="3" data-field="jp" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="JP Jabatan 3">
+              <span class="rab-jabatan-label">BPJS Kesehatan (4.00%)</span>
+              <input id="rab-r-j1-kesehatan" data-jabatan-col="1" data-field="bpjs_kesehatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="BPJS Kesehatan Jabatan 1">
+              <input id="rab-r-j2-kesehatan" data-jabatan-col="2" data-field="bpjs_kesehatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="BPJS Kesehatan Jabatan 2">
+              <input id="rab-r-j3-kesehatan" data-jabatan-col="3" data-field="bpjs_kesehatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="BPJS Kesehatan Jabatan 3">
+              <span class="rab-jabatan-label">Total Biaya Per Orang Per Bulan (Rp)</span>
+              <input id="rab-r-j1-total-orang" data-jabatan-col="1" data-field="total_per_orang_per_bulan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Total Biaya Per Orang Per Bulan Jabatan 1">
+              <input id="rab-r-j2-total-orang" data-jabatan-col="2" data-field="total_per_orang_per_bulan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Total Biaya Per Orang Per Bulan Jabatan 2">
+              <input id="rab-r-j3-total-orang" data-jabatan-col="3" data-field="total_per_orang_per_bulan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Total Biaya Per Orang Per Bulan Jabatan 3">
+              <span class="rab-jabatan-label">Item Tambahan (Keterangan)</span>
+              <input id="rab-r-j1-item-keterangan" data-jabatan-col="1" data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" aria-label="Item Tambahan Keterangan Jabatan 1">
+              <input id="rab-r-j2-item-keterangan" data-jabatan-col="2" data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" aria-label="Item Tambahan Keterangan Jabatan 2">
+              <input id="rab-r-j3-item-keterangan" data-jabatan-col="3" data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" aria-label="Item Tambahan Keterangan Jabatan 3">
+              <span class="rab-jabatan-label">Item Tambahan (Nominal) (Rp)</span>
+              <input id="rab-r-j1-item-nominal" data-jabatan-col="1" data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Item Tambahan Nominal Jabatan 1">
+              <input id="rab-r-j2-item-nominal" data-jabatan-col="2" data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Item Tambahan Nominal Jabatan 2">
+              <input id="rab-r-j3-item-nominal" data-jabatan-col="3" data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Item Tambahan Nominal Jabatan 3">
+            </div>
+            <p class="hint">Item tambahan di luar penamaan RAB standar untuk jabatan itu (opsional) — kalau keterangan tidak diisi, tampil "Item Kosong" di Rekapitulasi RAB.</p>
 
             <p class="hint">Jadwal &amp; lokasi pembayaran THR dan UUCK berikut berlaku untuk seluruh RAB ini (bukan per jabatan) — nominalnya sendiri sudah diisi per baris jabatan di atas.</p>
             <div class="rab-payment-opts">
@@ -349,7 +419,15 @@
             <p class="eyebrow rab-component-label">Pajak</p>
             <div class="form-grid"><label>PPN Ps 23 (11%) (Rp)<input id="rab-r-ppn" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label><label>PPH (2%) (Rp)<input id="rab-r-pph" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label></div>
 
-            <p class="hint">Total Biaya Per Orang Per Bulan dan Biaya Total Kontrak sudah diisi per baris jabatan di atas. Kalau cuma salah satu baris yang diisi Biaya Total Kontrak-nya, nilai itu otomatis jadi total biaya kontrak untuk keseluruhan RAB; kalau lebih dari satu baris diisi, semuanya dijumlah.</p>
+            <p class="eyebrow rab-component-label">Biaya Akhir</p>
+            <p class="hint">Isi Biaya Total Kontrak di 1 kolom jabatan saja kalau nilainya untuk keseluruhan RAB (otomatis jadi total). Kalau diisi di lebih dari 1 kolom, semuanya dijumlah jadi total kontrak keseluruhan.</p>
+            <div class="rab-jabatan-grid">
+              <span></span><strong>Jabatan 1</strong><strong>Jabatan 2</strong><strong>Jabatan 3</strong>
+              <span class="rab-jabatan-label">Biaya Total Kontrak (Rp)</span>
+              <input id="rab-r-j1-total-kontrak" data-jabatan-col="1" data-field="biaya_total_kontrak" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Biaya Total Kontrak Jabatan 1">
+              <input id="rab-r-j2-total-kontrak" data-jabatan-col="2" data-field="biaya_total_kontrak" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Biaya Total Kontrak Jabatan 2">
+              <input id="rab-r-j3-total-kontrak" data-jabatan-col="3" data-field="biaya_total_kontrak" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Biaya Total Kontrak Jabatan 3">
+            </div>
 
             <p id="rab-recap-form-status" class="hint" role="status"></p>
             <div class="actions"><button class="primary" id="rab-recap-form-save" type="submit">Simpan</button><button id="rab-recap-form-cancel" type="button" hidden>Batal ubah</button></div>

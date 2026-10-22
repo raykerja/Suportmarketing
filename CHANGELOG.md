@@ -1,3 +1,10 @@
+VERSION: 0.9.20 (Jabatan 1/2/3 jadi tabel 3 kolom tetap, bukan kartu dinamis)
+DATE: 2026-10-22
+
+CHANGED: Tata letak "Komponen Gaji &amp; BPJS per Jabatan" diubah total — bukan lagi kotak dinamis (tombol "+ Tambah Jabatan"/"Hapus baris") yang ditumpuk/berjejer, tapi **tabel 3 kolom tetap** (Jabatan 1/Jabatan 2/Jabatan 3) persis gaya form yang sudah ada: 1 label field (Gaji Pokok, THR, Acuan BPJS, dst) lalu 3 kotak isian sejajar di sampingnya. Kolom yang tidak dipakai (RAB cuma 1-2 jabatan) dibiarkan kosong saja — tidak perlu tombol hapus. BPJS (Acuan + JKK/JKM/JHT/JP/Kesehatan) ikut format 3-kolom yang sama, dan Acuan BPJS tiap kolom otomatis menghitung ulang 5 persentase BPJS di kolom itu saja.
+CHANGED: "Biaya Total Kontrak" juga 3 kolom (1 per Jabatan), diposisikan di paling bawah form (setelah bagian Pajak) seperti sebelum ada baris Jabatan. Aturan jumlahnya tidak berubah dari 0.9.19: kalau cuma 1 kolom diisi, nilai itu jadi total kontrak keseluruhan RAB; kalau lebih dari 1 kolom diisi, semuanya dijumlah.
+Data tetap di `rincian.jabatan_rows` (jsonb) — tidak ada migrasi database baru; kolom yang tidak diisi tidak ikut tersimpan ke array.
+
 VERSION: 0.9.19 (Baris Jabatan berjejer + Biaya Total Kontrak per Jabatan + tampilan diperlebar)
 DATE: 2026-10-22
 
