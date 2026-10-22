@@ -29,7 +29,7 @@
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261022-1"></script>
+  <script type="module" src="app.js?v=20261022-2"></script>
   <script defer src="pwa.js?v=20261010-1"></script>
 </head>
 <body>
@@ -307,30 +307,26 @@
           <form id="rab-recap-form">
             <label>Nama <span class="required">*</span><input id="rab-recap-f-nama" maxlength="200" required placeholder="Contoh: PT Contoh Sejahtera"></label>
             <label>Link Spreadsheet <span class="required">*</span><input id="rab-recap-f-link" type="url" required placeholder="https://docs.google.com/spreadsheets/..."></label>
-            <div class="form-grid"><label>Bagian Kerja<select id="rab-r-bagian-kerja"><option value="">Pilih bagian kerja</option><option>Keamanan</option><option>Kebersihan</option><option>Pramubakti/Administrasi</option><option>Pengemudi</option></select></label><label>Jabatan<select id="rab-r-jabatan"><option value="">Pilih jabatan</option><option>Anggota</option><option>Danru</option><option>Chief</option><option>Supervisor</option></select></label></div>
             <div class="form-grid"><label>Durasi kontrak<select id="rab-recap-f-durasi"><option value="">Pilih durasi</option><option>1 bulan</option><option>2 bulan</option><option>3 bulan</option><option>4 bulan</option><option>5 bulan</option><option>6 bulan</option><option>7 bulan</option><option>8 bulan</option><option>9 bulan</option><option>10 bulan</option><option>11 bulan</option><option>12 bulan</option></select></label><label>Nilai kontrak (Rp)<input id="rab-recap-f-nilai" type="text" inputmode="numeric" autocomplete="off" placeholder="Contoh: 50.000.000"></label></div>
             <label>Catatan<input id="rab-recap-f-catatan" maxlength="300" placeholder="Opsional"></label>
 
             <h3>Rincian RAB</h3>
             <p class="hint">Data margin/harga internal — hanya admin yang bisa melihat dan mengisi bagian ini.</p>
-            <label>Jumlah Anggota<input id="rab-r-jumlah" class="rab-int-field" type="text" inputmode="numeric" autocomplete="off" placeholder="Contoh: 10"></label>
 
-            <p class="eyebrow rab-component-label">Komponen Gaji</p>
-            <label>Gaji Pokok (Rp)<input id="rab-r-gaji" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
-            <label>Tunjangan Hari Raya (Rp)<input id="rab-r-thr" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
+            <p class="eyebrow rab-component-label">Komponen Gaji per Jabatan</p>
+            <p class="hint">Tambah 1 baris per jabatan kalau RAB ini mencakup lebih dari satu jabatan sekaligus (misal Anggota, Danru, dan Chief dalam 1 kontrak yang sama). Kalau RAB ini cuma 1 jabatan, isi 1 baris saja seperti biasa — tampilan di Rekapitulasi RAB tidak berubah.</p>
+            <div id="rab-jabatan-rows"></div>
+            <button type="button" id="rab-jabatan-add">+ Tambah Jabatan</button>
+
+            <p class="hint">Jadwal &amp; lokasi pembayaran THR dan UUCK berikut berlaku untuk seluruh RAB ini (bukan per jabatan) — nominalnya sendiri sudah diisi per baris jabatan di atas.</p>
             <div class="rab-payment-opts">
               <div class="form-grid"><label>Lokasi Pembayaran THR<select id="rab-r-thr-lokasi"><option value="dalam_rab">Dalam RAB</option><option value="luar_rab">Luar RAB</option></select></label><label>Jadwal Pembayaran THR<select id="rab-r-thr-jadwal" class="rab-jadwal-select" data-rab-jadwal="thr"><option value="bulanan">Sesuai termin per bulan</option><option value="sekali">Dibayar sekali</option><option value="dua_kali">Dibayar 2x</option></select></label></div>
               <div class="form-grid rab-bulan-wrap" id="rab-r-thr-bulan-wrap" hidden><label>Dibayarkan Bulan ke-1<select id="rab-r-thr-bulan1"></select></label><label id="rab-r-thr-bulan2-field" hidden>Dibayarkan Bulan ke-2<select id="rab-r-thr-bulan2"></select></label></div>
             </div>
-            <label>Kompensasi UUCK (Rp)<input id="rab-r-uuck" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
             <div class="rab-payment-opts">
               <div class="form-grid"><label>Lokasi Pembayaran UUCK<select id="rab-r-uuck-lokasi"><option value="dalam_rab">Dalam RAB</option><option value="luar_rab">Luar RAB</option></select></label><label>Jadwal Pembayaran UUCK<select id="rab-r-uuck-jadwal" class="rab-jadwal-select" data-rab-jadwal="uuck"><option value="bulanan">Sesuai termin per bulan</option><option value="sekali">Dibayar sekali</option><option value="dua_kali">Dibayar 2x</option></select></label></div>
               <div class="form-grid rab-bulan-wrap" id="rab-r-uuck-bulan-wrap" hidden><label>Dibayarkan Bulan ke-1<select id="rab-r-uuck-bulan1"></select></label><label id="rab-r-uuck-bulan2-field" hidden>Dibayarkan Bulan ke-2<select id="rab-r-uuck-bulan2"></select></label></div>
             </div>
-            <label>Lembur (Rp)<input id="rab-r-lembur" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
-            <label>Tunjangan Jabatan (Rp)<input id="rab-r-tunjangan-jabatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
-            <p class="hint">Item tambahan di luar penamaan RAB standar (opsional) — isi keterangan bebas lalu nominalnya. Kalau keterangan tidak diisi, akan tampil sebagai "Item Kosong" di Rekapitulasi RAB.</p>
-            <div class="form-grid"><label>Item Tambahan (Keterangan)<input id="rab-r-item-keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport"></label><label>Item Tambahan (Nominal) (Rp)<input id="rab-r-item-nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label></div>
 
             <p class="eyebrow rab-component-label">Komponen BPJS</p>
             <label>Acuan Nilai BPJS (Rp)<input id="rab-r-acuan-bpjs" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>

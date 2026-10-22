@@ -1,3 +1,10 @@
+VERSION: 0.9.17 (Komponen Gaji: beberapa baris Jabatan per RAB)
+DATE: 2026-10-22
+
+CHANGED: 1 RAB sekarang bisa punya **lebih dari satu jabatan sekaligus** (misal Anggota + Danru + Chief dalam 1 kontrak yang sama) — bukan cuma 1 jabatan per RAB seperti sebelumnya. Di "Komponen Gaji" (submenu 1. Input RAB Fix), field Bagian Kerja/Jabatan/Jumlah Anggota/Gaji Pokok/THR/Kompensasi UUCK/Lembur/Tunjangan Jabatan/Item Tambahan sekarang jadi **baris yang bisa ditambah** (tombol "+ Tambah Jabatan") — tiap baris punya nilainya sendiri-sendiri. Jadwal & Lokasi Pembayaran THR/UUCK tetap 1 set untuk seluruh RAB (bukan per jabatan), karena itu kebijakan perusahaan, bukan per posisi.
+CHANGED: Tabel "2. Rekapitulasi RAB" dan "Unduh Excel" (khusus admin) — kolom Bagian Kerja/Jabatan/Jumlah Anggota/Gaji Pokok/THR/Kompensasi UUCK/Lembur/Tunjangan Jabatan/Item Tambahan (Keterangan+Nominal) **tetap kolom yang sama persis seperti sebelumnya, tidak bertambah**. Kalau RAB itu cuma 1 jabatan (kasus paling umum), tampilannya **tidak berubah sama sekali** — tetap angka polos seperti biasa. Kalau RAB itu punya beberapa jabatan, sel kolom tersebut menggabungkan semua baris, misal `Anggota: Rp2.698.273 · Danru: Rp2.968.100 · Chief: Rp3.200.000`.
+Data tersimpan di kolom `rincian` (jsonb) yang sudah ada sebagai array baru `jabatan_rows` — tidak ada migrasi database baru. RAB lama (format sebelumnya, field datar) tetap terbaca otomatis (dianggap 1 baris jabatan) tanpa perlu diisi ulang.
+
 VERSION: 0.9.16 (Komponen Gaji: Item Tambahan Keterangan + Nominal)
 DATE: 2026-10-22
 

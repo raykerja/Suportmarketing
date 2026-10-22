@@ -1736,11 +1736,9 @@ async function loadRabRecap() {
 }
 function previewUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/preview') : ''; }
 function pdfUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/export?format=pdf') : ''; }
-// [kunci, label kolom, true=format Rupiah] — urutan sama persis dengan form Rincian RAB.
+// [kunci, label kolom, true=format Rupiah] — urutan sama persis dengan form Rincian RAB (dari Komponen BPJS ke bawah;
+// Komponen Gaji per jabatan dirender terpisah lewat RAB_JABATAN_COLUMNS karena bisa ada beberapa baris jabatan per RAB).
 const RAB_RINCIAN_COLUMNS = [
-  ['bagian_kerja', 'Bagian Kerja', false], ['jabatan', 'Jabatan', false],
-  ['jumlah_anggota', 'Jumlah Anggota', false], ['gaji_pokok', 'Gaji Pokok', true], ['thr', 'Tunjangan Hari Raya', true],
-  ['kompensasi_uuck', 'Kompensasi UUCK', true], ['lembur', 'Lembur', true], ['tunjangan_jabatan', 'Tunjangan Jabatan', true],
   ['acuan_bpjs', 'Acuan Nilai BPJS', true],
   ['jkk', 'JKK (0.24%)', true], ['jkm', 'JKM (0.30%)', true], ['jht', 'JHT (3.70%)', true], ['jp', 'JP (2.00%)', true],
   ['bpjs_kesehatan', 'BPJS Kesehatan (4.00%)', true], ['seragam_kerja', 'Seragam Kerja', true], ['peralatan_kerja', 'Peralatan Kerja', true],
@@ -1749,9 +1747,8 @@ const RAB_RINCIAN_COLUMNS = [
   ['ppn_ps23', 'PPN Ps 23 (11%)', true], ['pph', 'PPH (2%)', true],
   ['total_per_orang_per_bulan', 'Total Biaya Per Orang Per Bulan', true], ['biaya_total_kontrak', 'Biaya Total Kontrak', true],
 ];
-const RAB_RINCIAN_TEXT_KEYS = new Set(['bagian_kerja', 'jabatan']);
 // Komponen yang punya pilihan "dibayar di luar RAB" — kalau ditandai luar_rab, nilainya tidak ikut tampil
-// di Rekapitulasi RAB (sudah dipindah ke submenu "3. Pembayaran Diluar RAB").
+// di Rekapitulasi RAB (sudah dipindah ke submenu "3. Pembayaran Diluar RAB"). Lokasi/jadwal berlaku untuk seluruh RAB.
 const RAB_PAYMENT_ITEMS = [
   { suffix: 'thr', key: 'thr', label: 'Tunjangan Hari Raya' },
   { suffix: 'uuck', key: 'kompensasi_uuck', label: 'Kompensasi UUCK' },
@@ -1759,15 +1756,8 @@ const RAB_PAYMENT_ITEMS = [
   { suffix: 'peralatan', key: 'peralatan_kerja', label: 'Peralatan Kerja' },
 ];
 const RAB_PAYMENT_OUTSIDE_KEYS = new Set(RAB_PAYMENT_ITEMS.map((i) => i.key));
-// Item Tambahan — Komponen Gaji di luar penamaan RAB standar: keterangan bebas + nominal, per RAB (diisi admin).
-function rabCustomKeterangan(rincian) {
-  const v = ((rincian || {}).item_tambahan_keterangan || '').trim();
-  return v || 'Item Kosong';
-}
-function rabCustomNominal(rincian) { return Number((rincian || {}).item_tambahan_nominal) || 0; }
 const RAB_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 function rabRincianRawValue(rincian, key) {
-  if (RAB_RINCIAN_TEXT_KEYS.has(key)) return (rincian || {})[key] || '';
   if (RAB_PAYMENT_OUTSIDE_KEYS.has(key) && (rincian || {})[key + '_lokasi'] === 'luar_rab') return 0;
   return Number((rincian || {})[key]) || 0;
 }
@@ -1776,15 +1766,58 @@ function rabRincianDisplay(rincian, key, isRupiah) {
   if (!v) return '—';
   return isRupiah ? 'Rp' + v.toLocaleString('id-ID') : (key === 'management_fee_persen' ? v + '%' : String(v));
 }
+// Komponen Gaji sekarang bisa punya beberapa baris jabatan dalam 1 RAB (misal Anggota + Danru + Chief sekaligus).
+const RAB_JABATAN_ROW_FIELDS = ['bagian_kerja', 'jabatan', 'jumlah_anggota', 'gaji_pokok', 'thr', 'kompensasi_uuck', 'lembur', 'tunjangan_jabatan', 'item_tambahan_keterangan', 'item_tambahan_nominal'];
+// [kunci, label kolom, mode] — mode: 'text' (gabung nilai unik dipisah koma), 'jumlah', 'rupiah', 'rupiah-masked' (disamarkan kalau Lokasi Pembayaran = Luar RAB).
+const RAB_JABATAN_COLUMNS = [
+  ['bagian_kerja', 'Bagian Kerja', 'text'], ['jabatan', 'Jabatan', 'text'], ['jumlah_anggota', 'Jumlah Anggota', 'jumlah'],
+  ['gaji_pokok', 'Gaji Pokok', 'rupiah'], ['thr', 'Tunjangan Hari Raya', 'rupiah-masked'], ['kompensasi_uuck', 'Kompensasi UUCK', 'rupiah-masked'],
+  ['lembur', 'Lembur', 'rupiah'], ['tunjangan_jabatan', 'Tunjangan Jabatan', 'rupiah'],
+];
+function rabJabatanRowsOf(rincian) {
+  const r = rincian || {};
+  if (Array.isArray(r.jabatan_rows) && r.jabatan_rows.length) return r.jabatan_rows;
+  // Kompatibel dengan RAB lama (sebelum ada beberapa baris jabatan): field datar langsung di root `rincian`.
+  const legacy = {};
+  let hasLegacy = false;
+  for (const key of RAB_JABATAN_ROW_FIELDS) if (r[key] !== undefined) { legacy[key] = r[key]; hasLegacy = true; }
+  return hasLegacy ? [legacy] : [];
+}
+function rabJabatanLabel(row) { return (row.jabatan || '').trim() || 'Item Kosong'; }
+// Kolom angka/Rupiah per jabatan: 1 baris tampil polos seperti sebelumnya; >1 baris digabung "Jabatan: nilai · Jabatan: nilai".
+function rabJabatanFieldText(rincian, key, mode) {
+  const rows = rabJabatanRowsOf(rincian);
+  if (!rows.length) return '—';
+  const masked = mode === 'rupiah-masked' && (rincian || {})[key + '_lokasi'] === 'luar_rab';
+  if (mode === 'text') {
+    const vals = [...new Set(rows.map((row) => (row[key] || '').trim()).filter(Boolean))];
+    return vals.length ? vals.join(', ') : '—';
+  }
+  const fmt = (row) => {
+    if (masked) return '—';
+    const v = Number(row[key]) || 0;
+    return mode === 'jumlah' ? (v ? String(v) : '—') : (v ? 'Rp' + v.toLocaleString('id-ID') : '—');
+  };
+  if (rows.length === 1) return fmt(rows[0]);
+  return rows.map((row) => `${rabJabatanLabel(row)}: ${fmt(row)}`).join(' · ');
+}
+// Item Tambahan per jabatan — "Item Kosong" (bukan "—") kalau keterangan tidak diisi, konsisten dengan kolom Keterangan.
+function rabJabatanKeteranganText(rincian) {
+  const rows = rabJabatanRowsOf(rincian);
+  if (!rows.length) return 'Item Kosong';
+  const fmt = (row) => (row.item_tambahan_keterangan || '').trim() || 'Item Kosong';
+  if (rows.length === 1) return fmt(rows[0]);
+  return rows.map((row) => `${rabJabatanLabel(row)}: ${fmt(row)}`).join(' · ');
+}
 function renderRabRecapSummary() {
   const admin = isAdmin();
   const q = $('#rab-recap-summary-query').value.trim().toLocaleLowerCase('id');
   const rows = rabRecapCache.filter((r) => !q || r.nama.toLocaleLowerCase('id').includes(q))
     .slice().sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
   status('#rab-recap-summary-status', rabRecapCache.length ? `Menampilkan ${rows.length} dari ${rabRecapCache.length} RAB.` : 'Belum ada RAB final yang ditambahkan.');
-  const rincianHead = admin ? RAB_RINCIAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Item Tambahan (Keterangan)</th><th>Item Tambahan (Nominal)</th>' : '';
+  const rincianHead = admin ? RAB_JABATAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Item Tambahan (Keterangan)</th><th>Item Tambahan (Nominal)</th>' + RAB_RINCIAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') : '';
   $('#rab-recap-summary-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th>${rincianHead}<th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${rows.map((r, i) => {
-    const rincianCells = admin ? RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') + `<td>${esc(rabCustomKeterangan(r.rincian))}</td><td>${rabCustomNominal(r.rincian) ? 'Rp' + rabCustomNominal(r.rincian).toLocaleString('id-ID') : '—'}</td>` : '';
+    const rincianCells = admin ? RAB_JABATAN_COLUMNS.map(([key, , mode]) => `<td>${esc(rabJabatanFieldText(r.rincian, key, mode))}</td>`).join('') + `<td>${esc(rabJabatanKeteranganText(r.rincian))}</td><td>${esc(rabJabatanFieldText(r.rincian, 'item_tambahan_nominal', 'rupiah'))}</td>` + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') : '';
     return `<tr><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
   }).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
@@ -1797,12 +1830,13 @@ async function exportRabRecapSummary() {
   const data = rows.map((r, i) => {
     const out = { 'No': i + 1, 'Nama Lokasi': r.nama, 'Durasi Kontrak': r.durasi_kontrak || '' };
     if (admin) {
+      for (const [key, label, mode] of RAB_JABATAN_COLUMNS) out[label] = rabJabatanFieldText(r.rincian, key, mode);
+      out['Item Tambahan (Keterangan)'] = rabJabatanKeteranganText(r.rincian);
+      out['Item Tambahan (Nominal)'] = rabJabatanFieldText(r.rincian, 'item_tambahan_nominal', 'rupiah');
       for (const [key, label] of RAB_RINCIAN_COLUMNS) {
         const v = rabRincianRawValue(r.rincian, key);
         out[label] = key === 'management_fee_persen' ? (v ? v + '%' : '') : v;
       }
-      out['Item Tambahan (Keterangan)'] = rabCustomKeterangan(r.rincian);
-      out['Item Tambahan (Nominal)'] = rabCustomNominal(r.rincian);
     }
     out['Nilai Kontrak'] = r.nilai_kontrak || 0;
     out['Link Spreadsheet'] = r.link;
@@ -1854,8 +1888,6 @@ function renderRabRecap() {
 $('#refresh-rab-recap').addEventListener('click', loadRabRecap);
 $('#rab-recap-query').addEventListener('input', renderRabRecap);
 const RAB_RINCIAN_FIELDS = {
-  jumlah_anggota: 'rab-r-jumlah', gaji_pokok: 'rab-r-gaji', thr: 'rab-r-thr', kompensasi_uuck: 'rab-r-uuck', lembur: 'rab-r-lembur',
-  tunjangan_jabatan: 'rab-r-tunjangan-jabatan',
   acuan_bpjs: 'rab-r-acuan-bpjs', jkk: 'rab-r-jkk', jkm: 'rab-r-jkm', jht: 'rab-r-jht', jp: 'rab-r-jp', bpjs_kesehatan: 'rab-r-kesehatan',
   seragam_kerja: 'rab-r-seragam', peralatan_kerja: 'rab-r-peralatan', pelatihan_supervisi: 'rab-r-pelatihan', pembinaan_monitoring: 'rab-r-pembinaan',
   management_fee_rupiah: 'rab-r-fee-rupiah', ppn_ps23: 'rab-r-ppn', pph: 'rab-r-pph',
@@ -1879,6 +1911,50 @@ function updateRabPaymentVisibility(suffix) {
     $('#' + ids.jadwal).addEventListener('change', () => updateRabPaymentVisibility(item.suffix));
   }
 })();
+function rabJabatanRowTemplate(data) {
+  const d = data || {};
+  const val = (key) => Number(d[key]) ? groupThousands(String(d[key])) : '';
+  const opt = (current, label) => `<option${current === label ? ' selected' : ''}>${label}</option>`;
+  return `<div class="form-grid"><label>Bagian Kerja<select data-field="bagian_kerja"><option value="">Pilih bagian kerja</option>${['Keamanan', 'Kebersihan', 'Pramubakti/Administrasi', 'Pengemudi'].map((o) => opt(d.bagian_kerja, o)).join('')}</select></label><label>Jabatan<select data-field="jabatan"><option value="">Pilih jabatan</option>${['Anggota', 'Danru', 'Chief', 'Supervisor'].map((o) => opt(d.jabatan, o)).join('')}</select></label></div>
+    <label>Jumlah Anggota<input data-field="jumlah_anggota" class="rab-int-field" type="text" inputmode="numeric" autocomplete="off" placeholder="Contoh: 10" value="${esc(d.jumlah_anggota || '')}"></label>
+    <label>Gaji Pokok (Rp)<input data-field="gaji_pokok" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('gaji_pokok')}"></label>
+    <label>Tunjangan Hari Raya (Rp)<input data-field="thr" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('thr')}"></label>
+    <label>Kompensasi UUCK (Rp)<input data-field="kompensasi_uuck" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('kompensasi_uuck')}"></label>
+    <label>Lembur (Rp)<input data-field="lembur" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('lembur')}"></label>
+    <label>Tunjangan Jabatan (Rp)<input data-field="tunjangan_jabatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('tunjangan_jabatan')}"></label>
+    <p class="hint">Item tambahan di luar penamaan RAB standar untuk jabatan ini (opsional) — kalau keterangan tidak diisi, tampil "Item Kosong" di Rekapitulasi RAB.</p>
+    <div class="form-grid"><label>Item Tambahan (Keterangan)<input data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" value="${esc(d.item_tambahan_keterangan || '')}"></label><label>Item Tambahan (Nominal) (Rp)<input data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('item_tambahan_nominal')}"></label></div>`;
+}
+function renumberRabJabatanRows() {
+  $('#rab-jabatan-rows').querySelectorAll('.rab-jabatan-row').forEach((row, i) => {
+    row.querySelector('.rab-jabatan-row-title').textContent = `Jabatan ${i + 1}`;
+  });
+}
+function addRabJabatanRow(data) {
+  const row = document.createElement('div');
+  row.className = 'rab-jabatan-row rab-payment-opts';
+  row.innerHTML = `<div class="section-head"><strong class="rab-jabatan-row-title"></strong><button type="button" data-remove-jabatan-row>Hapus baris</button></div>${rabJabatanRowTemplate(data)}`;
+  $('#rab-jabatan-rows').appendChild(row);
+  renumberRabJabatanRows();
+}
+$('#rab-jabatan-add').addEventListener('click', () => addRabJabatanRow());
+$('#rab-jabatan-rows').addEventListener('click', (event) => {
+  const btn = event.target.closest('[data-remove-jabatan-row]');
+  if (!btn) return;
+  btn.closest('.rab-jabatan-row').remove();
+  renumberRabJabatanRows();
+});
+function collectRabJabatanRows() {
+  return Array.from($('#rab-jabatan-rows').querySelectorAll('.rab-jabatan-row')).map((rowEl) => {
+    const row = {};
+    for (const key of RAB_JABATAN_ROW_FIELDS) {
+      const field = rowEl.querySelector(`[data-field="${key}"]`);
+      if (!field) continue;
+      row[key] = (key === 'bagian_kerja' || key === 'jabatan' || key === 'item_tambahan_keterangan') ? field.value.trim() : (Number(digitsOnly(field.value)) || 0);
+    }
+    return row;
+  });
+}
 const RAB_BPJS_RATES = { jkk: 0.0024, jkm: 0.0030, jht: 0.0370, jp: 0.0200, bpjs_kesehatan: 0.0400 };
 function recomputeRabBpjs() {
   const acuan = Number(digitsOnly($('#rab-r-acuan-bpjs').value));
@@ -1890,16 +1966,13 @@ $('#rab-r-acuan-bpjs').addEventListener('input', recomputeRabBpjs);
 $('#rab-recap-form').addEventListener('input', (event) => {
   const field = event.target.closest('.rab-rp-field');
   if (field && !field.readOnly) field.value = groupThousands(field.value);
-  if (event.target.id === 'rab-r-jumlah') event.target.value = digitsOnly(event.target.value);
+  if (event.target.classList.contains('rab-int-field')) event.target.value = digitsOnly(event.target.value);
 });
 function buildRabRincianPayload() {
   const out = {};
   for (const [key, id] of Object.entries(RAB_RINCIAN_FIELDS)) out[key] = Number(digitsOnly($('#' + id).value)) || 0;
   out.management_fee_persen = Number(String($('#rab-r-fee-persen').value).trim().replace(',', '.')) || 0;
-  out.bagian_kerja = $('#rab-r-bagian-kerja').value;
-  out.jabatan = $('#rab-r-jabatan').value;
-  out.item_tambahan_keterangan = $('#rab-r-item-keterangan').value.trim();
-  out.item_tambahan_nominal = Number(digitsOnly($('#rab-r-item-nominal').value)) || 0;
+  out.jabatan_rows = collectRabJabatanRows();
   for (const item of RAB_PAYMENT_ITEMS) {
     const ids = rabPaymentFieldIds(item.suffix);
     out[item.key + '_lokasi'] = $('#' + ids.lokasi).value;
@@ -1913,10 +1986,9 @@ function fillRabRincianForm(rincian) {
   const r = rincian || {};
   for (const [key, id] of Object.entries(RAB_RINCIAN_FIELDS)) $('#' + id).value = r[key] ? groupThousands(String(r[key])) : '';
   $('#rab-r-fee-persen').value = r.management_fee_persen || '';
-  $('#rab-r-bagian-kerja').value = r.bagian_kerja || '';
-  $('#rab-r-jabatan').value = r.jabatan || '';
-  $('#rab-r-item-keterangan').value = r.item_tambahan_keterangan || '';
-  $('#rab-r-item-nominal').value = r.item_tambahan_nominal ? groupThousands(String(r.item_tambahan_nominal)) : '';
+  $('#rab-jabatan-rows').replaceChildren();
+  const jabatanRows = rabJabatanRowsOf(r);
+  (jabatanRows.length ? jabatanRows : [{}]).forEach((row) => addRabJabatanRow(row));
   for (const item of RAB_PAYMENT_ITEMS) {
     const ids = rabPaymentFieldIds(item.suffix);
     $('#' + ids.lokasi).value = r[item.key + '_lokasi'] || 'dalam_rab';
@@ -1930,11 +2002,14 @@ function resetRabRecapForm() {
   editingRabRecap = null;
   $('#rab-recap-form-title').textContent = 'Tambah RAB';
   $('#rab-recap-form').reset();
+  $('#rab-jabatan-rows').replaceChildren();
+  addRabJabatanRow();
   $('#rab-recap-form-cancel').hidden = true;
   status('#rab-recap-form-status', '');
   for (const item of RAB_PAYMENT_ITEMS) updateRabPaymentVisibility(item.suffix);
 }
 $('#rab-recap-form-cancel').addEventListener('click', resetRabRecapForm);
+resetRabRecapForm();
 $('#rab-recap-f-nilai').addEventListener('input', () => { $('#rab-recap-f-nilai').value = groupThousands($('#rab-recap-f-nilai').value); });
 $('#rab-recap-form').addEventListener('submit', async (event) => {
   event.preventDefault();
