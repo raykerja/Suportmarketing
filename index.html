@@ -29,7 +29,7 @@
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261021-2"></script>
+  <script type="module" src="app.js?v=20261022-1"></script>
   <script defer src="pwa.js?v=20261010-1"></script>
 </head>
 <body>
@@ -329,6 +329,8 @@
             </div>
             <label>Lembur (Rp)<input id="rab-r-lembur" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
             <label>Tunjangan Jabatan (Rp)<input id="rab-r-tunjangan-jabatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
+            <p class="hint">Item tambahan di luar penamaan RAB standar (opsional) — isi keterangan bebas lalu nominalnya. Kalau keterangan tidak diisi, akan tampil sebagai "Item Kosong" di Rekapitulasi RAB.</p>
+            <div class="form-grid"><label>Item Tambahan (Keterangan)<input id="rab-r-item-keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport"></label><label>Item Tambahan (Nominal) (Rp)<input id="rab-r-item-nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label></div>
 
             <p class="eyebrow rab-component-label">Komponen BPJS</p>
             <label>Acuan Nilai BPJS (Rp)<input id="rab-r-acuan-bpjs" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>

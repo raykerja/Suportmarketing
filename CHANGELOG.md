@@ -1,3 +1,8 @@
+VERSION: 0.9.16 (Komponen Gaji: Item Tambahan Keterangan + Nominal)
+DATE: 2026-10-22
+
+ADDED: Di "Komponen Gaji" (submenu 1. Input RAB Fix), bawah field "Tunjangan Jabatan" sekarang ada 2 field baru "Item Tambahan (Keterangan)" (teks bebas, opsional) dan "Item Tambahan (Nominal) (Rp)" — untuk komponen gaji dengan penamaan di luar standar RAB yang ingin admin catat manual per RAB (misal "Uang Transport"). Tersimpan di kolom `rincian` (jsonb) yang sudah ada — tidak ada migrasi database baru. Tabel "2. Rekapitulasi RAB" (khusus admin) dan file hasil "Unduh Excel" otomatis mendapat 2 kolom baru "Item Tambahan (Keterangan)" dan "Item Tambahan (Nominal)"; kalau keterangan tidak diisi untuk RAB itu, kolom Keterangan tampil teks "Item Kosong".
+
 VERSION: 0.9.15 (Rincian RAB: jadwal & lokasi pembayaran THR/UUCK/Seragam/Peralatan + submenu Pembayaran Diluar RAB)
 DATE: 2026-10-21
 

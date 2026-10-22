@@ -1759,6 +1759,12 @@ const RAB_PAYMENT_ITEMS = [
   { suffix: 'peralatan', key: 'peralatan_kerja', label: 'Peralatan Kerja' },
 ];
 const RAB_PAYMENT_OUTSIDE_KEYS = new Set(RAB_PAYMENT_ITEMS.map((i) => i.key));
+// Item Tambahan — Komponen Gaji di luar penamaan RAB standar: keterangan bebas + nominal, per RAB (diisi admin).
+function rabCustomKeterangan(rincian) {
+  const v = ((rincian || {}).item_tambahan_keterangan || '').trim();
+  return v || 'Item Kosong';
+}
+function rabCustomNominal(rincian) { return Number((rincian || {}).item_tambahan_nominal) || 0; }
 const RAB_MONTHS = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 function rabRincianRawValue(rincian, key) {
   if (RAB_RINCIAN_TEXT_KEYS.has(key)) return (rincian || {})[key] || '';
@@ -1776,9 +1782,9 @@ function renderRabRecapSummary() {
   const rows = rabRecapCache.filter((r) => !q || r.nama.toLocaleLowerCase('id').includes(q))
     .slice().sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
   status('#rab-recap-summary-status', rabRecapCache.length ? `Menampilkan ${rows.length} dari ${rabRecapCache.length} RAB.` : 'Belum ada RAB final yang ditambahkan.');
-  const rincianHead = admin ? RAB_RINCIAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') : '';
+  const rincianHead = admin ? RAB_RINCIAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Item Tambahan (Keterangan)</th><th>Item Tambahan (Nominal)</th>' : '';
   $('#rab-recap-summary-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th>${rincianHead}<th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${rows.map((r, i) => {
-    const rincianCells = admin ? RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') : '';
+    const rincianCells = admin ? RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') + `<td>${esc(rabCustomKeterangan(r.rincian))}</td><td>${rabCustomNominal(r.rincian) ? 'Rp' + rabCustomNominal(r.rincian).toLocaleString('id-ID') : '—'}</td>` : '';
     return `<tr><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
   }).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
@@ -1790,9 +1796,13 @@ async function exportRabRecapSummary() {
   try { await loadXlsx(); } catch (error) { status('#rab-recap-summary-status', error.message, true); return; }
   const data = rows.map((r, i) => {
     const out = { 'No': i + 1, 'Nama Lokasi': r.nama, 'Durasi Kontrak': r.durasi_kontrak || '' };
-    if (admin) for (const [key, label] of RAB_RINCIAN_COLUMNS) {
-      const v = rabRincianRawValue(r.rincian, key);
-      out[label] = key === 'management_fee_persen' ? (v ? v + '%' : '') : v;
+    if (admin) {
+      for (const [key, label] of RAB_RINCIAN_COLUMNS) {
+        const v = rabRincianRawValue(r.rincian, key);
+        out[label] = key === 'management_fee_persen' ? (v ? v + '%' : '') : v;
+      }
+      out['Item Tambahan (Keterangan)'] = rabCustomKeterangan(r.rincian);
+      out['Item Tambahan (Nominal)'] = rabCustomNominal(r.rincian);
     }
     out['Nilai Kontrak'] = r.nilai_kontrak || 0;
     out['Link Spreadsheet'] = r.link;
@@ -1888,6 +1898,8 @@ function buildRabRincianPayload() {
   out.management_fee_persen = Number(String($('#rab-r-fee-persen').value).trim().replace(',', '.')) || 0;
   out.bagian_kerja = $('#rab-r-bagian-kerja').value;
   out.jabatan = $('#rab-r-jabatan').value;
+  out.item_tambahan_keterangan = $('#rab-r-item-keterangan').value.trim();
+  out.item_tambahan_nominal = Number(digitsOnly($('#rab-r-item-nominal').value)) || 0;
   for (const item of RAB_PAYMENT_ITEMS) {
     const ids = rabPaymentFieldIds(item.suffix);
     out[item.key + '_lokasi'] = $('#' + ids.lokasi).value;
@@ -1903,6 +1915,8 @@ function fillRabRincianForm(rincian) {
   $('#rab-r-fee-persen').value = r.management_fee_persen || '';
   $('#rab-r-bagian-kerja').value = r.bagian_kerja || '';
   $('#rab-r-jabatan').value = r.jabatan || '';
+  $('#rab-r-item-keterangan').value = r.item_tambahan_keterangan || '';
+  $('#rab-r-item-nominal').value = r.item_tambahan_nominal ? groupThousands(String(r.item_tambahan_nominal)) : '';
   for (const item of RAB_PAYMENT_ITEMS) {
     const ids = rabPaymentFieldIds(item.suffix);
     $('#' + ids.lokasi).value = r[item.key + '_lokasi'] || 'dalam_rab';

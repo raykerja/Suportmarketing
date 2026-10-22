@@ -87,6 +87,7 @@ Arti penanda:
 | Staf: hanya lihat & pratinjau (dialog sama dengan pratinjau dokumen penawaran); Admin: tambah/ubah/hapus | 🟡 | Belum dicoba manusia dengan akun staf/admin sungguhan |
 | **20 Okt**: Tabel Rekapitulasi RAB diperluas (khusus admin) dengan semua kolom Rincian RAB di antara Durasi kontrak dan Nilai kontrak; + tombol "Unduh Excel" (selalu semua data, pakai SheetJS yang sudah ada) | ⬜ | Murni frontend, tidak ada migrasi baru (pakai VIEW masking yang sudah ada dari fitur sebelumnya). Belum dicoba manusia sama sekali, termasuk belum dicoba unduh Excel-nya |
 | Khusus tampilan HP (≤760px, web tidak berubah): logo RAY buka drawer menu samping dengan ikon; sub-menu jadi bilah ikon tetap di bawah (latar biru tua, label ringkas tanpa nomor); layar Beranda (hero + Asisten Marketing) hanya sebelum pilih menu, bisa diakses ulang lewat drawer | 🟡 | Belum dicoba di HP sungguhan sepenuhnya oleh pemilik |
+| **22 Okt**: "Komponen Gaji" + 2 field "Item Tambahan (Keterangan)" (teks bebas) & "Item Tambahan (Nominal)" (Rp), opsional, per RAB, untuk komponen di luar penamaan standar | ⬜ | Murni frontend + kolom `rincian` jsonb yang sudah ada, tidak ada migrasi baru. Rekapitulasi RAB & Excel dapat 2 kolom baru terpisah "Item Tambahan (Keterangan)" dan "Item Tambahan (Nominal)"; kolom Keterangan tampil "Item Kosong" kalau tidak diisi. Belum dicoba manusia |
 
 ## D5. Pengeluaran marketing — input multi-transaksi + lampiran nota di PDF (15 Oktober 2026)
 
