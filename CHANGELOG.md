@@ -1,3 +1,10 @@
+VERSION: 0.9.18 (Acuan BPJS & Total Biaya Per Orang Per Bulan ikut per Jabatan)
+DATE: 2026-10-22
+
+CHANGED: "Acuan Nilai BPJS" (+ JKK/JKM/JHT/JP/BPJS Kesehatan yang otomatis terhitung dari situ) dan "Total Biaya Per Orang Per Bulan" **dipindah jadi isian per baris Jabatan** (sebelumnya 1 nilai untuk seluruh RAB di 0.9.17, padahal nilainya memang beda per Anggota/Danru/Chief). Tiap baris Jabatan kini punya Acuan BPJS sendiri — mengisinya otomatis menghitung ulang JKK/JKM/JHT/JP/Kesehatan untuk baris itu saja (tetap bisa diedit manual seperti sebelumnya). "Biaya Total Kontrak" tetap 1 nilai untuk seluruh RAB (bukan per jabatan), karena itu akumulasi seluruh kontrak.
+CHANGED: Tabel "2. Rekapitulasi RAB" dan "Unduh Excel" — kolom Acuan Nilai BPJS/JKK/JKM/JHT/JP/BPJS Kesehatan/Total Biaya Per Orang Per Bulan ikut pola yang sama seperti kolom per-jabatan lain: RAB 1 jabatan tampil polos seperti sebelumnya, RAB multi-jabatan menggabungkan nilai per baris (misal `Anggota: Rp6.476 · Chief: Rp7.123`).
+Data tetap di `rincian.jabatan_rows` (jsonb) — tidak ada migrasi database baru.
+
 VERSION: 0.9.17 (Komponen Gaji: beberapa baris Jabatan per RAB)
 DATE: 2026-10-22
 

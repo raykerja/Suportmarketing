@@ -1739,13 +1739,11 @@ function pdfUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/
 // [kunci, label kolom, true=format Rupiah] — urutan sama persis dengan form Rincian RAB (dari Komponen BPJS ke bawah;
 // Komponen Gaji per jabatan dirender terpisah lewat RAB_JABATAN_COLUMNS karena bisa ada beberapa baris jabatan per RAB).
 const RAB_RINCIAN_COLUMNS = [
-  ['acuan_bpjs', 'Acuan Nilai BPJS', true],
-  ['jkk', 'JKK (0.24%)', true], ['jkm', 'JKM (0.30%)', true], ['jht', 'JHT (3.70%)', true], ['jp', 'JP (2.00%)', true],
-  ['bpjs_kesehatan', 'BPJS Kesehatan (4.00%)', true], ['seragam_kerja', 'Seragam Kerja', true], ['peralatan_kerja', 'Peralatan Kerja', true],
+  ['seragam_kerja', 'Seragam Kerja', true], ['peralatan_kerja', 'Peralatan Kerja', true],
   ['pelatihan_supervisi', 'Pelatihan dan Supervisi', true], ['pembinaan_monitoring', 'Pembinaan dan Monitoring', true],
   ['management_fee_persen', 'Management Fee (%)', false], ['management_fee_rupiah', 'Management Fee (Rp)', true],
   ['ppn_ps23', 'PPN Ps 23 (11%)', true], ['pph', 'PPH (2%)', true],
-  ['total_per_orang_per_bulan', 'Total Biaya Per Orang Per Bulan', true], ['biaya_total_kontrak', 'Biaya Total Kontrak', true],
+  ['biaya_total_kontrak', 'Biaya Total Kontrak', true],
 ];
 // Komponen yang punya pilihan "dibayar di luar RAB" — kalau ditandai luar_rab, nilainya tidak ikut tampil
 // di Rekapitulasi RAB (sudah dipindah ke submenu "3. Pembayaran Diluar RAB"). Lokasi/jadwal berlaku untuk seluruh RAB.
@@ -1766,13 +1764,21 @@ function rabRincianDisplay(rincian, key, isRupiah) {
   if (!v) return '—';
   return isRupiah ? 'Rp' + v.toLocaleString('id-ID') : (key === 'management_fee_persen' ? v + '%' : String(v));
 }
-// Komponen Gaji sekarang bisa punya beberapa baris jabatan dalam 1 RAB (misal Anggota + Danru + Chief sekaligus).
-const RAB_JABATAN_ROW_FIELDS = ['bagian_kerja', 'jabatan', 'jumlah_anggota', 'gaji_pokok', 'thr', 'kompensasi_uuck', 'lembur', 'tunjangan_jabatan', 'item_tambahan_keterangan', 'item_tambahan_nominal'];
+// Komponen Gaji, BPJS & Biaya per orang sekarang bisa punya beberapa baris jabatan dalam 1 RAB (misal Anggota + Danru + Chief
+// sekaligus) — Acuan Nilai BPJS dan Total Biaya Per Orang Per Bulan ikut berbeda per jabatan, bukan 1 nilai untuk seluruh RAB.
+const RAB_JABATAN_ROW_FIELDS = [
+  'bagian_kerja', 'jabatan', 'jumlah_anggota', 'gaji_pokok', 'thr', 'kompensasi_uuck', 'lembur', 'tunjangan_jabatan',
+  'acuan_bpjs', 'jkk', 'jkm', 'jht', 'jp', 'bpjs_kesehatan', 'total_per_orang_per_bulan',
+  'item_tambahan_keterangan', 'item_tambahan_nominal',
+];
 // [kunci, label kolom, mode] — mode: 'text' (gabung nilai unik dipisah koma), 'jumlah', 'rupiah', 'rupiah-masked' (disamarkan kalau Lokasi Pembayaran = Luar RAB).
 const RAB_JABATAN_COLUMNS = [
   ['bagian_kerja', 'Bagian Kerja', 'text'], ['jabatan', 'Jabatan', 'text'], ['jumlah_anggota', 'Jumlah Anggota', 'jumlah'],
   ['gaji_pokok', 'Gaji Pokok', 'rupiah'], ['thr', 'Tunjangan Hari Raya', 'rupiah-masked'], ['kompensasi_uuck', 'Kompensasi UUCK', 'rupiah-masked'],
   ['lembur', 'Lembur', 'rupiah'], ['tunjangan_jabatan', 'Tunjangan Jabatan', 'rupiah'],
+  ['acuan_bpjs', 'Acuan Nilai BPJS', 'rupiah'], ['jkk', 'JKK (0.24%)', 'rupiah'], ['jkm', 'JKM (0.30%)', 'rupiah'],
+  ['jht', 'JHT (3.70%)', 'rupiah'], ['jp', 'JP (2.00%)', 'rupiah'], ['bpjs_kesehatan', 'BPJS Kesehatan (4.00%)', 'rupiah'],
+  ['total_per_orang_per_bulan', 'Total Biaya Per Orang Per Bulan', 'rupiah'],
 ];
 function rabJabatanRowsOf(rincian) {
   const r = rincian || {};
@@ -1888,10 +1894,9 @@ function renderRabRecap() {
 $('#refresh-rab-recap').addEventListener('click', loadRabRecap);
 $('#rab-recap-query').addEventListener('input', renderRabRecap);
 const RAB_RINCIAN_FIELDS = {
-  acuan_bpjs: 'rab-r-acuan-bpjs', jkk: 'rab-r-jkk', jkm: 'rab-r-jkm', jht: 'rab-r-jht', jp: 'rab-r-jp', bpjs_kesehatan: 'rab-r-kesehatan',
   seragam_kerja: 'rab-r-seragam', peralatan_kerja: 'rab-r-peralatan', pelatihan_supervisi: 'rab-r-pelatihan', pembinaan_monitoring: 'rab-r-pembinaan',
   management_fee_rupiah: 'rab-r-fee-rupiah', ppn_ps23: 'rab-r-ppn', pph: 'rab-r-pph',
-  total_per_orang_per_bulan: 'rab-r-total-orang', biaya_total_kontrak: 'rab-r-total-kontrak',
+  biaya_total_kontrak: 'rab-r-total-kontrak',
 };
 function rabPaymentFieldIds(suffix) {
   return { lokasi: `rab-r-${suffix}-lokasi`, jadwal: `rab-r-${suffix}-jadwal`, wrap: `rab-r-${suffix}-bulan-wrap`, bulan1: `rab-r-${suffix}-bulan1`, bulan2: `rab-r-${suffix}-bulan2`, bulan2Field: `rab-r-${suffix}-bulan2-field` };
@@ -1922,6 +1927,11 @@ function rabJabatanRowTemplate(data) {
     <label>Kompensasi UUCK (Rp)<input data-field="kompensasi_uuck" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('kompensasi_uuck')}"></label>
     <label>Lembur (Rp)<input data-field="lembur" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('lembur')}"></label>
     <label>Tunjangan Jabatan (Rp)<input data-field="tunjangan_jabatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('tunjangan_jabatan')}"></label>
+    <label>Acuan Nilai BPJS (Rp)<input data-field="acuan_bpjs" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('acuan_bpjs')}"></label>
+    <div class="form-grid"><label>JKK (0.24%)<input data-field="jkk" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('jkk')}"></label><label>JKM (0.30%)<input data-field="jkm" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('jkm')}"></label></div>
+    <div class="form-grid"><label>JHT (3.70%)<input data-field="jht" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('jht')}"></label><label>JP (2.00%)<input data-field="jp" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('jp')}"></label></div>
+    <label>BPJS Kesehatan (4.00%)<input data-field="bpjs_kesehatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('bpjs_kesehatan')}"></label>
+    <label>Total Biaya Per Orang Per Bulan (Rp)<input data-field="total_per_orang_per_bulan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('total_per_orang_per_bulan')}"></label>
     <p class="hint">Item tambahan di luar penamaan RAB standar untuk jabatan ini (opsional) — kalau keterangan tidak diisi, tampil "Item Kosong" di Rekapitulasi RAB.</p>
     <div class="form-grid"><label>Item Tambahan (Keterangan)<input data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" value="${esc(d.item_tambahan_keterangan || '')}"></label><label>Item Tambahan (Nominal) (Rp)<input data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" value="${val('item_tambahan_nominal')}"></label></div>`;
 }
@@ -1956,13 +1966,15 @@ function collectRabJabatanRows() {
   });
 }
 const RAB_BPJS_RATES = { jkk: 0.0024, jkm: 0.0030, jht: 0.0370, jp: 0.0200, bpjs_kesehatan: 0.0400 };
-function recomputeRabBpjs() {
-  const acuan = Number(digitsOnly($('#rab-r-acuan-bpjs').value));
+function recomputeRabJabatanBpjs(rowEl) {
+  const acuan = Number(digitsOnly(rowEl.querySelector('[data-field="acuan_bpjs"]').value));
   for (const key of Object.keys(RAB_BPJS_RATES)) {
-    $('#' + RAB_RINCIAN_FIELDS[key]).value = acuan ? groupThousands(String(Math.round(acuan * RAB_BPJS_RATES[key]))) : '';
+    rowEl.querySelector(`[data-field="${key}"]`).value = acuan ? groupThousands(String(Math.round(acuan * RAB_BPJS_RATES[key]))) : '';
   }
 }
-$('#rab-r-acuan-bpjs').addEventListener('input', recomputeRabBpjs);
+$('#rab-jabatan-rows').addEventListener('input', (event) => {
+  if (event.target.dataset.field === 'acuan_bpjs') recomputeRabJabatanBpjs(event.target.closest('.rab-jabatan-row'));
+});
 $('#rab-recap-form').addEventListener('input', (event) => {
   const field = event.target.closest('.rab-rp-field');
   if (field && !field.readOnly) field.value = groupThousands(field.value);

@@ -29,7 +29,7 @@
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261022-2"></script>
+  <script type="module" src="app.js?v=20261022-3"></script>
   <script defer src="pwa.js?v=20261010-1"></script>
 </head>
 <body>
@@ -313,8 +313,8 @@
             <h3>Rincian RAB</h3>
             <p class="hint">Data margin/harga internal — hanya admin yang bisa melihat dan mengisi bagian ini.</p>
 
-            <p class="eyebrow rab-component-label">Komponen Gaji per Jabatan</p>
-            <p class="hint">Tambah 1 baris per jabatan kalau RAB ini mencakup lebih dari satu jabatan sekaligus (misal Anggota, Danru, dan Chief dalam 1 kontrak yang sama). Kalau RAB ini cuma 1 jabatan, isi 1 baris saja seperti biasa — tampilan di Rekapitulasi RAB tidak berubah.</p>
+            <p class="eyebrow rab-component-label">Komponen Gaji, BPJS &amp; Biaya per Jabatan</p>
+            <p class="hint">Tambah 1 baris per jabatan kalau RAB ini mencakup lebih dari satu jabatan sekaligus (misal Anggota, Danru, dan Chief dalam 1 kontrak yang sama) — Acuan BPJS dan Total Biaya Per Orang Per Bulan juga beda-beda per jabatan. Kalau RAB ini cuma 1 jabatan, isi 1 baris saja seperti biasa — tampilan di Rekapitulasi RAB tidak berubah.</p>
             <div id="rab-jabatan-rows"></div>
             <button type="button" id="rab-jabatan-add">+ Tambah Jabatan</button>
 
@@ -327,12 +327,6 @@
               <div class="form-grid"><label>Lokasi Pembayaran UUCK<select id="rab-r-uuck-lokasi"><option value="dalam_rab">Dalam RAB</option><option value="luar_rab">Luar RAB</option></select></label><label>Jadwal Pembayaran UUCK<select id="rab-r-uuck-jadwal" class="rab-jadwal-select" data-rab-jadwal="uuck"><option value="bulanan">Sesuai termin per bulan</option><option value="sekali">Dibayar sekali</option><option value="dua_kali">Dibayar 2x</option></select></label></div>
               <div class="form-grid rab-bulan-wrap" id="rab-r-uuck-bulan-wrap" hidden><label>Dibayarkan Bulan ke-1<select id="rab-r-uuck-bulan1"></select></label><label id="rab-r-uuck-bulan2-field" hidden>Dibayarkan Bulan ke-2<select id="rab-r-uuck-bulan2"></select></label></div>
             </div>
-
-            <p class="eyebrow rab-component-label">Komponen BPJS</p>
-            <label>Acuan Nilai BPJS (Rp)<input id="rab-r-acuan-bpjs" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
-            <div class="form-grid"><label>JKK (0.24%)<input id="rab-r-jkk" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label><label>JKM (0.30%)<input id="rab-r-jkm" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label></div>
-            <div class="form-grid"><label>JHT (3.70%)<input id="rab-r-jht" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label><label>JP (2.00%)<input id="rab-r-jp" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label></div>
-            <label>BPJS Kesehatan (4.00%)<input id="rab-r-kesehatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
 
             <p class="eyebrow rab-component-label">Komponen Fasilitas Kerja</p>
             <label>Seragam Kerja (Rp)<input id="rab-r-seragam" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
@@ -356,7 +350,8 @@
             <div class="form-grid"><label>PPN Ps 23 (11%) (Rp)<input id="rab-r-ppn" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label><label>PPH (2%) (Rp)<input id="rab-r-pph" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label></div>
 
             <p class="eyebrow rab-component-label">Biaya Akhir</p>
-            <div class="form-grid"><label>Total Biaya Per Orang Per Bulan (Rp)<input id="rab-r-total-orang" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label><label>Biaya Total Kontrak (Rp)<input id="rab-r-total-kontrak" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label></div>
+            <p class="hint">Total Biaya Per Orang Per Bulan sudah diisi per baris jabatan di atas (beda per jabatan). Biaya Total Kontrak di bawah ini untuk keseluruhan RAB.</p>
+            <label>Biaya Total Kontrak (Rp)<input id="rab-r-total-kontrak" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
 
             <p id="rab-recap-form-status" class="hint" role="status"></p>
             <div class="actions"><button class="primary" id="rab-recap-form-save" type="submit">Simpan</button><button id="rab-recap-form-cancel" type="button" hidden>Batal ubah</button></div>
