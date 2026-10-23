@@ -1,3 +1,8 @@
+VERSION: 0.9.36 (Rekapitulasi RAB: 3 kolom Biaya Akhir dipindah ke paling belakang, sebelum Nilai Kontrak)
+DATE: 2026-10-23
+
+CHANGED: Tabel "2. Rekapitulasi RAB" dan "Unduh Excel" — kolom **Biaya Per Orang Per Bulan, Biaya Total Personil Per Bulan, Biaya Total Personil Per Tahun** dipindah dari posisi semula (tepat setelah BPJS Kesehatan) ke **paling belakang, tepat sebelum kolom Nilai Kontrak** (setelah Biaya Total Kontrak). Urutan kolom lain tidak berubah. Murni urutan tampilan (`app.js`, konstanta baru `RAB_JABATAN_COLUMNS_FINAL` dipisah dari `RAB_JABATAN_COLUMNS_PART2`), tidak ada perubahan data/rumus.
+
 VERSION: 0.9.35 (Fix: basis Management Fee "Total" ikut BPJS + PPH ditambah bukan dikurangi)
 DATE: 2026-10-23
 
