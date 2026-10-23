@@ -2014,7 +2014,7 @@ function recomputeRabJabatanBpjs() {
   }
 }
 $('#rab-recap-form').addEventListener('input', (event) => {
-  if (event.target.id === 'rab-r-acuan-bpjs') recomputeRabJabatanBpjs();
+  if (event.target.id === 'rab-r-acuan-bpjs') { recomputeRabJabatanBpjs(); recomputeRabTotalOrang(); recomputeRabBiayaAkhir(); }
 });
 $('#rab-recap-form').addEventListener('input', (event) => {
   const field = event.target.closest('.rab-rp-field');
@@ -2029,13 +2029,18 @@ function rabEffectiveValue(fieldId, lokasiId) {
   const v = Number(digitsOnly($('#' + fieldId).value)) || 0;
   return (lokasiId && $('#' + lokasiId).value === 'luar_rab') ? 0 : v;
 }
-function recomputeRabFeesPajak() {
+// Dipakai bareng oleh Management Fee/Pajak & Biaya Per Orang Per Bulan supaya rumusnya konsisten satu sumber.
+function rabBiayaGroups() {
   const gajiPokok = Number(digitsOnly($('#rab-r-gaji').value)) || 0;
   const gajiGroup = gajiPokok + rabEffectiveValue('rab-r-thr', 'rab-r-thr-lokasi') + rabEffectiveValue('rab-r-uuck', 'rab-r-uuck-lokasi')
     + (Number(digitsOnly($('#rab-r-lembur').value)) || 0) + (Number(digitsOnly($('#rab-r-tunjangan-jabatan').value)) || 0)
     + (Number(digitsOnly($('#rab-r-item-nominal').value)) || 0);
   const fasilitasGroup = rabEffectiveValue('rab-r-seragam', 'rab-r-seragam-lokasi') + rabEffectiveValue('rab-r-peralatan', 'rab-r-peralatan-lokasi');
   const peningkatanGroup = (Number(digitsOnly($('#rab-r-pelatihan').value)) || 0) + (Number(digitsOnly($('#rab-r-pembinaan').value)) || 0);
+  return { gajiPokok, gajiGroup, fasilitasGroup, peningkatanGroup };
+}
+function recomputeRabFeesPajak() {
+  const { gajiPokok, gajiGroup, fasilitasGroup, peningkatanGroup } = rabBiayaGroups();
 
   const feePersen = Number(String($('#rab-r-fee-persen').value).trim().replace(',', '.')) || 0;
   const feeAcuan = $('#rab-r-fee-acuan').value;
@@ -2043,10 +2048,12 @@ function recomputeRabFeesPajak() {
   const feeRp = Math.round(feePersen / 100 * feeBase);
   $('#rab-r-fee-rupiah').value = feeRp ? groupThousands(String(feeRp)) : '';
 
-  const ppnBase = $('#rab-r-ppn-acuan').value === 'fee_saja' ? feeRp : (fasilitasGroup + peningkatanGroup + feeRp);
+  const ppnAcuan = $('#rab-r-ppn-acuan').value;
+  const ppnBase = ppnAcuan === 'fee_saja' ? feeRp : ppnAcuan === 'fasilitas_fee' ? (fasilitasGroup + feeRp) : (fasilitasGroup + peningkatanGroup + feeRp);
   $('#rab-r-ppn').value = ppnBase ? groupThousands(String(Math.round(0.11 * ppnBase))) : '';
 
-  const pphBase = $('#rab-r-pph-acuan').value === 'fee_saja' ? feeRp : (gajiGroup + fasilitasGroup + peningkatanGroup + feeRp);
+  const pphAcuan = $('#rab-r-pph-acuan').value;
+  const pphBase = pphAcuan === 'fee_saja' ? feeRp : pphAcuan === 'fasilitas_fee' ? (fasilitasGroup + feeRp) : (gajiGroup + fasilitasGroup + peningkatanGroup + feeRp);
   $('#rab-r-pph').value = pphBase ? groupThousands(String(Math.round(0.02 * pphBase))) : '';
 }
 const RAB_FEE_PAJAK_TRIGGER_IDS = new Set([
@@ -2054,8 +2061,18 @@ const RAB_FEE_PAJAK_TRIGGER_IDS = new Set([
   'rab-r-item-nominal', 'rab-r-seragam', 'rab-r-seragam-lokasi', 'rab-r-peralatan', 'rab-r-peralatan-lokasi',
   'rab-r-pelatihan', 'rab-r-pembinaan', 'rab-r-fee-persen', 'rab-r-fee-acuan', 'rab-r-ppn-acuan', 'rab-r-pph-acuan',
 ]);
-$('#rab-recap-form').addEventListener('input', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) recomputeRabFeesPajak(); });
-$('#rab-recap-form').addEventListener('change', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) recomputeRabFeesPajak(); });
+$('#rab-recap-form').addEventListener('input', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) { recomputeRabFeesPajak(); recomputeRabTotalOrang(); recomputeRabBiayaAkhir(); } });
+$('#rab-recap-form').addEventListener('change', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) { recomputeRabFeesPajak(); recomputeRabTotalOrang(); recomputeRabBiayaAkhir(); } });
+// Biaya Per Orang Per Bulan = Komponen Gaji + BPJS (JKK/JKM/JHT/JP/Kesehatan) + Fasilitas Kerja + Peningkatan
+// Kemampuan — TIDAK termasuk Management Fee/PPN/PPH (itu angka ringkasan RAB, bukan biaya per orang). Tetap bisa
+// diedit manual kalau admin mau override hasil otomatis.
+function recomputeRabTotalOrang() {
+  const { gajiGroup, fasilitasGroup, peningkatanGroup } = rabBiayaGroups();
+  const bpjsGroup = ['rab-r-jkk', 'rab-r-jkm', 'rab-r-jht', 'rab-r-jp', 'rab-r-kesehatan']
+    .reduce((sum, id) => sum + (Number(digitsOnly($('#' + id).value)) || 0), 0);
+  const totalOrang = gajiGroup + bpjsGroup + fasilitasGroup + peningkatanGroup;
+  $('#rab-r-total-orang').value = totalOrang ? groupThousands(String(totalOrang)) : '';
+}
 // Biaya Total Personil = Biaya Per Orang Per Bulan × Jumlah Anggota; per tahun dikali jumlah bulan dari Durasi
 // Kontrak (default 12 bulan kalau belum diisi). Tetap bisa diedit manual kalau admin mau override hasil otomatis.
 function recomputeRabBiayaAkhir() {

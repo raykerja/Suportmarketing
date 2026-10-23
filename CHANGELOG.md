@@ -1,3 +1,10 @@
+VERSION: 0.9.33 (Fix: Biaya Per Orang Per Bulan otomatis + Acuan Pajak "Fasilitas Kerja + Management Fee")
+DATE: 2026-10-23
+
+ADDED: Dropdown **Acuan PPN** dan **Acuan PPH** di "Input RAB Fix" dapat opsi baru **"Fasilitas Kerja + Management Fee"** (basisnya cuma Fasilitas Kerja + Management Fee, tanpa Peningkatan Kemampuan/Komponen Gaji) — sebelumnya cuma ada 2 opsi per dropdown.
+FIXED: Bug "Biaya Total Personil Per Bulan" &amp; "Per Tahun" (di "Biaya Akhir") tidak muncul — akar masalahnya, field "Biaya Per Orang Per Bulan" (0.9.32) sama sekali tidak punya rumus otomatis, jadi kalau admin belum mengisinya manual, kedua total itu ikut kosong karena hasil perkaliannya nol. Sekarang "Biaya Per Orang Per Bulan" **otomatis dijumlah** dari Komponen Gaji (Gaji Pokok+THR+UUCK+Lembur+Tunjangan Jabatan+Tunjangan Tambahan) + BPJS (JKK/JKM/JHT/JP/Kesehatan) + Fasilitas Kerja + Peningkatan Kemampuan (komponen "Luar RAB" dianggap 0, konsisten dengan aturan Management Fee/Pajak) — tidak termasuk Management Fee/PPN/PPH. Tetap bisa diedit manual kalau admin mau override.
+Fungsi dasar (`gajiGroup`/`fasilitasGroup`/`peningkatanGroup`) yang sebelumnya cuma dipakai Management Fee/Pajak kini diekstrak ke `rabBiayaGroups()` di `app.js` supaya dipakai bareng oleh fungsi baru `recomputeRabTotalOrang()` — satu sumber rumus, tidak dobel logika.
+
 VERSION: 0.9.32 (Rincian RAB: 1 RAB = 1 Jabatan lagi + Management Fee/PPN/PPH otomatis + Biaya Total Personil)
 DATE: 2026-10-23
 
