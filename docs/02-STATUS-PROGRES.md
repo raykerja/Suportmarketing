@@ -1,6 +1,6 @@
 # Status & progres — sampai mana
 
-**Diperbarui: 20 Oktober 2026.** Perbarui dokumen ini setiap kali menyelesaikan sesuatu. Cek keadaan nyata dengan `python3 scripts/status_check.py`.
+**Diperbarui: 23 Oktober 2026.** Perbarui dokumen ini setiap kali menyelesaikan sesuatu. Cek keadaan nyata dengan `python3 scripts/status_check.py`.
 
 Arti penanda:
 - ✅ **Terbukti** — sudah di produksi dan diuji di sistem tujuan (database/RLS atau server) *dan* alurnya jalan.
@@ -92,6 +92,7 @@ Arti penanda:
 | **22 Okt**: Acuan Nilai BPJS (+JKK/JKM/JHT/JP/Kesehatan otomatis) dan Total Biaya Per Orang Per Bulan ikut dipindah jadi per baris Jabatan (sebelumnya masih 1 nilai untuk seluruh RAB) | ⬜ | Sama seperti baris di atas — tetap `jabatan_rows` jsonb, tidak ada migrasi baru. "Biaya Total Kontrak" tetap 1 nilai untuk seluruh RAB. Belum dicoba manusia |
 | **22 Okt**: Baris Jabatan ditampilkan berjejer (grid, bukan ditumpuk ke bawah), "Biaya Total Kontrak" juga dipindah jadi per baris Jabatan (kalau cuma 1 baris diisi = jadi total kontrak keseluruhan; kalau lebih dari 1 = dijumlah), lebar situs diperlebar 1180px→1480px | ⬜ | Masih `jabatan_rows` jsonb, tidak ada migrasi baru. Kolom "Biaya Total Kontrak" di Rekapitulasi/Excel tetap 1 angka (hasil jumlah), bukan rincian per jabatan. **Direvisi lagi 22 Okt** (lihat baris di bawah) setelah owner coba dan tata letaknya tidak sesuai harapan |
 | **22 Okt (revisi)**: "Komponen Gaji &amp; BPJS per Jabatan" diubah dari kotak dinamis (+Tambah Jabatan) jadi **tabel 3 kolom tetap** (Jabatan 1/2/3) — 1 label field, 3 kotak isian sejajar, gaya form biasa tanpa kotak/kartu pembungkus. Kolom tak terpakai dibiarkan kosong. "Biaya Total Kontrak" juga 3 kolom, diposisikan di paling bawah (setelah Pajak) seperti sebelum ada baris Jabatan | ⬜ | Masih `jabatan_rows` jsonb; kolom kosong tidak ikut tersimpan ke array. Tidak ada tombol tambah/hapus baris lagi (maksimal tetap 3 jabatan per RAB). Belum dicoba manusia sama sekali, termasuk belum dicoba tampilan HP/tablet untuk layout tabel baru ini |
+| **23 Okt**: Tabel "2. Rekapitulasi RAB" (khusus admin) dan "Unduh Excel" — RAB dengan >1 baris Jabatan sekarang **dipecah jadi beberapa baris/`<tr>`** (1 baris per Jabatan, nama lokasi diulang di tiap baris) menggantikan sel gabungan "Jabatan: nilai · Jabatan: nilai" dari 0.9.17-0.9.20 | ⬜ | Murni frontend (app.js), tidak ada migrasi baru, tetap baca `jabatan_rows` jsonb yang sama. Kolom Jumlah Anggota/Gaji Pokok/THR/dst tampil polos per baris (nama Jabatan cukup di kolom Jabatan). "Biaya Total Kontrak" cuma diisi di baris pertama tiap klien (baris sisanya kosong) biar tidak terlihat seperti nilai kontrak ganda/triple; kolom lain yang memang level-RAB (Durasi/Nilai Kontrak/Seragam/Management Fee/PPN/PPH/Preview/Download) tetap berulang di tiap baris. RAB dengan 1 baris Jabatan (kasus paling umum) tampilannya tidak berubah. Belum dicoba manusia |
 
 ## D5. Pengeluaran marketing — input multi-transaksi + lampiran nota di PDF (15 Oktober 2026)
 
