@@ -1819,6 +1819,17 @@ function rabJabatanRowFieldText(rincian, jabatanRow, key, mode) {
 function rabJabatanRowKeteranganText(jabatanRow) {
   return jabatanRow ? (jabatanRow.item_tambahan_keterangan || '').trim() || 'Item Kosong' : '—';
 }
+// Warna selang-seling per KELOMPOK Nama Lokasi (bukan per baris) — begitu nama lokasi ganti, warnanya ikut ganti;
+// selama nama lokasi sama (termasuk baris pecahan per Jabatan), warnanya tetap sama. Dipakai di Rekapitulasi RAB
+// & Pembayaran Diluar RAB supaya baris-baris milik 1 klien gampang dibedakan dari klien berikutnya.
+function rabAltRowFlags(items, getNama) {
+  let alt = false, prevNama = null;
+  return items.map((item) => {
+    const nama = getNama(item);
+    if (nama !== prevNama) { alt = !alt; prevNama = nama; }
+    return alt;
+  });
+}
 function renderRabRecapSummary() {
   const admin = isAdmin();
   const q = $('#rab-recap-summary-query').value.trim().toLocaleLowerCase('id');
@@ -1839,9 +1850,10 @@ function renderRabRecapSummary() {
     if (jabatanRows.length > 1) jabatanRows.forEach((jabatanRow, idx) => expanded.push({ r, jabatanRow, isFirst: idx === 0 }));
     else expanded.push({ r, jabatanRow: jabatanRows[0] || null, isFirst: true });
   });
+  const altFlags = rabAltRowFlags(expanded, (x) => x.r.nama);
   $('#rab-recap-summary-list').innerHTML = expanded.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th>${rincianHead}<th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${expanded.map(({ r, jabatanRow, isFirst }, i) => {
     const rincianCells = admin ? RAB_JABATAN_COLUMNS.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') + `<td>${esc(rabJabatanRowKeteranganText(jabatanRow))}</td><td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah'))}</td>` + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${(!isFirst && RAB_RINCIAN_DEDUP_KEYS.has(key)) ? '—' : esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') + `<td>${isFirst ? esc(rabJabatanFieldText(r.rincian, 'biaya_total_kontrak')) : '—'}</td>` : '';
-    return `<tr><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${isFirst ? (r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
+    return `<tr${altFlags[i] ? ' class="rab-row-alt"' : ''}><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${isFirst ? (r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
   }).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
 }
@@ -1938,7 +1950,8 @@ function renderRabRecapLuar() {
   rabRecapCache.filter((r) => !q || r.nama.toLocaleLowerCase('id').includes(q)).slice().sort((a, b) => a.nama.localeCompare(b.nama, 'id'))
     .forEach((r) => rows.push(...buildRabLuarRabRows(r)));
   status('#rab-recap-luar-status', rows.length ? `Menampilkan ${rows.length} pembayaran di luar RAB.` : (rabRecapCache.length ? 'Belum ada komponen yang ditandai dibayar di luar RAB.' : 'Belum ada RAB final yang ditambahkan.'));
-  $('#rab-recap-luar-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama Lokasi</th><th>Jenis yang Dibayarkan Diluar RAB</th><th>Jabatan</th><th>Jumlah Personil</th><th>Nilai per Orang (Rp)</th><th>Total (Rp)</th><th>Berapa Kali Pembayaran</th><th>Dibayarkan Bulan</th></tr></thead><tbody>${rows.map((row, i) => `<tr><td>${i + 1}</td><td>${esc(row.nama)}</td><td>${esc(row.jenis)}</td><td>${esc(row.jabatan || '—')}</td><td>${row.jumlah ? String(row.jumlah) : '—'}</td><td>${row.perOrang ? 'Rp' + row.perOrang.toLocaleString('id-ID') : '—'}</td><td>${row.total ? 'Rp' + row.total.toLocaleString('id-ID') : '—'}</td><td>${esc(row.kali)}</td><td>${esc(row.bulan)}</td></tr>`).join('')}</tbody></table></div>`
+  const altFlags = rabAltRowFlags(rows, (row) => row.nama);
+  $('#rab-recap-luar-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama Lokasi</th><th>Jenis yang Dibayarkan Diluar RAB</th><th>Jabatan</th><th>Jumlah Personil</th><th>Nilai per Orang (Rp)</th><th>Total (Rp)</th><th>Berapa Kali Pembayaran</th><th>Dibayarkan Bulan</th></tr></thead><tbody>${rows.map((row, i) => `<tr${altFlags[i] ? ' class="rab-row-alt"' : ''}><td>${i + 1}</td><td>${esc(row.nama)}</td><td>${esc(row.jenis)}</td><td>${esc(row.jabatan || '—')}</td><td>${row.jumlah ? String(row.jumlah) : '—'}</td><td>${row.perOrang ? 'Rp' + row.perOrang.toLocaleString('id-ID') : '—'}</td><td>${row.total ? 'Rp' + row.total.toLocaleString('id-ID') : '—'}</td><td>${esc(row.kali)}</td><td>${esc(row.bulan)}</td></tr>`).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada pembayaran di luar RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
 }
 $('#rab-recap-luar-query').addEventListener('input', renderRabRecapLuar);

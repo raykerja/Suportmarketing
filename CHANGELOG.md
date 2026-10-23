@@ -1,3 +1,8 @@
+VERSION: 0.9.28 (Warna selang-seling per klien di Rekapitulasi RAB & Pembayaran Diluar RAB)
+DATE: 2026-10-23
+
+ADDED: Tabel "2. Rekapitulasi RAB" dan "3. Pembayaran Diluar RAB" sekarang punya **warna baris selang-seling per klien** (hijau muda / putih bergantian) — semua baris milik 1 Nama Lokasi yang sama (termasuk baris pecahan per Jabatan) mendapat warna yang sama, lalu begitu Nama Lokasi berganti ke klien berikutnya warnanya ikut berganti, supaya batas antar-klien gampang dikenali tanpa perlu baca ulang kolom Nama Lokasi tiap baris. Kelas CSS baru `.rab-row-alt` (warna `#e4f5e6`) di `style.css`, logika pengelompokan lewat fungsi `rabAltRowFlags()` di `app.js`. Tidak mengubah data atau Excel export — murni visual di tabel layar.
+
 VERSION: 0.9.27 (Revisi 0.9.25: Seragam/Peralatan/Pelatihan/Pembinaan TETAP tampil di tiap baris Jabatan)
 DATE: 2026-10-23
 
