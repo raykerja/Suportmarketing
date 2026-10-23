@@ -295,13 +295,6 @@
         <p class="hint">Kalau pratinjau kosong atau diminta akses, kemungkinan akun Google Anda belum dibagikan ke file ini. <a id="offer-preview-open" href="#" target="_blank" rel="noopener noreferrer">Buka di tab baru</a> untuk meminta akses atau melihat langsung di Drive.</p>
       </dialog>
       <section id="rab-recap" class="panel" hidden>
-        <div class="card">
-          <div class="section-head"><div><p class="eyebrow">REKAP RAB</p><h2>Daftar RAB Final</h2><p class="hint">Kumpulan link Spreadsheet RAB yang sudah final dan siap dijadikan acuan.</p></div><button id="refresh-rab-recap" type="button">Muat ulang</button></div>
-          <label class="search">Cari nama<input id="rab-recap-query" type="search" list="rab-recap-suggestions" placeholder="Ketik atau pilih nama"></label>
-          <datalist id="rab-recap-suggestions"></datalist>
-          <p id="rab-recap-status" class="hint" role="status"></p>
-          <div id="rab-recap-list" class="list" aria-live="polite"></div>
-        </div>
         <div class="card" id="rab-recap-admin" hidden>
           <h2 id="rab-recap-form-title">Tambah RAB</h2>
           <form id="rab-recap-form">
@@ -432,6 +425,13 @@
             <p id="rab-recap-form-status" class="hint" role="status"></p>
             <div class="actions"><button class="primary" id="rab-recap-form-save" type="submit">Simpan</button><button id="rab-recap-form-cancel" type="button" hidden>Batal ubah</button></div>
           </form>
+        </div>
+        <div class="card">
+          <div class="section-head"><div><p class="eyebrow">REKAP RAB</p><h2>Daftar RAB Final</h2><p class="hint">Kumpulan link Spreadsheet RAB yang sudah final dan siap dijadikan acuan.</p></div><button id="refresh-rab-recap" type="button">Muat ulang</button></div>
+          <label class="search">Cari nama<input id="rab-recap-query" type="search" list="rab-recap-suggestions" placeholder="Ketik atau pilih nama"></label>
+          <datalist id="rab-recap-suggestions"></datalist>
+          <p id="rab-recap-status" class="hint" role="status"></p>
+          <div id="rab-recap-list" class="list" aria-live="polite"></div>
         </div>
       </section>
       <section id="rab-recap-summary" class="panel" hidden>

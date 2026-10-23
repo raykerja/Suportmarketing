@@ -1,3 +1,8 @@
+VERSION: 0.9.29 (Submenu Input RAB Fix: kotak Tambah RAB dipindah ke atas)
+DATE: 2026-10-23
+
+CHANGED: Di submenu "1. Input RAB Fix", urutan 2 kotak ditukar — kotak **"Tambah RAB"** (form isian) sekarang di ATAS, kotak **"Daftar RAB Final"** (daftar/riwayat RAB yang sudah diinput) dipindah ke BAWAH. Sebelumnya urutannya kebalik sehingga admin harus scroll ke bawah melewati daftar riwayat RAB dulu setiap kali mau input RAB baru. Murni urutan tampilan di `index.html` (2 blok `<div class="card">` ditukar posisi) — tidak ada perubahan logika atau data.
+
 VERSION: 0.9.28 (Warna selang-seling per klien di Rekapitulasi RAB & Pembayaran Diluar RAB)
 DATE: 2026-10-23
 
