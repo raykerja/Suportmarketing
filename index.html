@@ -368,7 +368,8 @@
       <section id="rab-recap-summary" class="panel" hidden>
         <div class="card">
           <div class="section-head"><div><p class="eyebrow">REKAPITULASI RAB</p><h2>Rekapitulasi RAB</h2><p class="hint">Daftar seluruh RAB yang sudah diinput admin, lengkap dengan durasi dan nilai kontrak.</p></div><div class="actions"><button id="refresh-rab-recap-summary" type="button">Muat ulang</button><button id="rab-recap-summary-export" type="button">Unduh Excel</button></div></div>
-          <label class="search">Cari nama<input id="rab-recap-summary-query" type="search" list="rab-recap-suggestions" placeholder="Ketik atau pilih nama"></label>
+          <div class="form-grid"><label class="search">Cari nama<input id="rab-recap-summary-query" type="search" list="rab-recap-suggestions" placeholder="Ketik atau pilih nama"></label><label>Tampilkan rincian sebagai<select id="rab-recap-summary-scale"><option value="orang">Biaya Per Orang Per Bulan (×1)</option><option value="personil_bulan">Biaya Total Personil Per Bulan (× Jumlah Anggota)</option><option value="personil_tahun">Biaya Total Personil Per Tahun (× Jumlah Anggota × Durasi Kontrak)</option></select></label></div>
+          <p class="hint">Filter ini cuma mengalikan kolom Komponen Gaji, Komponen BPJS, Fasilitas Kerja &amp; Peningkatan Kemampuan. Management Fee, PPN, PPH, Biaya Total Kontrak, Nilai Kontrak, dan 3 kolom Biaya Akhir tetap tampil apa adanya (tidak ikut dikalikan filter ini).</p>
           <p id="rab-recap-summary-status" class="hint" role="status"></p>
           <div id="rab-recap-summary-list" aria-live="polite"></div>
         </div>

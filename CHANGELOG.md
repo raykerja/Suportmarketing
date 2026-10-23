@@ -1,3 +1,9 @@
+VERSION: 0.9.37 (Rekapitulasi RAB: filter "Tampilkan rincian sebagai" — per orang / total personil bulan / tahun)
+DATE: 2026-10-23
+
+ADDED: Tabel "2. Rekapitulasi RAB" dapat dropdown baru **"Tampilkan rincian sebagai"** di sebelah kotak "Cari nama", dengan 3 pilihan: **Biaya Per Orang Per Bulan (×1)** (default, tampilan lama), **Biaya Total Personil Per Bulan (× Jumlah Anggota)**, **Biaya Total Personil Per Tahun (× Jumlah Anggota × Durasi Kontrak)**. Filter ini mengalikan kolom **Komponen Gaji** (Gaji Pokok, THR, Kompensasi UUCK, Lembur, Tunjangan Jabatan, Tunjangan Tambahan), **Komponen BPJS** (Acuan Nilai BPJS, JKK, JKM, JHT, JP, BPJS Kesehatan), **Fasilitas Kerja** (Seragam Kerja, Peralatan Kerja), dan **Peningkatan Kemampuan** (Pelatihan dan Supervisi, Pembinaan dan Monitoring) sesuai Jumlah Anggota &amp; Durasi Kontrak baris Jabatan itu. Management Fee (%/Rp), PPN, PPH, Biaya Total Kontrak, Nilai Kontrak, dan 3 kolom Biaya Akhir (Biaya Per Orang/Total Personil Bulan/Tahun) TIDAK ikut dikalikan — tetap tampil apa adanya di semua mode filter. Berlaku juga di "Unduh Excel" (ikut mode filter yang sedang dipilih saat tombol diklik).
+Diverifikasi ke RAB PT HSG Material Indonesia: mode "Biaya Total Personil Per Tahun" menghasilkan Gaji Pokok Rp395.075.208 — persis sama dengan kolom "JUMLAH 11 SDM/12 BULAN" di file RAB sumber aslinya.
+
 VERSION: 0.9.36 (Rekapitulasi RAB: 3 kolom Biaya Akhir dipindah ke paling belakang, sebelum Nilai Kontrak)
 DATE: 2026-10-23
 

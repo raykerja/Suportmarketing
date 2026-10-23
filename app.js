@@ -1828,6 +1828,32 @@ function rabJabatanRowFieldText(rincian, jabatanRow, key, mode) {
 function rabJabatanRowKeteranganText(jabatanRow) {
   return jabatanRow ? (jabatanRow.item_tambahan_keterangan || '').trim() || 'Item Kosong' : '—';
 }
+// Filter "Tampilkan rincian sebagai" di atas tabel Rekapitulasi RAB — mengalikan kolom Komponen Gaji (PART1), Tunjangan
+// Tambahan, Komponen BPJS (PART2), Fasilitas Kerja & Peningkatan Kemampuan (4 kunci di RAB_RINCIAN_SCALE_KEYS) per baris
+// Jabatan. Management Fee/PPN/PPH, Biaya Total Kontrak, Nilai Kontrak, dan 3 kolom Biaya Akhir TIDAK ikut dikalikan —
+// tetap tampil apa adanya apa pun filternya. 'orang' = ×1 (nilai per orang, default/lama), 'personil_bulan' = × Jumlah
+// Anggota baris itu, 'personil_tahun' = × Jumlah Anggota × jumlah bulan Durasi Kontrak (default 12 bulan kalau kosong).
+const RAB_RINCIAN_SCALE_KEYS = new Set(['seragam_kerja', 'peralatan_kerja', 'pelatihan_supervisi', 'pembinaan_monitoring']);
+function rabScaleMultiplier(mode, jabatanRow, durasiKontrak) {
+  if (mode !== 'personil_bulan' && mode !== 'personil_tahun') return 1;
+  const jumlah = Number(jabatanRow?.jumlah_anggota) || 0;
+  if (mode === 'personil_bulan') return jumlah;
+  const bulanMatch = (durasiKontrak || '').match(/\d+/);
+  return jumlah * (bulanMatch ? Number(bulanMatch[0]) : 12);
+}
+function rabJabatanRowFieldTextScaled(rincian, jabatanRow, key, mode, multiplier) {
+  if (mode === 'text' || mode === 'jumlah') return rabJabatanRowFieldText(rincian, jabatanRow, key, mode);
+  if (!jabatanRow) return '—';
+  const masked = mode === 'rupiah-masked' && (rincian || {})[key + '_lokasi'] === 'luar_rab';
+  if (masked) return '—';
+  const v = (Number(jabatanRow[key]) || 0) * multiplier;
+  return v ? 'Rp' + Math.round(v).toLocaleString('id-ID') : '—';
+}
+function rabRincianDisplayScaled(rincian, key, isRupiah, multiplier) {
+  if (!RAB_RINCIAN_SCALE_KEYS.has(key)) return rabRincianDisplay(rincian, key, isRupiah);
+  const v = rabRincianRawValue(rincian, key) * multiplier;
+  return v ? 'Rp' + Math.round(v).toLocaleString('id-ID') : '—';
+}
 // Warna selang-seling per KELOMPOK Nama Lokasi (bukan per baris) — begitu nama lokasi ganti, warnanya ikut ganti;
 // selama nama lokasi sama (termasuk baris pecahan per Jabatan), warnanya tetap sama. Dipakai di Rekapitulasi RAB
 // & Pembayaran Diluar RAB supaya baris-baris milik 1 klien gampang dibedakan dari klien berikutnya.
@@ -1841,6 +1867,7 @@ function rabAltRowFlags(items, getNama) {
 }
 function renderRabRecapSummary() {
   const admin = isAdmin();
+  const scaleMode = $('#rab-recap-summary-scale').value || 'orang';
   const q = $('#rab-recap-summary-query').value.trim().toLocaleLowerCase('id');
   const rows = rabRecapCache.filter((r) => !q || r.nama.toLocaleLowerCase('id').includes(q))
     .slice().sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
@@ -1861,13 +1888,15 @@ function renderRabRecapSummary() {
   });
   const altFlags = rabAltRowFlags(expanded, (x) => x.r.nama);
   $('#rab-recap-summary-list').innerHTML = expanded.length ? `<div class="table-wrap"><table class="rab-sticky-cols"><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th>${rincianHead}<th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${expanded.map(({ r, jabatanRow, isFirst }, i) => {
-    const rincianCells = admin ? RAB_JABATAN_COLUMNS_PART1.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') + `<td>${esc(rabJabatanRowKeteranganText(jabatanRow))}</td><td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah'))}</td>` + RAB_JABATAN_COLUMNS_PART2.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${(!isFirst && RAB_RINCIAN_DEDUP_KEYS.has(key)) ? '—' : esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') + `<td>${isFirst ? esc(rabJabatanFieldText(r.rincian, 'biaya_total_kontrak')) : '—'}</td>` + RAB_JABATAN_COLUMNS_FINAL.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') : '';
+    const multiplier = rabScaleMultiplier(scaleMode, jabatanRow, r.durasi_kontrak);
+    const rincianCells = admin ? RAB_JABATAN_COLUMNS_PART1.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldTextScaled(r.rincian, jabatanRow, key, mode, multiplier))}</td>`).join('') + `<td>${esc(rabJabatanRowKeteranganText(jabatanRow))}</td><td>${esc(rabJabatanRowFieldTextScaled(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah', multiplier))}</td>` + RAB_JABATAN_COLUMNS_PART2.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldTextScaled(r.rincian, jabatanRow, key, mode, multiplier))}</td>`).join('') + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${(!isFirst && RAB_RINCIAN_DEDUP_KEYS.has(key)) ? '—' : esc(rabRincianDisplayScaled(r.rincian, key, isRupiah, multiplier))}</td>`).join('') + `<td>${isFirst ? esc(rabJabatanFieldText(r.rincian, 'biaya_total_kontrak')) : '—'}</td>` + RAB_JABATAN_COLUMNS_FINAL.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') : '';
     return `<tr${altFlags[i] ? ' class="rab-row-alt"' : ''}><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${isFirst ? (r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
   }).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
 }
 async function exportRabRecapSummary() {
   const admin = isAdmin();
+  const scaleMode = $('#rab-recap-summary-scale').value || 'orang';
   const rows = [...rabRecapCache].sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
   if (!rows.length) { status('#rab-recap-summary-status', 'Tidak ada baris untuk diekspor.', true); return; }
   try { await loadXlsx(); } catch (error) { status('#rab-recap-summary-status', error.message, true); return; }
@@ -1881,13 +1910,15 @@ async function exportRabRecapSummary() {
     split.forEach(({ jabatanRow, isFirst }) => {
       const out = { 'No': data.length + 1, 'Nama Lokasi': r.nama, 'Durasi Kontrak': r.durasi_kontrak || '' };
       if (admin) {
-        for (const [key, label, mode] of RAB_JABATAN_COLUMNS_PART1) out[label] = rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode);
+        const multiplier = rabScaleMultiplier(scaleMode, jabatanRow, r.durasi_kontrak);
+        for (const [key, label, mode] of RAB_JABATAN_COLUMNS_PART1) out[label] = rabJabatanRowFieldTextScaled(r.rincian, jabatanRow, key, mode, multiplier);
         out['Tunjangan Tambahan (Keterangan)'] = rabJabatanRowKeteranganText(jabatanRow);
-        out['Tunjangan Tambahan (Nominal)'] = rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah');
-        for (const [key, label, mode] of RAB_JABATAN_COLUMNS_PART2) out[label] = rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode);
+        out['Tunjangan Tambahan (Nominal)'] = rabJabatanRowFieldTextScaled(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah', multiplier);
+        for (const [key, label, mode] of RAB_JABATAN_COLUMNS_PART2) out[label] = rabJabatanRowFieldTextScaled(r.rincian, jabatanRow, key, mode, multiplier);
         for (const [key, label] of RAB_RINCIAN_COLUMNS) {
           if (!isFirst && RAB_RINCIAN_DEDUP_KEYS.has(key)) { out[label] = ''; continue; }
-          const v = rabRincianRawValue(r.rincian, key);
+          const raw = rabRincianRawValue(r.rincian, key);
+          const v = RAB_RINCIAN_SCALE_KEYS.has(key) ? raw * multiplier : raw;
           out[label] = key === 'management_fee_persen' ? (v ? v + '%' : '') : v;
         }
         out['Biaya Total Kontrak'] = isFirst ? rabJabatanFieldText(r.rincian, 'biaya_total_kontrak') : '';
@@ -1920,6 +1951,7 @@ async function exportRabRecapSummary() {
   status('#rab-recap-summary-status', `${data.length} baris diekspor (+ ${luarData.length} baris Pembayaran Diluar RAB).`);
 }
 $('#rab-recap-summary-query').addEventListener('input', renderRabRecapSummary);
+$('#rab-recap-summary-scale').addEventListener('change', renderRabRecapSummary);
 $('#refresh-rab-recap-summary').addEventListener('click', loadRabRecap);
 $('#rab-recap-summary-export').addEventListener('click', exportRabRecapSummary);
 function rabJadwalLabel(jadwal) { return jadwal === 'sekali' ? '1x' : jadwal === 'dua_kali' ? '2x' : 'Bulanan'; }
