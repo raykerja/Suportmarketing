@@ -1,3 +1,8 @@
+VERSION: 0.9.23 (Fix: Nominal THR/UUCK di Pembayaran Diluar RAB belum dikali Jumlah Anggota)
+DATE: 2026-10-23
+
+FIXED: Kolom "Nominal (Rp)" baru di "3. Pembayaran Diluar RAB" (0.9.22) salah hitung — THR & Kompensasi UUCK cuma dijumlah per baris Jabatan tanpa dikali Jumlah Anggota baris itu, padahal nilainya disimpan **per orang**. Pemilik lapor: 11 Anggota + 4 Danru + 1 Chief tapi nominal yang tampil kecil sekali. Sekarang tiap baris Jabatan dikali Jumlah Anggota-nya dulu sebelum dijumlah semua baris (THR Anggota × 11 + THR Danru × 4 + THR Chief × 1), persis cara perhitungan yang diminta pemilik. Seragam Kerja & Peralatan Kerja tidak kena dampak (disimpan 1 angka flat per RAB, bukan per orang).
+
 VERSION: 0.9.22 (Pembayaran Diluar RAB: tampilkan Nominal + sheet terpisah di Excel)
 DATE: 2026-10-23
 

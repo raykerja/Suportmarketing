@@ -1765,10 +1765,12 @@ function rabRincianDisplay(rincian, key, isRupiah) {
 }
 // Nominal komponen yang dibayar "Luar RAB" (submenu 3) — kebalikan dari rabRincianRawValue di atas (yang MASK jadi 0
 // kalau luar_rab, karena nilainya tidak boleh dobel tampil di Rekapitulasi RAB). THR & Kompensasi UUCK nilainya
-// disimpan per baris Jabatan (jabatan_rows), jadi dijumlah semua baris; Seragam & Peralatan Kerja disimpan flat di rincian.
+// disimpan PER ORANG per baris Jabatan (jabatan_rows) — jadi dikali Jumlah Anggota baris itu dulu sebelum dijumlah
+// semua baris (misal THR Anggota × 11 orang + THR Danru × 4 orang + THR Chief × 1 orang). Seragam & Peralatan Kerja
+// disimpan flat di rincian (1 angka untuk seluruh RAB, bukan per orang), jadi tidak perlu dikali apa-apa.
 function rabLuarRabNominal(rincian, key) {
   if (key === 'thr' || key === 'kompensasi_uuck') {
-    return rabJabatanRowsOf(rincian).reduce((sum, row) => sum + (Number(row[key]) || 0), 0);
+    return rabJabatanRowsOf(rincian).reduce((sum, row) => sum + (Number(row[key]) || 0) * (Number(row.jumlah_anggota) || 0), 0);
   }
   return Number((rincian || {})[key]) || 0;
 }
