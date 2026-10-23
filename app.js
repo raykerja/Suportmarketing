@@ -1890,12 +1890,17 @@ function renderRabRecapSummary() {
     else expanded.push({ r, jabatanRow: jabatanRows[0] || null, isFirst: true });
   });
   const altFlags = rabAltRowFlags(expanded, (x) => x.r.nama);
+  // Ganti filter/cari tidak boleh bikin tabel balik scroll ke paling kiri — simpan posisi geser horizontal tabel lama,
+  // pasang lagi ke tabel baru setelah innerHTML diganti (render ulang selalu bikin elemen baru, scroll-nya hilang).
+  const prevScrollLeft = $('#rab-recap-summary-list .table-wrap')?.scrollLeft || 0;
   $('#rab-recap-summary-list').innerHTML = expanded.length ? `<div class="table-wrap"><table class="rab-sticky-cols"><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th>${rincianHead}<th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${expanded.map(({ r, jabatanRow, isFirst }, i) => {
     const multiplier = rabScaleMultiplier(scaleMode, jabatanRow, r.durasi_kontrak);
     const rincianCells = admin ? RAB_JABATAN_COLUMNS_PART1.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldTextScaled(r.rincian, jabatanRow, key, mode, multiplier))}</td>`).join('') + `<td>${esc(rabJabatanRowKeteranganText(jabatanRow))}</td><td>${esc(rabJabatanRowFieldTextScaled(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah', multiplier))}</td>` + RAB_JABATAN_COLUMNS_PART2.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldTextScaled(r.rincian, jabatanRow, key, mode, multiplier))}</td>`).join('') + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${(!isFirst && RAB_RINCIAN_DEDUP_KEYS.has(key)) ? '—' : esc(rabRincianDisplayScaled(r.rincian, key, isRupiah, multiplier))}</td>`).join('') + `<td>${isFirst ? esc(rabJabatanFieldText(r.rincian, 'biaya_total_kontrak')) : '—'}</td>` + RAB_JABATAN_COLUMNS_FINAL.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') : '';
     return `<tr${altFlags[i] ? ' class="rab-row-alt"' : ''}><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${isFirst ? (r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
   }).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
+  const newWrap = $('#rab-recap-summary-list .table-wrap');
+  if (newWrap && prevScrollLeft) newWrap.scrollLeft = prevScrollLeft;
 }
 async function exportRabRecapSummary() {
   const admin = isAdmin();

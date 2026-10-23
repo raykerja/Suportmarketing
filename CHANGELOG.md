@@ -1,3 +1,8 @@
+VERSION: 0.9.39 (Fix: ganti filter Rekapitulasi RAB tidak lagi reset scroll tabel ke kiri)
+DATE: 2026-10-23
+
+FIXED: Ganti dropdown "Tampilkan rincian sebagai" (atau ketik di kotak Cari nama) selalu bikin tabel "2. Rekapitulasi RAB" balik ke-scroll paling kiri, padahal admin biasanya sedang melihat kolom di sebelah kanan (Management Fee/Pajak/Biaya Akhir). Sekarang posisi geser horizontal tabel disimpan sebelum render ulang dan dipasang lagi ke tabel baru, jadi bagian yang sedang dilihat tetap di tempatnya.
+
 VERSION: 0.9.38 (Fix: filter "Tampilkan rincian sebagai" sekarang ikut mengalikan Management Fee/PPN/PPH)
 DATE: 2026-10-23
 
