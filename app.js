@@ -1763,17 +1763,7 @@ function rabRincianDisplay(rincian, key, isRupiah) {
   if (!v) return '—';
   return isRupiah ? 'Rp' + v.toLocaleString('id-ID') : (key === 'management_fee_persen' ? v + '%' : String(v));
 }
-// Nominal komponen yang dibayar "Luar RAB" (submenu 3) — kebalikan dari rabRincianRawValue di atas (yang MASK jadi 0
-// kalau luar_rab, karena nilainya tidak boleh dobel tampil di Rekapitulasi RAB). THR & Kompensasi UUCK nilainya
-// disimpan PER ORANG per baris Jabatan (jabatan_rows) — jadi dikali Jumlah Anggota baris itu dulu sebelum dijumlah
-// semua baris (misal THR Anggota × 11 orang + THR Danru × 4 orang + THR Chief × 1 orang). Seragam & Peralatan Kerja
-// disimpan flat di rincian (1 angka untuk seluruh RAB, bukan per orang), jadi tidak perlu dikali apa-apa.
-function rabLuarRabNominal(rincian, key) {
-  if (key === 'thr' || key === 'kompensasi_uuck') {
-    return rabJabatanRowsOf(rincian).reduce((sum, row) => sum + (Number(row[key]) || 0) * (Number(row.jumlah_anggota) || 0), 0);
-  }
-  return Number((rincian || {})[key]) || 0;
-}
+function rabJabatanLabel(row) { return (row.jabatan || '').trim() || 'Item Kosong'; }
 // Komponen Gaji, BPJS & Biaya per orang sekarang bisa punya beberapa baris jabatan dalam 1 RAB (misal Anggota + Danru + Chief
 // sekaligus) — Acuan Nilai BPJS dan Total Biaya Per Orang Per Bulan ikut berbeda per jabatan, bukan 1 nilai untuk seluruh RAB.
 const RAB_JABATAN_ROW_FIELDS = [
@@ -1880,16 +1870,13 @@ async function exportRabRecapSummary() {
   const luarData = [];
   if (admin) {
     rows.forEach((r) => {
-      const rincian = r.rincian || {};
-      for (const item of RAB_PAYMENT_ITEMS) {
-        if (rincian[item.key + '_lokasi'] !== 'luar_rab') continue;
-        const jadwal = rincian[item.key + '_jadwal'] || 'bulanan';
+      buildRabLuarRabRows(r).forEach((row) => {
         luarData.push({
-          'No': luarData.length + 1, 'Nama Lokasi': r.nama, 'Jenis yang Dibayarkan Diluar RAB': item.label,
-          'Nominal (Rp)': rabLuarRabNominal(rincian, item.key), 'Berapa Kali Pembayaran': rabJadwalLabel(jadwal),
-          'Dibayarkan Bulan': rabBulanLabel(rincian, item.key, jadwal),
+          'No': luarData.length + 1, 'Nama Lokasi': row.nama, 'Jenis yang Dibayarkan Diluar RAB': row.jenis,
+          'Jabatan': row.jabatan || '', 'Jumlah Personil': row.jumlah || '', 'Nilai per Orang (Rp)': row.perOrang || '',
+          'Total (Rp)': row.total, 'Berapa Kali Pembayaran': row.kali, 'Dibayarkan Bulan': row.bulan,
         });
-      }
+      });
     });
   }
   const sheet = window.XLSX.utils.json_to_sheet(data);
@@ -1909,22 +1896,39 @@ function rabBulanLabel(rincian, key, jadwal) {
   if (jadwal === 'sekali') return name(rincian[key + '_bulan1']) || '—';
   return '—';
 }
+// Pecah tiap komponen "Luar RAB" jadi baris per Jabatan kalau nilainya memang per orang (THR & Kompensasi UUCK,
+// disimpan di jabatan_rows) — Jabatan/Jumlah Personil/Nilai per Orang terisi, Total = Nilai per Orang × Jumlah
+// Personil. Seragam Kerja & Peralatan Kerja tetap 1 baris (nilai flat untuk seluruh RAB, bukan per orang) — Jabatan/
+// Jumlah Personil/Nilai per Orang dikosongkan (null), Total = nilainya langsung. Dipakai tabel di layar & export Excel.
+function buildRabLuarRabRows(r) {
+  const rincian = r.rincian || {};
+  const out = [];
+  for (const item of RAB_PAYMENT_ITEMS) {
+    if (rincian[item.key + '_lokasi'] !== 'luar_rab') continue;
+    const jadwal = rincian[item.key + '_jadwal'] || 'bulanan';
+    const kali = rabJadwalLabel(jadwal);
+    const bulan = rabBulanLabel(rincian, item.key, jadwal);
+    if (item.key === 'thr' || item.key === 'kompensasi_uuck') {
+      const jabatanRows = rabJabatanRowsOf(rincian).filter((row) => (Number(row[item.key]) || 0) || (Number(row.jumlah_anggota) || 0));
+      for (const row of jabatanRows) {
+        const jumlah = Number(row.jumlah_anggota) || 0;
+        const perOrang = Number(row[item.key]) || 0;
+        out.push({ nama: r.nama, jenis: item.label, jabatan: rabJabatanLabel(row), jumlah, perOrang, total: perOrang * jumlah, kali, bulan });
+      }
+    } else {
+      out.push({ nama: r.nama, jenis: item.label, jabatan: null, jumlah: null, perOrang: null, total: Number(rincian[item.key]) || 0, kali, bulan });
+    }
+  }
+  return out;
+}
 function renderRabRecapLuar() {
   if (!isAdmin()) return;
   const q = $('#rab-recap-luar-query').value.trim().toLocaleLowerCase('id');
   const rows = [];
   rabRecapCache.filter((r) => !q || r.nama.toLocaleLowerCase('id').includes(q)).slice().sort((a, b) => a.nama.localeCompare(b.nama, 'id'))
-    .forEach((r) => {
-      const rincian = r.rincian || {};
-      for (const item of RAB_PAYMENT_ITEMS) {
-        if (rincian[item.key + '_lokasi'] !== 'luar_rab') continue;
-        const jadwal = rincian[item.key + '_jadwal'] || 'bulanan';
-        const nominal = rabLuarRabNominal(rincian, item.key);
-        rows.push({ nama: r.nama, jenis: item.label, nominal, kali: rabJadwalLabel(jadwal), bulan: rabBulanLabel(rincian, item.key, jadwal) });
-      }
-    });
+    .forEach((r) => rows.push(...buildRabLuarRabRows(r)));
   status('#rab-recap-luar-status', rows.length ? `Menampilkan ${rows.length} pembayaran di luar RAB.` : (rabRecapCache.length ? 'Belum ada komponen yang ditandai dibayar di luar RAB.' : 'Belum ada RAB final yang ditambahkan.'));
-  $('#rab-recap-luar-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama Lokasi</th><th>Jenis yang Dibayarkan Diluar RAB</th><th>Nominal (Rp)</th><th>Berapa Kali Pembayaran</th><th>Dibayarkan Bulan</th></tr></thead><tbody>${rows.map((row, i) => `<tr><td>${i + 1}</td><td>${esc(row.nama)}</td><td>${esc(row.jenis)}</td><td>${row.nominal ? 'Rp' + row.nominal.toLocaleString('id-ID') : '—'}</td><td>${esc(row.kali)}</td><td>${esc(row.bulan)}</td></tr>`).join('')}</tbody></table></div>`
+  $('#rab-recap-luar-list').innerHTML = rows.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama Lokasi</th><th>Jenis yang Dibayarkan Diluar RAB</th><th>Jabatan</th><th>Jumlah Personil</th><th>Nilai per Orang (Rp)</th><th>Total (Rp)</th><th>Berapa Kali Pembayaran</th><th>Dibayarkan Bulan</th></tr></thead><tbody>${rows.map((row, i) => `<tr><td>${i + 1}</td><td>${esc(row.nama)}</td><td>${esc(row.jenis)}</td><td>${esc(row.jabatan || '—')}</td><td>${row.jumlah ? String(row.jumlah) : '—'}</td><td>${row.perOrang ? 'Rp' + row.perOrang.toLocaleString('id-ID') : '—'}</td><td>${row.total ? 'Rp' + row.total.toLocaleString('id-ID') : '—'}</td><td>${esc(row.kali)}</td><td>${esc(row.bulan)}</td></tr>`).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada pembayaran di luar RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
 }
 $('#rab-recap-luar-query').addEventListener('input', renderRabRecapLuar);

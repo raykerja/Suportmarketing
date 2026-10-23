@@ -1,3 +1,10 @@
+VERSION: 0.9.24 (Pembayaran Diluar RAB: pecah per Jabatan + kolom Jumlah Personil/Nilai per Orang/Total)
+DATE: 2026-10-23
+
+CHANGED: Tabel "3. Pembayaran Diluar RAB" (dan sheet ke-2 "Unduh Excel" di Rekapitulasi RAB) diubah total — THR & Kompensasi UUCK (nilainya per orang per baris Jabatan) sekarang **dipecah jadi 1 baris per Jabatan** (Anggota/Danru/Chief masing-masing baris sendiri, Nama Lokasi diulang di tiap baris, sama seperti Rekapitulasi RAB), bukan 1 baris gabungan lagi seperti 0.9.22-0.9.23.
+CHANGED: Kolom "Nominal (Rp)" diganti jadi 3 kolom terpisah: **Jabatan** (Anggota/Danru/Chief), **Jumlah Personil**, **Nilai per Orang (Rp)**, lalu **Total (Rp)** (= Nilai per Orang × Jumlah Personil) — sebelumnya cuma 1 kolom "Nominal" yang sudah dijumlah, tidak kelihatan rincian per Jabatan-nya. Kolom "Berapa Kali Pembayaran" dan "Dibayarkan Bulan" tetap sama seperti sebelumnya.
+Seragam Kerja & Peralatan Kerja (nilai flat per RAB, bukan per orang) tetap 1 baris seperti sebelumnya — kolom Jabatan/Jumlah Personil/Nilai per Orang dikosongkan ("—"), cuma Total yang terisi. Murni frontend (`app.js`), tidak ada migrasi baru.
+
 VERSION: 0.9.23 (Fix: Nominal THR/UUCK di Pembayaran Diluar RAB belum dikali Jumlah Anggota)
 DATE: 2026-10-23
 
