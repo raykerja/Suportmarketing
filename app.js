@@ -1859,12 +1859,13 @@ async function exportRabRecapSummary() {
         out['Item Tambahan (Keterangan)'] = rabJabatanRowKeteranganText(jabatanRow);
         out['Item Tambahan (Nominal)'] = rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah');
         for (const [key, label] of RAB_RINCIAN_COLUMNS) {
-          const v = isFirst ? rabRincianRawValue(r.rincian, key) : 0;
+          if (!isFirst) { out[label] = ''; continue; }
+          const v = rabRincianRawValue(r.rincian, key);
           out[label] = key === 'management_fee_persen' ? (v ? v + '%' : '') : v;
         }
         out['Biaya Total Kontrak'] = isFirst ? rabJabatanFieldText(r.rincian, 'biaya_total_kontrak') : '';
       }
-      out['Nilai Kontrak'] = isFirst ? (r.nilai_kontrak || 0) : 0;
+      out['Nilai Kontrak'] = isFirst ? (r.nilai_kontrak || 0) : '';
       out['Link Spreadsheet'] = r.link;
       data.push(out);
     });

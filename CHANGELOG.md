@@ -1,3 +1,8 @@
+VERSION: 0.9.26 (Fix: sheet Excel Rekapitulasi RAB tampilkan "0" bukan kosong di baris non-pertama)
+DATE: 2026-10-23
+
+FIXED: Bug di `exportRabRecapSummary` (0.9.25) — di sheet Excel "Rekapitulasi RAB", baris selain baris pertama tiap klien (hasil pecah per Jabatan) seharusnya kosong untuk kolom level-RAB (Seragam Kerja, Peralatan Kerja, Pelatihan &amp; Supervisi, Pembinaan &amp; Monitoring, Management Fee (Rp), PPN, PPH, Nilai Kontrak), tapi kodenya salah ketik sehingga malah terisi angka **0** di baris-baris itu (cuma "Management Fee (%)" yang benar-benar kosong). Di tabel di layar tidak kena bug ini (sudah benar tampil "—" sejak 0.9.25). Sekarang disamakan — kosong di Excel juga.
+
 VERSION: 0.9.25 (Rekapitulasi RAB: kolom level-RAB — Nilai Kontrak, Management Fee, PPN/PPH, dst — cuma tampil sekali per klien)
 DATE: 2026-10-23
 
