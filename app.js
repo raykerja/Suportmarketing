@@ -1773,7 +1773,7 @@ function rabJabatanLabel(row) { return (row.jabatan || '').trim() || 'Item Koson
 // sekaligus) — Acuan Nilai BPJS dan Total Biaya Per Orang Per Bulan ikut berbeda per jabatan, bukan 1 nilai untuk seluruh RAB.
 const RAB_JABATAN_ROW_FIELDS = [
   'bagian_kerja', 'jabatan', 'jumlah_anggota', 'gaji_pokok', 'thr', 'kompensasi_uuck', 'lembur', 'tunjangan_jabatan',
-  'acuan_bpjs', 'jkk', 'jkm', 'jht', 'jp', 'bpjs_kesehatan', 'total_per_orang_per_bulan',
+  'acuan_bpjs', 'jkk', 'jkm', 'jht', 'jp', 'bpjs_kesehatan', 'total_per_orang_per_bulan', 'total_personil_bulan', 'total_personil_tahun',
   'item_tambahan_keterangan', 'item_tambahan_nominal', 'biaya_total_kontrak',
 ];
 // [kunci, label kolom, mode] — mode: 'text' (gabung nilai unik dipisah koma), 'jumlah', 'rupiah', 'rupiah-masked' (disamarkan kalau
@@ -1789,7 +1789,8 @@ const RAB_JABATAN_COLUMNS_PART1 = [
 const RAB_JABATAN_COLUMNS_PART2 = [
   ['acuan_bpjs', 'Acuan Nilai BPJS', 'rupiah'], ['jkk', 'JKK (0.24%)', 'rupiah'], ['jkm', 'JKM (0.30%)', 'rupiah'],
   ['jht', 'JHT (3.70%)', 'rupiah'], ['jp', 'JP (2.00%)', 'rupiah'], ['bpjs_kesehatan', 'BPJS Kesehatan (4.00%)', 'rupiah'],
-  ['total_per_orang_per_bulan', 'Total Biaya Per Orang Per Bulan', 'rupiah'],
+  ['total_per_orang_per_bulan', 'Biaya Per Orang Per Bulan', 'rupiah'],
+  ['total_personil_bulan', 'Biaya Total Personil Per Bulan', 'rupiah'], ['total_personil_tahun', 'Biaya Total Personil Per Tahun', 'rupiah'],
 ];
 function rabJabatanRowsOf(rincian) {
   const r = rincian || {};
@@ -1993,45 +1994,95 @@ function updateRabPaymentVisibility(suffix) {
     $('#' + ids.jadwal).addEventListener('change', () => updateRabPaymentVisibility(item.suffix));
   }
 })();
-// 3 kolom tetap (Jabatan 1/2/3) — field-nya diidentifikasi lewat atribut data-jabatan-col + data-field di index.html,
-// bukan dibuat dinamis lewat JS, supaya tampilannya persis seperti field lain di form ini (berjejer, tanpa kotak/kartu).
-function rabJabatanField(col, key) { return $(`#rab-recap-form [data-jabatan-col="${col}"][data-field="${key}"]`); }
-function collectRabJabatanRows() {
-  const rows = [];
-  for (const col of [1, 2, 3]) {
-    const row = {};
-    let filled = false;
-    for (const key of RAB_JABATAN_ROW_FIELDS) {
-      const field = rabJabatanField(col, key);
-      if (!field) continue;
-      const v = (key === 'bagian_kerja' || key === 'jabatan' || key === 'item_tambahan_keterangan') ? field.value.trim() : (Number(digitsOnly(field.value)) || 0);
-      row[key] = v;
-      if (v) filled = true;
-    }
-    if (filled) rows.push(row);
-  }
-  return rows;
-}
+// 1 RAB = 1 Jabatan (sejak revisi ini, bukan kolom Jabatan 1/2/3 lagi) — field flat biasa, id-nya dipetakan di sini.
+// Kalau 1 klien butuh beberapa Jabatan (Anggota+Danru+Chief), diinput sebagai beberapa RAB TERPISAH (beberapa kali
+// submit form) — Rekapitulasi RAB sudah otomatis menampilkan RAB terpisah itu apa adanya, tidak perlu digabung.
+const RAB_JABATAN_FLAT_FIELDS = {
+  bagian_kerja: 'rab-r-bagian-kerja', jabatan: 'rab-r-jabatan', jumlah_anggota: 'rab-r-jumlah',
+  gaji_pokok: 'rab-r-gaji', thr: 'rab-r-thr', kompensasi_uuck: 'rab-r-uuck', lembur: 'rab-r-lembur',
+  tunjangan_jabatan: 'rab-r-tunjangan-jabatan', item_tambahan_keterangan: 'rab-r-item-keterangan',
+  item_tambahan_nominal: 'rab-r-item-nominal', acuan_bpjs: 'rab-r-acuan-bpjs', jkk: 'rab-r-jkk', jkm: 'rab-r-jkm',
+  jht: 'rab-r-jht', jp: 'rab-r-jp', bpjs_kesehatan: 'rab-r-kesehatan', total_per_orang_per_bulan: 'rab-r-total-orang',
+  total_personil_bulan: 'rab-r-total-personil-bulan', total_personil_tahun: 'rab-r-total-personil-tahun',
+};
+const RAB_JABATAN_FLAT_TEXT_KEYS = new Set(['bagian_kerja', 'jabatan', 'item_tambahan_keterangan']);
 const RAB_BPJS_RATES = { jkk: 0.0024, jkm: 0.0030, jht: 0.0370, jp: 0.0200, bpjs_kesehatan: 0.0400 };
-function recomputeRabJabatanBpjs(col) {
-  const acuan = Number(digitsOnly(rabJabatanField(col, 'acuan_bpjs').value));
+function recomputeRabJabatanBpjs() {
+  const acuan = Number(digitsOnly($('#rab-r-acuan-bpjs').value));
   for (const key of Object.keys(RAB_BPJS_RATES)) {
-    rabJabatanField(col, key).value = acuan ? groupThousands(String(Math.round(acuan * RAB_BPJS_RATES[key]))) : '';
+    $('#' + RAB_JABATAN_FLAT_FIELDS[key]).value = acuan ? groupThousands(String(Math.round(acuan * RAB_BPJS_RATES[key]))) : '';
   }
 }
 $('#rab-recap-form').addEventListener('input', (event) => {
-  if (event.target.dataset.field === 'acuan_bpjs') recomputeRabJabatanBpjs(event.target.dataset.jabatanCol);
+  if (event.target.id === 'rab-r-acuan-bpjs') recomputeRabJabatanBpjs();
 });
 $('#rab-recap-form').addEventListener('input', (event) => {
   const field = event.target.closest('.rab-rp-field');
   if (field && !field.readOnly) field.value = groupThousands(field.value);
   if (event.target.classList.contains('rab-int-field')) event.target.value = digitsOnly(event.target.value);
 });
+// Acuan Management Fee/PPN/PPH dipilih admin lewat dropdown di kolom tengah — nilai Rupiah dihitung otomatis dari
+// persentase × basis terpilih. Komponen yang ditandai "Luar RAB" dianggap 0 di basis (sudah dibayar di luar RAB,
+// konsisten dengan aturan yang sama di Rekapitulasi RAB), tapi inputnya sendiri tetap ada di form, tidak hilang.
+// Basisnya nilai PER ORANG seperti yang sudah diisi di masing-masing field (bukan dikali Jumlah Anggota).
+function rabEffectiveValue(fieldId, lokasiId) {
+  const v = Number(digitsOnly($('#' + fieldId).value)) || 0;
+  return (lokasiId && $('#' + lokasiId).value === 'luar_rab') ? 0 : v;
+}
+function recomputeRabFeesPajak() {
+  const gajiPokok = Number(digitsOnly($('#rab-r-gaji').value)) || 0;
+  const gajiGroup = gajiPokok + rabEffectiveValue('rab-r-thr', 'rab-r-thr-lokasi') + rabEffectiveValue('rab-r-uuck', 'rab-r-uuck-lokasi')
+    + (Number(digitsOnly($('#rab-r-lembur').value)) || 0) + (Number(digitsOnly($('#rab-r-tunjangan-jabatan').value)) || 0)
+    + (Number(digitsOnly($('#rab-r-item-nominal').value)) || 0);
+  const fasilitasGroup = rabEffectiveValue('rab-r-seragam', 'rab-r-seragam-lokasi') + rabEffectiveValue('rab-r-peralatan', 'rab-r-peralatan-lokasi');
+  const peningkatanGroup = (Number(digitsOnly($('#rab-r-pelatihan').value)) || 0) + (Number(digitsOnly($('#rab-r-pembinaan').value)) || 0);
+
+  const feePersen = Number(String($('#rab-r-fee-persen').value).trim().replace(',', '.')) || 0;
+  const feeAcuan = $('#rab-r-fee-acuan').value;
+  const feeBase = feeAcuan === 'gaji_pokok' ? gajiPokok : feeAcuan === 'gaji' ? gajiGroup : (gajiGroup + fasilitasGroup + peningkatanGroup);
+  const feeRp = Math.round(feePersen / 100 * feeBase);
+  $('#rab-r-fee-rupiah').value = feeRp ? groupThousands(String(feeRp)) : '';
+
+  const ppnBase = $('#rab-r-ppn-acuan').value === 'fee_saja' ? feeRp : (fasilitasGroup + peningkatanGroup + feeRp);
+  $('#rab-r-ppn').value = ppnBase ? groupThousands(String(Math.round(0.11 * ppnBase))) : '';
+
+  const pphBase = $('#rab-r-pph-acuan').value === 'fee_saja' ? feeRp : (gajiGroup + fasilitasGroup + peningkatanGroup + feeRp);
+  $('#rab-r-pph').value = pphBase ? groupThousands(String(Math.round(0.02 * pphBase))) : '';
+}
+const RAB_FEE_PAJAK_TRIGGER_IDS = new Set([
+  'rab-r-gaji', 'rab-r-thr', 'rab-r-thr-lokasi', 'rab-r-uuck', 'rab-r-uuck-lokasi', 'rab-r-lembur', 'rab-r-tunjangan-jabatan',
+  'rab-r-item-nominal', 'rab-r-seragam', 'rab-r-seragam-lokasi', 'rab-r-peralatan', 'rab-r-peralatan-lokasi',
+  'rab-r-pelatihan', 'rab-r-pembinaan', 'rab-r-fee-persen', 'rab-r-fee-acuan', 'rab-r-ppn-acuan', 'rab-r-pph-acuan',
+]);
+$('#rab-recap-form').addEventListener('input', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) recomputeRabFeesPajak(); });
+$('#rab-recap-form').addEventListener('change', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) recomputeRabFeesPajak(); });
+// Biaya Total Personil = Biaya Per Orang Per Bulan × Jumlah Anggota; per tahun dikali jumlah bulan dari Durasi
+// Kontrak (default 12 bulan kalau belum diisi). Tetap bisa diedit manual kalau admin mau override hasil otomatis.
+function recomputeRabBiayaAkhir() {
+  const perOrang = Number(digitsOnly($('#rab-r-total-orang').value)) || 0;
+  const jumlah = Number(digitsOnly($('#rab-r-jumlah').value)) || 0;
+  const perBulanPersonil = perOrang * jumlah;
+  $('#rab-r-total-personil-bulan').value = perBulanPersonil ? groupThousands(String(perBulanPersonil)) : '';
+  const bulanMatch = ($('#rab-recap-f-durasi').value || '').match(/\d+/);
+  const bulanKontrak = bulanMatch ? Number(bulanMatch[0]) : 12;
+  const perTahunPersonil = perBulanPersonil * bulanKontrak;
+  $('#rab-r-total-personil-tahun').value = perTahunPersonil ? groupThousands(String(perTahunPersonil)) : '';
+}
+$('#rab-recap-form').addEventListener('input', (event) => {
+  if (event.target.id === 'rab-r-total-orang' || event.target.id === 'rab-r-jumlah') recomputeRabBiayaAkhir();
+});
+$('#rab-recap-f-durasi').addEventListener('change', recomputeRabBiayaAkhir);
 function buildRabRincianPayload() {
   const out = {};
   for (const [key, id] of Object.entries(RAB_RINCIAN_FIELDS)) out[key] = Number(digitsOnly($('#' + id).value)) || 0;
   out.management_fee_persen = Number(String($('#rab-r-fee-persen').value).trim().replace(',', '.')) || 0;
-  out.jabatan_rows = collectRabJabatanRows();
+  out.management_fee_acuan = $('#rab-r-fee-acuan').value;
+  out.ppn_acuan = $('#rab-r-ppn-acuan').value;
+  out.pph_acuan = $('#rab-r-pph-acuan').value;
+  for (const [key, id] of Object.entries(RAB_JABATAN_FLAT_FIELDS)) {
+    const field = $('#' + id);
+    out[key] = RAB_JABATAN_FLAT_TEXT_KEYS.has(key) ? field.value.trim() : (Number(digitsOnly(field.value)) || 0);
+  }
   for (const item of RAB_PAYMENT_ITEMS) {
     const ids = rabPaymentFieldIds(item.suffix);
     out[item.key + '_lokasi'] = $('#' + ids.lokasi).value;
@@ -2045,14 +2096,14 @@ function fillRabRincianForm(rincian) {
   const r = rincian || {};
   for (const [key, id] of Object.entries(RAB_RINCIAN_FIELDS)) $('#' + id).value = r[key] ? groupThousands(String(r[key])) : '';
   $('#rab-r-fee-persen').value = r.management_fee_persen || '';
-  const jabatanRows = rabJabatanRowsOf(r);
-  for (const col of [1, 2, 3]) {
-    const row = jabatanRows[col - 1] || {};
-    for (const key of RAB_JABATAN_ROW_FIELDS) {
-      const field = rabJabatanField(col, key);
-      if (!field) continue;
-      field.value = (key === 'bagian_kerja' || key === 'jabatan' || key === 'item_tambahan_keterangan') ? (row[key] || '') : (row[key] ? groupThousands(String(row[key])) : '');
-    }
+  $('#rab-r-fee-acuan').value = r.management_fee_acuan || 'total';
+  $('#rab-r-ppn-acuan').value = r.ppn_acuan || 'fasilitas_peningkatan_fee';
+  $('#rab-r-pph-acuan').value = r.pph_acuan || 'total_sampai_fee';
+  // RAB lama bisa punya beberapa baris Jabatan (jabatan_rows) — cuma Jabatan pertama yang dimuat ke form (1 RAB = 1
+  // Jabatan sekarang); kalau mau edit jabatan lain dari RAB lama itu, buat RAB baru terpisah untuk jabatan tersebut.
+  const row = rabJabatanRowsOf(r)[0] || {};
+  for (const [key, id] of Object.entries(RAB_JABATAN_FLAT_FIELDS)) {
+    $('#' + id).value = RAB_JABATAN_FLAT_TEXT_KEYS.has(key) ? (row[key] || '') : (row[key] ? groupThousands(String(row[key])) : '');
   }
   for (const item of RAB_PAYMENT_ITEMS) {
     const ids = rabPaymentFieldIds(item.suffix);

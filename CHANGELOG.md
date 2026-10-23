@@ -1,3 +1,12 @@
+VERSION: 0.9.32 (Rincian RAB: 1 RAB = 1 Jabatan lagi + Management Fee/PPN/PPH otomatis + Biaya Total Personil)
+DATE: 2026-10-23
+
+CHANGED (BESAR): Struktur "Komponen Gaji &amp; BPJS per Jabatan" (3 kolom Jabatan 1/2/3, sejak 0.9.17-0.9.20) **dikembalikan jadi 1 Jabatan per RAB** (field flat biasa, bukan grid 3 kolom). Kalau 1 klien butuh beberapa Jabatan (Anggota+Danru+Chief), diinput sebagai **beberapa RAB terpisah** (submit form beberapa kali) — Rekapitulasi RAB sudah otomatis menampilkan RAB terpisah itu apa adanya (fitur "RAB diinput satu-satu" yang sudah ada sejak awal). RAB lama yang masih punya beberapa baris Jabatan tetap terbaca & tertampil normal di Rekapitulasi RAB (cuma Jabatan pertama yang termuat kalau RAB itu dibuka untuk diedit).
+ADDED: **Management Fee, PPN, PPH sekarang 3 kolom** — kolom tengah jadi dropdown **Acuan** (basis perhitungan), kolom Rupiah **otomatis terhitung** dari persentase × Acuan terpilih (komponen yang ditandai "Luar RAB" dianggap 0 di basis, tapi inputnya tetap ada di form), tetap bisa diedit manual kalau perlu. Acuan Management Fee: Total (Gaji+Fasilitas+Peningkatan Kemampuan) / Komponen Gaji saja / Gaji Pokok saja. Acuan PPN: Fasilitas+Peningkatan Kemampuan+Management Fee / Management Fee saja. Acuan PPH: Total sampai Management Fee / Management Fee saja. PPH dipindah ke baris sendiri di bawah PPN (sebelumnya sebaris).
+ADDED: Baris "Lokasi Pembayaran + Jadwal Pembayaran + Dibayarkan Bulan" (THR/UUCK/Seragam/Peralatan) dirapikan jadi **1 baris 3 kolom** (sebelumnya 2 baris terpisah, baris Bulan kadang tersembunyi di bawah). Baris tanpa dropdown (Pelatihan, Pembinaan) dibuat 1 baris penuh sendiri-sendiri (sebelumnya sebaris berdua).
+CHANGED: "Biaya Akhir" — "Biaya Total Kontrak" (3 kolom Jabatan) diganti jadi **"Biaya Per Orang Per Bulan"** (1 kolom) + 2 kotak baru **"Biaya Total Personil Per Bulan"** (otomatis = Biaya Per Orang × Jumlah Anggota) dan **"Biaya Total Personil Per Tahun / Sesuai Durasi Kontrak"** (otomatis dikali jumlah bulan dari Durasi Kontrak, default 12 bulan). Kedua kolom baru ini otomatis muncul juga di Rekapitulasi RAB &amp; Excel (kolom `RAB_JABATAN_COLUMNS_PART2`), tanpa kode render tambahan.
+Data tetap di kolom `rincian` jsonb (field flat, kompatibel dengan format RAB lama sebelum 0.9.17) — tidak ada migrasi database baru.
+
 VERSION: 0.9.31 (Rekapitulasi RAB: kolom No & Nama Lokasi dikunci/sticky saat geser ke kanan)
 DATE: 2026-10-23
 
