@@ -339,7 +339,7 @@
             <label>Pembinaan dan Monitoring (Rp)<input id="rab-r-pembinaan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
 
             <p class="eyebrow rab-component-label">Biaya Pengelolaan</p>
-            <div class="form-grid rab-payment-grid-3"><label>Management Fee (%)<input id="rab-r-fee-persen" type="text" inputmode="decimal" autocomplete="off" placeholder="Contoh: 10"></label><label>Acuan Management Fee<select id="rab-r-fee-acuan"><option value="total">Total (Komponen Gaji + Fasilitas Kerja + Peningkatan Kemampuan)</option><option value="gaji">Komponen Gaji saja</option><option value="gaji_pokok">Gaji Pokok saja</option></select></label><label>Management Fee (Rp)<input id="rab-r-fee-rupiah" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label></div>
+            <div class="form-grid rab-payment-grid-3"><label>Management Fee (%)<input id="rab-r-fee-persen" type="text" inputmode="decimal" autocomplete="off" placeholder="Contoh: 10"></label><label>Acuan Management Fee<select id="rab-r-fee-acuan"><option value="total">Total (Komponen Gaji + BPJS + Fasilitas Kerja + Peningkatan Kemampuan)</option><option value="gaji">Komponen Gaji saja</option><option value="gaji_pokok">Gaji Pokok saja</option></select></label><label>Management Fee (Rp)<input id="rab-r-fee-rupiah" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label></div>
             <p class="hint">Management Fee (Rp) otomatis terhitung dari % × Acuan terpilih (komponen yang ditandai "Luar RAB" tidak ikut dihitung) — tetap bisa diedit manual kalau perlu.</p>
 
             <p class="eyebrow rab-component-label">Pajak</p>
@@ -351,7 +351,7 @@
             <label>Biaya Per Orang Per Bulan (Rp)<input id="rab-r-total-orang" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
             <label>Biaya Total Personil Per Bulan (Rp)<input id="rab-r-total-personil-bulan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
             <label>Biaya Total Personil Per Tahun / Sesuai Durasi Kontrak (Rp)<input id="rab-r-total-personil-tahun" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off"></label>
-            <p class="hint">Biaya Per Orang Per Bulan otomatis dijumlah dari Komponen Gaji + BPJS + Fasilitas Kerja + Peningkatan Kemampuan + Management Fee (Rp) + PPN (Rp) − PPH (Rp) (komponen "Luar RAB" dianggap 0, sama seperti aturan Management Fee/Pajak; PPH dipotong/minus, bukan ditambah). Biaya Total Personil otomatis terhitung dari situ × Jumlah Anggota; untuk per tahun dikali jumlah bulan dari Durasi Kontrak di atas (default 12 bulan kalau belum diisi) — semua tetap bisa diedit manual.</p>
+            <p class="hint">Biaya Per Orang Per Bulan otomatis dijumlah dari Komponen Gaji + BPJS + Fasilitas Kerja + Peningkatan Kemampuan + Management Fee (Rp) + PPN (Rp) + PPH (Rp) (komponen "Luar RAB" dianggap 0, sama seperti aturan Management Fee/Pajak). Biaya Total Personil otomatis terhitung dari situ × Jumlah Anggota; untuk per tahun dikali jumlah bulan dari Durasi Kontrak di atas (default 12 bulan kalau belum diisi) — semua tetap bisa diedit manual.</p>
 
             <p id="rab-recap-form-status" class="hint" role="status"></p>
             <div class="actions"><button class="primary" id="rab-recap-form-save" type="submit">Simpan</button><button id="rab-recap-form-cancel" type="button" hidden>Batal ubah</button></div>

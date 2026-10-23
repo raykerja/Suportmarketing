@@ -1,3 +1,11 @@
+VERSION: 0.9.35 (Fix: basis Management Fee "Total" ikut BPJS + PPH ditambah bukan dikurangi)
+DATE: 2026-10-23
+
+FIXED: Dicocokkan langsung ke file sumber asli "RAB PT HSG MATERIAL INDONESIA.xlsx" (sheet KEAMANAN) — ketemu 2 rumus yang salah di 0.9.33-0.9.34, keduanya bikin "Biaya Per Orang Per Bulan" otomatis lebih kecil dari seharusnya:
+1. Acuan Management Fee **"Total"** seharusnya basisnya Komponen Gaji + **BPJS** + Fasilitas Kerja + Peningkatan Kemampuan — sebelumnya BPJS tidak ikut dihitung (basisnya cuma Gaji+Fasilitas+Peningkatan), jadi Management Fee (Rp) selalu lebih kecil dari seharusnya.
+2. "Biaya Per Orang Per Bulan" = Komponen Gaji + BPJS + Fasilitas Kerja + Peningkatan Kemampuan + Management Fee (Rp) + PPN (Rp) **+ PPH (Rp)** — PPH ternyata ditambah (sama seperti PPN), BUKAN dikurangi seperti di 0.9.34.
+Diverifikasi persis ke contoh RAB PT HSG Material Indonesia (Jabatan Anggota, 11 orang): hasil Rp4.613.032/orang/bulan, sama persis dengan file RAB aslinya (sebelumnya rumus di kode cuma menghasilkan Rp4.043.309–4.553.536, kurang Rp59.496-569.723/orang/bulan).
+
 VERSION: 0.9.34 (Fix: Biaya Per Orang Per Bulan otomatis sekarang termasuk Management Fee + PPN − PPH)
 DATE: 2026-10-23
 

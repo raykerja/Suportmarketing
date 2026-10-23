@@ -2037,14 +2037,16 @@ function rabBiayaGroups() {
     + (Number(digitsOnly($('#rab-r-item-nominal').value)) || 0);
   const fasilitasGroup = rabEffectiveValue('rab-r-seragam', 'rab-r-seragam-lokasi') + rabEffectiveValue('rab-r-peralatan', 'rab-r-peralatan-lokasi');
   const peningkatanGroup = (Number(digitsOnly($('#rab-r-pelatihan').value)) || 0) + (Number(digitsOnly($('#rab-r-pembinaan').value)) || 0);
-  return { gajiPokok, gajiGroup, fasilitasGroup, peningkatanGroup };
+  const bpjsGroup = ['rab-r-jkk', 'rab-r-jkm', 'rab-r-jht', 'rab-r-jp', 'rab-r-kesehatan']
+    .reduce((sum, id) => sum + (Number(digitsOnly($('#' + id).value)) || 0), 0);
+  return { gajiPokok, gajiGroup, fasilitasGroup, peningkatanGroup, bpjsGroup };
 }
 function recomputeRabFeesPajak() {
-  const { gajiPokok, gajiGroup, fasilitasGroup, peningkatanGroup } = rabBiayaGroups();
+  const { gajiPokok, gajiGroup, fasilitasGroup, peningkatanGroup, bpjsGroup } = rabBiayaGroups();
 
   const feePersen = Number(String($('#rab-r-fee-persen').value).trim().replace(',', '.')) || 0;
   const feeAcuan = $('#rab-r-fee-acuan').value;
-  const feeBase = feeAcuan === 'gaji_pokok' ? gajiPokok : feeAcuan === 'gaji' ? gajiGroup : (gajiGroup + fasilitasGroup + peningkatanGroup);
+  const feeBase = feeAcuan === 'gaji_pokok' ? gajiPokok : feeAcuan === 'gaji' ? gajiGroup : (gajiGroup + bpjsGroup + fasilitasGroup + peningkatanGroup);
   const feeRp = Math.round(feePersen / 100 * feeBase);
   $('#rab-r-fee-rupiah').value = feeRp ? groupThousands(String(feeRp)) : '';
 
@@ -2063,18 +2065,17 @@ const RAB_FEE_PAJAK_TRIGGER_IDS = new Set([
 ]);
 $('#rab-recap-form').addEventListener('input', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) { recomputeRabFeesPajak(); recomputeRabTotalOrang(); recomputeRabBiayaAkhir(); } });
 $('#rab-recap-form').addEventListener('change', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) { recomputeRabFeesPajak(); recomputeRabTotalOrang(); recomputeRabBiayaAkhir(); } });
-// Biaya Per Orang Per Bulan = tarif akhir per orang yang ditagih ke klien = Komponen Gaji + BPJS
-// (JKK/JKM/JHT/JP/Kesehatan) + Fasilitas Kerja + Peningkatan Kemampuan + Management Fee (Rp) + PPN (Rp) - PPH (Rp)
-// (PPH dipotong/minus, bukan ditambah — beda dari PPN yang jadi beban tambahan ke klien). Fee/PPN/PPH dibaca dari
-// field hasil recomputeRabFeesPajak() — sudah per-orang, bukan dikali Jumlah Anggota. Tetap bisa diedit manual.
+// Biaya Per Orang Per Bulan = tarif akhir per orang yang ditagih ke klien = Jumlah I+II+III+IV+V+VI di RAB asli =
+// Komponen Gaji + BPJS (JKK/JKM/JHT/JP/Kesehatan) + Fasilitas Kerja + Peningkatan Kemampuan + Management Fee (Rp) +
+// PPN (Rp) + PPH (Rp) — SEMUA DIJUMLAH (termasuk PPH, dicocokkan ke contoh RAB PT HSG Material Indonesia yang
+// menjumlah semuanya, bukan mengurangi PPH). Fee/PPN/PPH dibaca dari field hasil recomputeRabFeesPajak() — sudah
+// per-orang, bukan dikali Jumlah Anggota. Tetap bisa diedit manual.
 function recomputeRabTotalOrang() {
-  const { gajiGroup, fasilitasGroup, peningkatanGroup } = rabBiayaGroups();
-  const bpjsGroup = ['rab-r-jkk', 'rab-r-jkm', 'rab-r-jht', 'rab-r-jp', 'rab-r-kesehatan']
-    .reduce((sum, id) => sum + (Number(digitsOnly($('#' + id).value)) || 0), 0);
+  const { gajiGroup, fasilitasGroup, peningkatanGroup, bpjsGroup } = rabBiayaGroups();
   const feeRp = Number(digitsOnly($('#rab-r-fee-rupiah').value)) || 0;
   const ppnRp = Number(digitsOnly($('#rab-r-ppn').value)) || 0;
   const pphRp = Number(digitsOnly($('#rab-r-pph').value)) || 0;
-  const totalOrang = gajiGroup + bpjsGroup + fasilitasGroup + peningkatanGroup + feeRp + ppnRp - pphRp;
+  const totalOrang = gajiGroup + bpjsGroup + fasilitasGroup + peningkatanGroup + feeRp + ppnRp + pphRp;
   $('#rab-r-total-orang').value = totalOrang ? groupThousands(String(totalOrang)) : '';
 }
 // Biaya Total Personil = Biaya Per Orang Per Bulan × Jumlah Anggota; per tahun dikali jumlah bulan dari Durasi
