@@ -1,3 +1,9 @@
+VERSION: 0.9.38 (Fix: filter "Tampilkan rincian sebagai" sekarang ikut mengalikan Management Fee/PPN/PPH)
+DATE: 2026-10-23
+
+FIXED: Filter "Tampilkan rincian sebagai" (0.9.37) belum mengalikan Management Fee (Rp), PPN, dan PPH — padahal basis ketiganya ikut membesar kalau Komponen Gaji/BPJS/Fasilitas/Peningkatan membesar (ketiganya dihitung per-orang, sama seperti komponen lain). Sekarang ketiganya ikut dikalikan di mode "Biaya Total Personil Per Bulan/Per Tahun". Management Fee **(%)** (persentase), Biaya Total Kontrak, Nilai Kontrak, dan 3 kolom Biaya Akhir tetap TIDAK dikalikan (sudah angka total seluruh RAB).
+Diverifikasi ke RAB PT HSG Material Indonesia mode "Per Tahun": Management Fee Rp64.046.004, PPN Rp9.876.504, PPH Rp1.280.928 — selisih ≤9 rupiah dari file sumber asli (Rp64.046.013/9.876.461/1.280.920), murni pembulatan bertahap.
+
 VERSION: 0.9.37 (Rekapitulasi RAB: filter "Tampilkan rincian sebagai" — per orang / total personil bulan / tahun)
 DATE: 2026-10-23
 

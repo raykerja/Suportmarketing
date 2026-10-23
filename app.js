@@ -1829,11 +1829,14 @@ function rabJabatanRowKeteranganText(jabatanRow) {
   return jabatanRow ? (jabatanRow.item_tambahan_keterangan || '').trim() || 'Item Kosong' : '—';
 }
 // Filter "Tampilkan rincian sebagai" di atas tabel Rekapitulasi RAB — mengalikan kolom Komponen Gaji (PART1), Tunjangan
-// Tambahan, Komponen BPJS (PART2), Fasilitas Kerja & Peningkatan Kemampuan (4 kunci di RAB_RINCIAN_SCALE_KEYS) per baris
-// Jabatan. Management Fee/PPN/PPH, Biaya Total Kontrak, Nilai Kontrak, dan 3 kolom Biaya Akhir TIDAK ikut dikalikan —
-// tetap tampil apa adanya apa pun filternya. 'orang' = ×1 (nilai per orang, default/lama), 'personil_bulan' = × Jumlah
-// Anggota baris itu, 'personil_tahun' = × Jumlah Anggota × jumlah bulan Durasi Kontrak (default 12 bulan kalau kosong).
-const RAB_RINCIAN_SCALE_KEYS = new Set(['seragam_kerja', 'peralatan_kerja', 'pelatihan_supervisi', 'pembinaan_monitoring']);
+// Tambahan, Komponen BPJS (PART2), Fasilitas Kerja, Peningkatan Kemampuan, DAN Management Fee (Rp)/PPN/PPH (3 kunci di
+// RAB_RINCIAN_SCALE_KEYS) per baris Jabatan — Fee/PPN/PPH dasarnya nilai PER ORANG juga (lihat recomputeRabFeesPajak),
+// jadi ikut membesar kalau basisnya (Komponen Gaji/BPJS/Fasilitas/Peningkatan) membesar. Management Fee (%) (persentase,
+// bukan Rupiah), Biaya Total Kontrak, Nilai Kontrak (sudah angka total seluruh RAB, bukan per-orang), dan 3 kolom Biaya
+// Akhir TIDAK ikut dikalikan lagi — tetap tampil apa adanya. 'orang' = ×1 (nilai per orang, default/lama),
+// 'personil_bulan' = × Jumlah Anggota baris itu, 'personil_tahun' = × Jumlah Anggota × jumlah bulan Durasi Kontrak
+// (default 12 bulan kalau kosong).
+const RAB_RINCIAN_SCALE_KEYS = new Set(['seragam_kerja', 'peralatan_kerja', 'pelatihan_supervisi', 'pembinaan_monitoring', 'management_fee_rupiah', 'ppn_ps23', 'pph']);
 function rabScaleMultiplier(mode, jabatanRow, durasiKontrak) {
   if (mode !== 'personil_bulan' && mode !== 'personil_tahun') return 1;
   const jumlah = Number(jabatanRow?.jumlah_anggota) || 0;
