@@ -1,3 +1,8 @@
+VERSION: 0.9.40 (Rekapitulasi RAB: kolom Biaya Total Kontrak dihilangkan)
+DATE: 2026-10-23
+
+CHANGED: Kolom **"Biaya Total Kontrak"** dihilangkan dari tabel "2. Rekapitulasi RAB" dan "Unduh Excel" — kolom ini sisa dari RAB lama sebelum 0.9.32 (sebelum ada "Biaya Per Orang Per Bulan"/"Biaya Total Personil"), sudah tidak ada field isiannya lagi di form "1. Input RAB Fix" sejak saat itu. Fungsi `rabJabatanFieldText` (dipakai khusus kolom ini) ikut dihapus karena sudah tidak terpakai. Murni frontend (`app.js`), data lama (kalau ada) tidak dihapus, cuma tidak ditampilkan lagi.
+
 VERSION: 0.9.39 (Fix: ganti filter Rekapitulasi RAB tidak lagi reset scroll tabel ke kiri)
 DATE: 2026-10-23
 
