@@ -1,3 +1,8 @@
+VERSION: 0.9.31 (Rekapitulasi RAB: kolom No & Nama Lokasi dikunci/sticky saat geser ke kanan)
+DATE: 2026-10-23
+
+ADDED: Tabel "2. Rekapitulasi RAB" sekarang punya **kolom No dan Nama Lokasi yang dikunci (sticky)** di sisi kiri — saat tabel digeser ke kanan (banyak kolom Rincian RAB di layar sempit), 2 kolom ini tetap kelihatan supaya admin tidak kehilangan konteks baris mana milik klien yang mana. Kelas CSS baru `.rab-sticky-cols` di `style.css` (`position:sticky`, lebar kolom No dikunci 44px supaya offset kolom Nama Lokasi konsisten), warna latar kolom sticky ikut menyesuaikan baris selang-seling (`.rab-row-alt`) dari 0.9.28. Cuma diterapkan di Rekapitulasi RAB (belum di tabel lain) — murni visual, tidak ada perubahan data.
+
 VERSION: 0.9.30 (Item Tambahan diganti nama jadi Tunjangan Tambahan + dipindah ke bawah Tunjangan Jabatan)
 DATE: 2026-10-23
 
