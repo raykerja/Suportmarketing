@@ -1,3 +1,10 @@
+VERSION: 0.9.22 (Pembayaran Diluar RAB: tampilkan Nominal + sheet terpisah di Excel)
+DATE: 2026-10-23
+
+ADDED: Tabel "3. Pembayaran Diluar RAB" sekarang punya kolom **"Nominal (Rp)"** — sebelumnya cuma menampilkan Nama Lokasi/Jenis/Berapa Kali Pembayaran/Dibayarkan Bulan tanpa besaran angkanya sama sekali. Nominal THR & Kompensasi UUCK dijumlah dari semua baris Jabatan (nilainya disimpan per Jabatan di `jabatan_rows`); Seragam Kerja & Peralatan Kerja dibaca langsung dari `rincian` (nilai RAB-level).
+ADDED: Tombol "Unduh Excel" di submenu "2. Rekapitulasi RAB" sekarang menghasilkan file dengan **2 sheet** — "Rekapitulasi RAB" (seperti sebelumnya) dan sheet baru "Pembayaran Diluar RAB" (No/Nama Lokasi/Jenis/Nominal/Berapa Kali Pembayaran/Dibayarkan Bulan), bukan digabung jadi 1 sheet. Sheet kedua ini kosong (cuma header) kalau tidak ada komponen yang ditandai "Luar RAB" sama sekali.
+Murni frontend (`app.js`), tidak ada migrasi baru — datanya sama persis dengan yang sudah tersimpan di kolom `rincian` (termasuk `jabatan_rows`) sejak fitur "Luar RAB" & "beberapa baris Jabatan" ditambahkan sebelumnya.
+
 VERSION: 0.9.21 (Rekapitulasi RAB: pecah baris per Jabatan, bukan digabung dalam 1 sel)
 DATE: 2026-10-23
 
