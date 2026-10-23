@@ -1,3 +1,9 @@
+VERSION: 0.9.41 (Fix: Management Fee/PPN/PPH/Biaya Per Orang yang dikosongkan manual tidak lagi ketimpa otomatis)
+DATE: 2026-10-23
+
+FIXED: Kalau admin mengosongkan/menyesuaikan manual salah satu field Management Fee (Rp), PPN, PPH, atau Biaya Per Orang Per Bulan (misal disamakan ke RAB Excel sumber yang rumusnya beda/rusak — lihat kasus RAB ATR/BPN Kendal), nilai itu dulu bisa KETIMPA lagi otomatis begitu admin mengedit field lain yang tidak terkait (Gaji, Seragam, dst), karena Management Fee/Pajak dihitung ulang dari banyak field sekaligus. Sekarang field yang sudah disentuh manual dikunci — tidak ikut dihitung ulang sampai: (1) field itu dikosongkan total lagi (balik ke mode otomatis), atau (2) Acuan/Persentase field itu sendiri diganti (artinya admin memang minta dihitung ulang). RAB yang dibuka untuk diedit otomatis dianggap "manual" dulu untuk ke-4 field ini (supaya nilai tersimpan tidak berubah sendiri saat admin cuma mau edit bagian lain); RAB baru tetap full otomatis dari awal.
+Murni frontend (`app.js`, `RAB_MANUAL_OVERRIDE_FIELDS`/`rabManualOverrides`), tidak ada perubahan data/migrasi. Diuji lewat simulasi: PPH dikosongkan manual tetap 0 walau Seragam Kerja diedit, balik otomatis setelah field dikosongkan atau Acuan PPH diganti.
+
 VERSION: 0.9.40 (Rekapitulasi RAB: kolom Biaya Total Kontrak dihilangkan)
 DATE: 2026-10-23
 

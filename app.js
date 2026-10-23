@@ -2063,6 +2063,24 @@ function rabEffectiveValue(fieldId, lokasiId) {
   const v = Number(digitsOnly($('#' + fieldId).value)) || 0;
   return (lokasiId && $('#' + lokasiId).value === 'luar_rab') ? 0 : v;
 }
+// Kalau admin ngetik langsung ke salah satu field hasil hitung otomatis ini (Management Fee/PPN/PPH/Biaya Per Orang
+// Per Bulan) — misal dikosongkan/di-nol-kan sengaja karena rumus Excel sumbernya memang begitu — nilai itu dianggap
+// FINAL dan TIDAK ditimpa lagi oleh rumus otomatis walau field lain (Gaji/Seragam/dst) diedit setelahnya. Berlaku
+// sampai: field itu dikosongkan total lagi (balik ke mode otomatis), atau acuan/persentase field itu sendiri diganti
+// (artinya admin memang minta dihitung ulang). RAB yang dimuat ulang untuk diedit otomatis dianggap "manual" dulu
+// (lihat fillRabRincianForm) supaya nilai tersimpan tidak tiba-tiba berubah cuma gara-gara admin edit field lain.
+const RAB_MANUAL_OVERRIDE_FIELDS = new Set(['rab-r-fee-rupiah', 'rab-r-ppn', 'rab-r-pph', 'rab-r-total-orang']);
+let rabManualOverrides = new Set();
+$('#rab-recap-form').addEventListener('input', (event) => {
+  if (!RAB_MANUAL_OVERRIDE_FIELDS.has(event.target.id)) return;
+  if (event.target.value === '') {
+    rabManualOverrides.delete(event.target.id);
+    if (event.target.id === 'rab-r-total-orang') recomputeRabTotalOrang();
+    else recomputeRabFeesPajak();
+  } else {
+    rabManualOverrides.add(event.target.id);
+  }
+});
 // Dipakai bareng oleh Management Fee/Pajak & Biaya Per Orang Per Bulan supaya rumusnya konsisten satu sumber.
 function rabBiayaGroups() {
   const gajiPokok = Number(digitsOnly($('#rab-r-gaji').value)) || 0;
@@ -2081,30 +2099,47 @@ function recomputeRabFeesPajak() {
   const feePersen = Number(String($('#rab-r-fee-persen').value).trim().replace(',', '.')) || 0;
   const feeAcuan = $('#rab-r-fee-acuan').value;
   const feeBase = feeAcuan === 'gaji_pokok' ? gajiPokok : feeAcuan === 'gaji' ? gajiGroup : (gajiGroup + bpjsGroup + fasilitasGroup + peningkatanGroup);
-  const feeRp = Math.round(feePersen / 100 * feeBase);
-  $('#rab-r-fee-rupiah').value = feeRp ? groupThousands(String(feeRp)) : '';
+  if (!rabManualOverrides.has('rab-r-fee-rupiah')) {
+    const computedFeeRp = Math.round(feePersen / 100 * feeBase);
+    $('#rab-r-fee-rupiah').value = computedFeeRp ? groupThousands(String(computedFeeRp)) : '';
+  }
+  // Baca feeRp dari field-nya langsung (bukan computedFeeRp) — kalau fee-rupiah lagi di-override manual, PPN/PPH
+  // ikut dihitung dari nilai manual itu, bukan dari rumus persentase yang sedang diabaikan.
+  const feeRp = Number(digitsOnly($('#rab-r-fee-rupiah').value)) || 0;
 
   const ppnAcuan = $('#rab-r-ppn-acuan').value;
-  const ppnBase = ppnAcuan === 'fee_saja' ? feeRp : ppnAcuan === 'fasilitas_fee' ? (fasilitasGroup + feeRp) : (fasilitasGroup + peningkatanGroup + feeRp);
-  $('#rab-r-ppn').value = ppnBase ? groupThousands(String(Math.round(0.11 * ppnBase))) : '';
+  if (!rabManualOverrides.has('rab-r-ppn')) {
+    const ppnBase = ppnAcuan === 'fee_saja' ? feeRp : ppnAcuan === 'fasilitas_fee' ? (fasilitasGroup + feeRp) : (fasilitasGroup + peningkatanGroup + feeRp);
+    $('#rab-r-ppn').value = ppnBase ? groupThousands(String(Math.round(0.11 * ppnBase))) : '';
+  }
 
   const pphAcuan = $('#rab-r-pph-acuan').value;
-  const pphBase = pphAcuan === 'fee_saja' ? feeRp : pphAcuan === 'fasilitas_fee' ? (fasilitasGroup + feeRp) : (gajiGroup + fasilitasGroup + peningkatanGroup + feeRp);
-  $('#rab-r-pph').value = pphBase ? groupThousands(String(Math.round(0.02 * pphBase))) : '';
+  if (!rabManualOverrides.has('rab-r-pph')) {
+    const pphBase = pphAcuan === 'fee_saja' ? feeRp : pphAcuan === 'fasilitas_fee' ? (fasilitasGroup + feeRp) : (gajiGroup + fasilitasGroup + peningkatanGroup + feeRp);
+    $('#rab-r-pph').value = pphBase ? groupThousands(String(Math.round(0.02 * pphBase))) : '';
+  }
 }
 const RAB_FEE_PAJAK_TRIGGER_IDS = new Set([
   'rab-r-gaji', 'rab-r-thr', 'rab-r-thr-lokasi', 'rab-r-uuck', 'rab-r-uuck-lokasi', 'rab-r-lembur', 'rab-r-tunjangan-jabatan',
   'rab-r-item-nominal', 'rab-r-seragam', 'rab-r-seragam-lokasi', 'rab-r-peralatan', 'rab-r-peralatan-lokasi',
   'rab-r-pelatihan', 'rab-r-pembinaan', 'rab-r-fee-persen', 'rab-r-fee-acuan', 'rab-r-ppn-acuan', 'rab-r-pph-acuan',
 ]);
-$('#rab-recap-form').addEventListener('input', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) { recomputeRabFeesPajak(); recomputeRabTotalOrang(); recomputeRabBiayaAkhir(); } });
-$('#rab-recap-form').addEventListener('change', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) { recomputeRabFeesPajak(); recomputeRabTotalOrang(); recomputeRabBiayaAkhir(); } });
+// Ganti Acuan/Persentase sendiri = admin memang minta dihitung ulang — hapus override manual field terkait dulu
+// sebelum recompute, supaya field itu ikut ter-update lagi (bukan tetap terkunci ke nilai manual lama).
+function rabClearOverrideFor(fieldId) {
+  if (fieldId === 'rab-r-fee-persen' || fieldId === 'rab-r-fee-acuan') rabManualOverrides.delete('rab-r-fee-rupiah');
+  if (fieldId === 'rab-r-ppn-acuan') rabManualOverrides.delete('rab-r-ppn');
+  if (fieldId === 'rab-r-pph-acuan') rabManualOverrides.delete('rab-r-pph');
+}
+$('#rab-recap-form').addEventListener('input', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) { rabClearOverrideFor(event.target.id); recomputeRabFeesPajak(); recomputeRabTotalOrang(); recomputeRabBiayaAkhir(); } });
+$('#rab-recap-form').addEventListener('change', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) { rabClearOverrideFor(event.target.id); recomputeRabFeesPajak(); recomputeRabTotalOrang(); recomputeRabBiayaAkhir(); } });
 // Biaya Per Orang Per Bulan = tarif akhir per orang yang ditagih ke klien = Jumlah I+II+III+IV+V+VI di RAB asli =
 // Komponen Gaji + BPJS (JKK/JKM/JHT/JP/Kesehatan) + Fasilitas Kerja + Peningkatan Kemampuan + Management Fee (Rp) +
 // PPN (Rp) + PPH (Rp) — SEMUA DIJUMLAH (termasuk PPH, dicocokkan ke contoh RAB PT HSG Material Indonesia yang
 // menjumlah semuanya, bukan mengurangi PPH). Fee/PPN/PPH dibaca dari field hasil recomputeRabFeesPajak() — sudah
 // per-orang, bukan dikali Jumlah Anggota. Tetap bisa diedit manual.
 function recomputeRabTotalOrang() {
+  if (rabManualOverrides.has('rab-r-total-orang')) return;
   const { gajiGroup, fasilitasGroup, peningkatanGroup, bpjsGroup } = rabBiayaGroups();
   const feeRp = Number(digitsOnly($('#rab-r-fee-rupiah').value)) || 0;
   const ppnRp = Number(digitsOnly($('#rab-r-ppn').value)) || 0;
@@ -2169,6 +2204,11 @@ function fillRabRincianForm(rincian) {
     $('#' + ids.bulan2).value = r[item.key + '_bulan2'] || '';
     updateRabPaymentVisibility(item.suffix);
   }
+  // RAB yang dimuat untuk diedit: kunci Management Fee/PPN/PPH/Biaya Per Orang Per Bulan ke nilai TERSIMPAN
+  // (dianggap manual) supaya tidak tiba-tiba berubah cuma gara-gara admin edit field lain (Gaji/Seragam/dst) yang
+  // tidak ada hubungannya — admin yang pernah sengaja mengosongkan/menyesuaikan field ini (misal cocokkan ke RAB
+  // Excel sumber) tidak kehilangan perubahannya. Mau dihitung ulang otomatis? Ganti Acuan/Persentase field itu sendiri.
+  for (const id of RAB_MANUAL_OVERRIDE_FIELDS) rabManualOverrides.add(id);
 }
 function resetRabRecapForm() {
   editingRabRecap = null;
@@ -2177,6 +2217,8 @@ function resetRabRecapForm() {
   $('#rab-recap-form-cancel').hidden = true;
   status('#rab-recap-form-status', '');
   for (const item of RAB_PAYMENT_ITEMS) updateRabPaymentVisibility(item.suffix);
+  // RAB baru = mulai bersih, semua field hasil hitung otomatis kembali ikut rumus (tidak ada yang terkunci manual).
+  rabManualOverrides.clear();
 }
 $('#rab-recap-form-cancel').addEventListener('click', resetRabRecapForm);
 resetRabRecapForm();
