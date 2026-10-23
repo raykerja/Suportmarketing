@@ -1,3 +1,8 @@
+VERSION: 0.9.34 (Fix: Biaya Per Orang Per Bulan otomatis sekarang termasuk Management Fee + PPN − PPH)
+DATE: 2026-10-23
+
+FIXED: Rumus otomatis "Biaya Per Orang Per Bulan" dari 0.9.33 ternyata hasilnya lebih kecil dari seharusnya — sengaja TIDAK memasukkan Management Fee/PPN/PPH, padahal field ini dimaksud sebagai **tarif akhir per orang yang ditagih ke klien**, jadi 3 komponen itu memang harus ikut. Sekarang rumusnya jadi: Komponen Gaji + BPJS + Fasilitas Kerja + Peningkatan Kemampuan + **Management Fee (Rp) + PPN (Rp) − PPH (Rp)** (PPH dipotong/minus — beda dari PPN yang jadi beban tambahan ke klien). Fee/PPN/PPH yang dipakai sudah nilai per-orang (bukan dikali Jumlah Anggota), diambil langsung dari field hasil `recomputeRabFeesPajak()`.
+
 VERSION: 0.9.33 (Fix: Biaya Per Orang Per Bulan otomatis + Acuan Pajak "Fasilitas Kerja + Management Fee")
 DATE: 2026-10-23
 

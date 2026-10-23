@@ -2063,14 +2063,18 @@ const RAB_FEE_PAJAK_TRIGGER_IDS = new Set([
 ]);
 $('#rab-recap-form').addEventListener('input', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) { recomputeRabFeesPajak(); recomputeRabTotalOrang(); recomputeRabBiayaAkhir(); } });
 $('#rab-recap-form').addEventListener('change', (event) => { if (RAB_FEE_PAJAK_TRIGGER_IDS.has(event.target.id)) { recomputeRabFeesPajak(); recomputeRabTotalOrang(); recomputeRabBiayaAkhir(); } });
-// Biaya Per Orang Per Bulan = Komponen Gaji + BPJS (JKK/JKM/JHT/JP/Kesehatan) + Fasilitas Kerja + Peningkatan
-// Kemampuan — TIDAK termasuk Management Fee/PPN/PPH (itu angka ringkasan RAB, bukan biaya per orang). Tetap bisa
-// diedit manual kalau admin mau override hasil otomatis.
+// Biaya Per Orang Per Bulan = tarif akhir per orang yang ditagih ke klien = Komponen Gaji + BPJS
+// (JKK/JKM/JHT/JP/Kesehatan) + Fasilitas Kerja + Peningkatan Kemampuan + Management Fee (Rp) + PPN (Rp) - PPH (Rp)
+// (PPH dipotong/minus, bukan ditambah — beda dari PPN yang jadi beban tambahan ke klien). Fee/PPN/PPH dibaca dari
+// field hasil recomputeRabFeesPajak() — sudah per-orang, bukan dikali Jumlah Anggota. Tetap bisa diedit manual.
 function recomputeRabTotalOrang() {
   const { gajiGroup, fasilitasGroup, peningkatanGroup } = rabBiayaGroups();
   const bpjsGroup = ['rab-r-jkk', 'rab-r-jkm', 'rab-r-jht', 'rab-r-jp', 'rab-r-kesehatan']
     .reduce((sum, id) => sum + (Number(digitsOnly($('#' + id).value)) || 0), 0);
-  const totalOrang = gajiGroup + bpjsGroup + fasilitasGroup + peningkatanGroup;
+  const feeRp = Number(digitsOnly($('#rab-r-fee-rupiah').value)) || 0;
+  const ppnRp = Number(digitsOnly($('#rab-r-ppn').value)) || 0;
+  const pphRp = Number(digitsOnly($('#rab-r-pph').value)) || 0;
+  const totalOrang = gajiGroup + bpjsGroup + fasilitasGroup + peningkatanGroup + feeRp + ppnRp - pphRp;
   $('#rab-r-total-orang').value = totalOrang ? groupThousands(String(totalOrang)) : '';
 }
 // Biaya Total Personil = Biaya Per Orang Per Bulan × Jumlah Anggota; per tahun dikali jumlah bulan dari Durasi
