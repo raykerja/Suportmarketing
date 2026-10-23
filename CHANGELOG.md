@@ -1,3 +1,8 @@
+VERSION: 0.9.27 (Revisi 0.9.25: Seragam/Peralatan/Pelatihan/Pembinaan TETAP tampil di tiap baris Jabatan)
+DATE: 2026-10-23
+
+CHANGED: Cakupan dedup kolom level-RAB di 0.9.25 dipersempit — pemilik minta Seragam Kerja, Peralatan Kerja, Pelatihan &amp; Supervisi, Pembinaan &amp; Monitoring tetap tampil di SETIAP baris pecahan Jabatan (tidak disembunyikan jadi "—"), beda dengan Management Fee/PPN/PPH/Nilai Kontrak/Biaya Total Kontrak yang tetap cuma tampil di baris pertama. Ditandai lewat konstanta baru `RAB_RINCIAN_DEDUP_KEYS` (cuma `management_fee_persen`, `management_fee_rupiah`, `ppn_ps23`, `pph`) — kolom RAB_RINCIAN_COLUMNS lain di luar set ini sekarang selalu tampil normal apa pun nilai `isFirst`-nya. Berlaku di tabel di layar maupun sheet Excel. Murni frontend (`app.js`), tidak ada migrasi baru.
+
 VERSION: 0.9.26 (Fix: sheet Excel Rekapitulasi RAB tampilkan "0" bukan kosong di baris non-pertama)
 DATE: 2026-10-23
 

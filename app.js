@@ -1744,6 +1744,11 @@ const RAB_RINCIAN_COLUMNS = [
   ['management_fee_persen', 'Management Fee (%)', false], ['management_fee_rupiah', 'Management Fee (Rp)', true],
   ['ppn_ps23', 'PPN Ps 23 (11%)', true], ['pph', 'PPH (2%)', true],
 ];
+// Dari RAB_RINCIAN_COLUMNS di atas, cuma kolom ini yang "dedup" ke baris pertama tiap klien saat 1 RAB dipecah
+// per Jabatan (Management Fee/PPN/PPH = 1 angka ringkasan untuk seluruh RAB, aneh kalau kelihatan dobel/triple).
+// Seragam Kerja, Peralatan Kerja, Pelatihan dan Supervisi, Pembinaan dan Monitoring TETAP tampil di tiap baris
+// (pemilik minta tidak disembunyikan, meski nilainya juga 1 angka untuk seluruh RAB).
+const RAB_RINCIAN_DEDUP_KEYS = new Set(['management_fee_persen', 'management_fee_rupiah', 'ppn_ps23', 'pph']);
 // Komponen yang punya pilihan "dibayar di luar RAB" — kalau ditandai luar_rab, nilainya tidak ikut tampil
 // di Rekapitulasi RAB (sudah dipindah ke submenu "3. Pembayaran Diluar RAB"). Lokasi/jadwal berlaku untuk seluruh RAB.
 const RAB_PAYMENT_ITEMS = [
@@ -1823,11 +1828,11 @@ function renderRabRecapSummary() {
   const rincianHead = admin ? RAB_JABATAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Item Tambahan (Keterangan)</th><th>Item Tambahan (Nominal)</th>' + RAB_RINCIAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Biaya Total Kontrak</th>' : '';
   // 1 klien bisa punya beberapa Bagian Kerja/Jabatan (misal Anggota + Danru + Chief) — pecah jadi beberapa <tr>
   // per Jabatan (nama lokasi tetap sama di tiap baris) supaya kolom Jumlah Anggota/Gaji Pokok/dst tidak digabung jadi
-  // teks "Jabatan: nilai · Jabatan: nilai". Kolom yang nilainya cuma diisi SEKALI untuk SELURUH RAB (bukan per Jabatan)
-  // — Nilai Kontrak, Seragam Kerja, Peralatan Kerja, Pelatihan & Supervisi, Pembinaan & Monitoring, Management Fee,
-  // PPN, PPH, Biaya Total Kontrak — cuma tampil di baris pertama tiap klien, baris sisanya dikosongkan ("—"), karena
-  // 1 nilai itu memang sudah mewakili semua Jabatan, bukan nilai masing-masing. Ini HANYA berlaku untuk baris pecahan
-  // dalam 1 RAB yang sama; kalau klien punya beberapa RAB terpisah (diinput satu-satu), semua tetap tampil normal.
+  // teks "Jabatan: nilai · Jabatan: nilai". Nilai Kontrak & Biaya Total Kontrak, plus kolom di RAB_RINCIAN_DEDUP_KEYS
+  // (Management Fee %/Rp, PPN, PPH) — cuma tampil di baris pertama tiap klien, baris sisanya dikosongkan ("—"), karena
+  // itu angka ringkasan untuk seluruh RAB. Seragam Kerja/Peralatan Kerja/Pelatihan & Supervisi/Pembinaan & Monitoring
+  // TETAP tampil di tiap baris (pemilik minta tidak disembunyikan). Ini HANYA berlaku untuk baris pecahan dalam 1 RAB
+  // yang sama; kalau klien punya beberapa RAB terpisah (diinput satu-satu), semua tetap tampil normal.
   const expanded = [];
   rows.forEach((r) => {
     const jabatanRows = admin ? rabJabatanRowsOf(r.rincian) : [];
@@ -1835,7 +1840,7 @@ function renderRabRecapSummary() {
     else expanded.push({ r, jabatanRow: jabatanRows[0] || null, isFirst: true });
   });
   $('#rab-recap-summary-list').innerHTML = expanded.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th>${rincianHead}<th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${expanded.map(({ r, jabatanRow, isFirst }, i) => {
-    const rincianCells = admin ? RAB_JABATAN_COLUMNS.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') + `<td>${esc(rabJabatanRowKeteranganText(jabatanRow))}</td><td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah'))}</td>` + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${isFirst ? esc(rabRincianDisplay(r.rincian, key, isRupiah)) : '—'}</td>`).join('') + `<td>${isFirst ? esc(rabJabatanFieldText(r.rincian, 'biaya_total_kontrak')) : '—'}</td>` : '';
+    const rincianCells = admin ? RAB_JABATAN_COLUMNS.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') + `<td>${esc(rabJabatanRowKeteranganText(jabatanRow))}</td><td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah'))}</td>` + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${(!isFirst && RAB_RINCIAN_DEDUP_KEYS.has(key)) ? '—' : esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') + `<td>${isFirst ? esc(rabJabatanFieldText(r.rincian, 'biaya_total_kontrak')) : '—'}</td>` : '';
     return `<tr><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${isFirst ? (r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
   }).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
@@ -1846,8 +1851,8 @@ async function exportRabRecapSummary() {
   if (!rows.length) { status('#rab-recap-summary-status', 'Tidak ada baris untuk diekspor.', true); return; }
   try { await loadXlsx(); } catch (error) { status('#rab-recap-summary-status', error.message, true); return; }
   // Sama seperti tabel di layar: pecah jadi beberapa baris Excel per Jabatan kalau 1 RAB punya beberapa Bagian
-  // Kerja/Jabatan, dan kolom yang nilainya cuma diisi sekali untuk seluruh RAB (Nilai Kontrak, Seragam/Peralatan/
-  // Pelatihan/Pembinaan/Management Fee/PPN/PPH, Biaya Total Kontrak) cuma diisi di baris Excel pertama.
+  // Kerja/Jabatan. Nilai Kontrak, Biaya Total Kontrak, dan RAB_RINCIAN_DEDUP_KEYS (Management Fee/PPN/PPH) cuma
+  // diisi di baris Excel pertama; Seragam/Peralatan/Pelatihan/Pembinaan tetap diisi di tiap baris.
   const data = [];
   rows.forEach((r) => {
     const jabatanRows = admin ? rabJabatanRowsOf(r.rincian) : [];
@@ -1859,7 +1864,7 @@ async function exportRabRecapSummary() {
         out['Item Tambahan (Keterangan)'] = rabJabatanRowKeteranganText(jabatanRow);
         out['Item Tambahan (Nominal)'] = rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah');
         for (const [key, label] of RAB_RINCIAN_COLUMNS) {
-          if (!isFirst) { out[label] = ''; continue; }
+          if (!isFirst && RAB_RINCIAN_DEDUP_KEYS.has(key)) { out[label] = ''; continue; }
           const v = rabRincianRawValue(r.rincian, key);
           out[label] = key === 'management_fee_persen' ? (v ? v + '%' : '') : v;
         }
