@@ -29,7 +29,7 @@
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261023-8"></script>
+  <script type="module" src="app.js?v=20261023-9"></script>
   <script defer src="pwa.js?v=20261010-1"></script>
 </head>
 <body>
@@ -342,6 +342,14 @@
               <input id="rab-r-j1-tunjangan-jabatan" data-jabatan-col="1" data-field="tunjangan_jabatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Jabatan Jabatan 1">
               <input id="rab-r-j2-tunjangan-jabatan" data-jabatan-col="2" data-field="tunjangan_jabatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Jabatan Jabatan 2">
               <input id="rab-r-j3-tunjangan-jabatan" data-jabatan-col="3" data-field="tunjangan_jabatan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Jabatan Jabatan 3">
+              <span class="rab-jabatan-label">Tunjangan Tambahan (Keterangan)</span>
+              <input id="rab-r-j1-item-keterangan" data-jabatan-col="1" data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" aria-label="Tunjangan Tambahan Keterangan Jabatan 1">
+              <input id="rab-r-j2-item-keterangan" data-jabatan-col="2" data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" aria-label="Tunjangan Tambahan Keterangan Jabatan 2">
+              <input id="rab-r-j3-item-keterangan" data-jabatan-col="3" data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" aria-label="Tunjangan Tambahan Keterangan Jabatan 3">
+              <span class="rab-jabatan-label">Tunjangan Tambahan (Nominal) (Rp)</span>
+              <input id="rab-r-j1-item-nominal" data-jabatan-col="1" data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Tambahan Nominal Jabatan 1">
+              <input id="rab-r-j2-item-nominal" data-jabatan-col="2" data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Tambahan Nominal Jabatan 2">
+              <input id="rab-r-j3-item-nominal" data-jabatan-col="3" data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Tunjangan Tambahan Nominal Jabatan 3">
               <span class="rab-jabatan-label">Acuan Nilai BPJS (Rp)</span>
               <input id="rab-r-j1-acuan-bpjs" data-jabatan-col="1" data-field="acuan_bpjs" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Acuan Nilai BPJS Jabatan 1">
               <input id="rab-r-j2-acuan-bpjs" data-jabatan-col="2" data-field="acuan_bpjs" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Acuan Nilai BPJS Jabatan 2">
@@ -370,16 +378,8 @@
               <input id="rab-r-j1-total-orang" data-jabatan-col="1" data-field="total_per_orang_per_bulan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Total Biaya Per Orang Per Bulan Jabatan 1">
               <input id="rab-r-j2-total-orang" data-jabatan-col="2" data-field="total_per_orang_per_bulan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Total Biaya Per Orang Per Bulan Jabatan 2">
               <input id="rab-r-j3-total-orang" data-jabatan-col="3" data-field="total_per_orang_per_bulan" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Total Biaya Per Orang Per Bulan Jabatan 3">
-              <span class="rab-jabatan-label">Item Tambahan (Keterangan)</span>
-              <input id="rab-r-j1-item-keterangan" data-jabatan-col="1" data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" aria-label="Item Tambahan Keterangan Jabatan 1">
-              <input id="rab-r-j2-item-keterangan" data-jabatan-col="2" data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" aria-label="Item Tambahan Keterangan Jabatan 2">
-              <input id="rab-r-j3-item-keterangan" data-jabatan-col="3" data-field="item_tambahan_keterangan" maxlength="150" autocomplete="off" placeholder="Contoh: Uang Transport" aria-label="Item Tambahan Keterangan Jabatan 3">
-              <span class="rab-jabatan-label">Item Tambahan (Nominal) (Rp)</span>
-              <input id="rab-r-j1-item-nominal" data-jabatan-col="1" data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Item Tambahan Nominal Jabatan 1">
-              <input id="rab-r-j2-item-nominal" data-jabatan-col="2" data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Item Tambahan Nominal Jabatan 2">
-              <input id="rab-r-j3-item-nominal" data-jabatan-col="3" data-field="item_tambahan_nominal" class="rab-rp-field" type="text" inputmode="numeric" autocomplete="off" aria-label="Item Tambahan Nominal Jabatan 3">
             </div>
-            <p class="hint">Item tambahan di luar penamaan RAB standar untuk jabatan itu (opsional) — kalau keterangan tidak diisi, tampil "Item Kosong" di Rekapitulasi RAB.</p>
+            <p class="hint">Tunjangan Tambahan: komponen di luar penamaan RAB standar untuk jabatan itu (opsional) — kalau keterangan tidak diisi, tampil "Item Kosong" di Rekapitulasi RAB.</p>
 
             <p class="hint">Jadwal &amp; lokasi pembayaran THR dan UUCK berikut berlaku untuk seluruh RAB ini (bukan per jabatan) — nominalnya sendiri sudah diisi per baris jabatan di atas.</p>
             <div class="rab-payment-opts">

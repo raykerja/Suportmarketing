@@ -1737,7 +1737,7 @@ async function loadRabRecap() {
 function previewUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/preview') : ''; }
 function pdfUrlFor(url) { return url ? url.replace(/\/edit(\?[^#]*)?(#.*)?$/, '/export?format=pdf') : ''; }
 // [kunci, label kolom, true=format Rupiah] — urutan sama persis dengan form Rincian RAB (dari Komponen BPJS ke bawah;
-// Komponen Gaji per jabatan dirender terpisah lewat RAB_JABATAN_COLUMNS karena bisa ada beberapa baris jabatan per RAB).
+// Komponen Gaji per jabatan dirender terpisah lewat RAB_JABATAN_COLUMNS_PART1/PART2 karena bisa ada beberapa baris jabatan per RAB).
 const RAB_RINCIAN_COLUMNS = [
   ['seragam_kerja', 'Seragam Kerja', true], ['peralatan_kerja', 'Peralatan Kerja', true],
   ['pelatihan_supervisi', 'Pelatihan dan Supervisi', true], ['pembinaan_monitoring', 'Pembinaan dan Monitoring', true],
@@ -1779,10 +1779,14 @@ const RAB_JABATAN_ROW_FIELDS = [
 // [kunci, label kolom, mode] — mode: 'text' (gabung nilai unik dipisah koma), 'jumlah', 'rupiah', 'rupiah-masked' (disamarkan kalau
 // Lokasi Pembayaran = Luar RAB), 'sum-rupiah' (dijumlah semua baris jadi 1 angka — dipakai Biaya Total Kontrak: kalau cuma 1 baris
 // diisi, hasilnya = nilai baris itu; kalau beberapa baris diisi, semuanya dijumlah jadi total kontrak keseluruhan RAB).
-const RAB_JABATAN_COLUMNS = [
+// Dipecah 2 bagian karena Tunjangan Tambahan (Keterangan+Nominal) disisipkan di antaranya — posisinya tepat
+// di bawah Tunjangan Jabatan di form "Komponen Gaji per Jabatan", Rekapitulasi RAB & Excel ikut urutan yang sama.
+const RAB_JABATAN_COLUMNS_PART1 = [
   ['bagian_kerja', 'Bagian Kerja', 'text'], ['jabatan', 'Jabatan', 'text'], ['jumlah_anggota', 'Jumlah Anggota', 'jumlah'],
   ['gaji_pokok', 'Gaji Pokok', 'rupiah'], ['thr', 'Tunjangan Hari Raya', 'rupiah-masked'], ['kompensasi_uuck', 'Kompensasi UUCK', 'rupiah-masked'],
   ['lembur', 'Lembur', 'rupiah'], ['tunjangan_jabatan', 'Tunjangan Jabatan', 'rupiah'],
+];
+const RAB_JABATAN_COLUMNS_PART2 = [
   ['acuan_bpjs', 'Acuan Nilai BPJS', 'rupiah'], ['jkk', 'JKK (0.24%)', 'rupiah'], ['jkm', 'JKM (0.30%)', 'rupiah'],
   ['jht', 'JHT (3.70%)', 'rupiah'], ['jp', 'JP (2.00%)', 'rupiah'], ['bpjs_kesehatan', 'BPJS Kesehatan (4.00%)', 'rupiah'],
   ['total_per_orang_per_bulan', 'Total Biaya Per Orang Per Bulan', 'rupiah'],
@@ -1836,7 +1840,7 @@ function renderRabRecapSummary() {
   const rows = rabRecapCache.filter((r) => !q || r.nama.toLocaleLowerCase('id').includes(q))
     .slice().sort((a, b) => a.nama.localeCompare(b.nama, 'id'));
   status('#rab-recap-summary-status', rabRecapCache.length ? `Menampilkan ${rows.length} dari ${rabRecapCache.length} RAB.` : 'Belum ada RAB final yang ditambahkan.');
-  const rincianHead = admin ? RAB_JABATAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Item Tambahan (Keterangan)</th><th>Item Tambahan (Nominal)</th>' + RAB_RINCIAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Biaya Total Kontrak</th>' : '';
+  const rincianHead = admin ? RAB_JABATAN_COLUMNS_PART1.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Tunjangan Tambahan (Keterangan)</th><th>Tunjangan Tambahan (Nominal)</th>' + RAB_JABATAN_COLUMNS_PART2.map(([, label]) => `<th>${esc(label)}</th>`).join('') + RAB_RINCIAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Biaya Total Kontrak</th>' : '';
   // 1 klien bisa punya beberapa Bagian Kerja/Jabatan (misal Anggota + Danru + Chief) — pecah jadi beberapa <tr>
   // per Jabatan (nama lokasi tetap sama di tiap baris) supaya kolom Jumlah Anggota/Gaji Pokok/dst tidak digabung jadi
   // teks "Jabatan: nilai · Jabatan: nilai". Nilai Kontrak & Biaya Total Kontrak, plus kolom di RAB_RINCIAN_DEDUP_KEYS
@@ -1852,7 +1856,7 @@ function renderRabRecapSummary() {
   });
   const altFlags = rabAltRowFlags(expanded, (x) => x.r.nama);
   $('#rab-recap-summary-list').innerHTML = expanded.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th>${rincianHead}<th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${expanded.map(({ r, jabatanRow, isFirst }, i) => {
-    const rincianCells = admin ? RAB_JABATAN_COLUMNS.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') + `<td>${esc(rabJabatanRowKeteranganText(jabatanRow))}</td><td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah'))}</td>` + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${(!isFirst && RAB_RINCIAN_DEDUP_KEYS.has(key)) ? '—' : esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') + `<td>${isFirst ? esc(rabJabatanFieldText(r.rincian, 'biaya_total_kontrak')) : '—'}</td>` : '';
+    const rincianCells = admin ? RAB_JABATAN_COLUMNS_PART1.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') + `<td>${esc(rabJabatanRowKeteranganText(jabatanRow))}</td><td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah'))}</td>` + RAB_JABATAN_COLUMNS_PART2.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${(!isFirst && RAB_RINCIAN_DEDUP_KEYS.has(key)) ? '—' : esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') + `<td>${isFirst ? esc(rabJabatanFieldText(r.rincian, 'biaya_total_kontrak')) : '—'}</td>` : '';
     return `<tr${altFlags[i] ? ' class="rab-row-alt"' : ''}><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${isFirst ? (r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
   }).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
@@ -1872,9 +1876,10 @@ async function exportRabRecapSummary() {
     split.forEach(({ jabatanRow, isFirst }) => {
       const out = { 'No': data.length + 1, 'Nama Lokasi': r.nama, 'Durasi Kontrak': r.durasi_kontrak || '' };
       if (admin) {
-        for (const [key, label, mode] of RAB_JABATAN_COLUMNS) out[label] = rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode);
-        out['Item Tambahan (Keterangan)'] = rabJabatanRowKeteranganText(jabatanRow);
-        out['Item Tambahan (Nominal)'] = rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah');
+        for (const [key, label, mode] of RAB_JABATAN_COLUMNS_PART1) out[label] = rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode);
+        out['Tunjangan Tambahan (Keterangan)'] = rabJabatanRowKeteranganText(jabatanRow);
+        out['Tunjangan Tambahan (Nominal)'] = rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah');
+        for (const [key, label, mode] of RAB_JABATAN_COLUMNS_PART2) out[label] = rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode);
         for (const [key, label] of RAB_RINCIAN_COLUMNS) {
           if (!isFirst && RAB_RINCIAN_DEDUP_KEYS.has(key)) { out[label] = ''; continue; }
           const v = rabRincianRawValue(r.rincian, key);

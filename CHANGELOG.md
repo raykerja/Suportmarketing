@@ -1,3 +1,9 @@
+VERSION: 0.9.30 (Item Tambahan diganti nama jadi Tunjangan Tambahan + dipindah ke bawah Tunjangan Jabatan)
+DATE: 2026-10-23
+
+CHANGED: Field "Item Tambahan (Keterangan)" dan "Item Tambahan (Nominal) (Rp)" di "Komponen Gaji per Jabatan" diganti nama jadi **"Tunjangan Tambahan (Keterangan)"** dan **"Tunjangan Tambahan (Nominal) (Rp)"**, dan posisinya dipindah ke tepat di bawah "Tunjangan Jabatan (Rp)" — sebelumnya di paling bawah grup (setelah Total Biaya Per Orang Per Bulan). Tabel "2. Rekapitulasi RAB" (kolom + export Excel) ikut disesuaikan urutannya: Bagian Kerja → ... → Tunjangan Jabatan → **Tunjangan Tambahan (Keterangan/Nominal)** → Acuan Nilai BPJS → ... → Total Biaya Per Orang Per Bulan.
+Kunci data internal (`item_tambahan_keterangan`, `item_tambahan_nominal`) TIDAK berubah — murni rename label + urutan tampilan, data RAB lama tetap terbaca normal tanpa perlu diisi ulang. `RAB_JABATAN_COLUMNS` dipecah jadi `RAB_JABATAN_COLUMNS_PART1` (Bagian Kerja...Tunjangan Jabatan) dan `_PART2` (Acuan BPJS...Total per Orang per Bulan) di `app.js` supaya Tunjangan Tambahan bisa disisipkan di antaranya.
+
 VERSION: 0.9.29 (Submenu Input RAB Fix: kotak Tambah RAB dipindah ke atas)
 DATE: 2026-10-23
 
