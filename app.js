@@ -1823,8 +1823,11 @@ function renderRabRecapSummary() {
   const rincianHead = admin ? RAB_JABATAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Item Tambahan (Keterangan)</th><th>Item Tambahan (Nominal)</th>' + RAB_RINCIAN_COLUMNS.map(([, label]) => `<th>${esc(label)}</th>`).join('') + '<th>Biaya Total Kontrak</th>' : '';
   // 1 klien bisa punya beberapa Bagian Kerja/Jabatan (misal Anggota + Danru + Chief) — pecah jadi beberapa <tr>
   // per Jabatan (nama lokasi tetap sama di tiap baris) supaya kolom Jumlah Anggota/Gaji Pokok/dst tidak digabung jadi
-  // teks "Jabatan: nilai · Jabatan: nilai". Biaya Total Kontrak cuma tampil di baris pertama biar tidak terlihat seperti
-  // nilai kontrak ganda/triple.
+  // teks "Jabatan: nilai · Jabatan: nilai". Kolom yang nilainya cuma diisi SEKALI untuk SELURUH RAB (bukan per Jabatan)
+  // — Nilai Kontrak, Seragam Kerja, Peralatan Kerja, Pelatihan & Supervisi, Pembinaan & Monitoring, Management Fee,
+  // PPN, PPH, Biaya Total Kontrak — cuma tampil di baris pertama tiap klien, baris sisanya dikosongkan ("—"), karena
+  // 1 nilai itu memang sudah mewakili semua Jabatan, bukan nilai masing-masing. Ini HANYA berlaku untuk baris pecahan
+  // dalam 1 RAB yang sama; kalau klien punya beberapa RAB terpisah (diinput satu-satu), semua tetap tampil normal.
   const expanded = [];
   rows.forEach((r) => {
     const jabatanRows = admin ? rabJabatanRowsOf(r.rincian) : [];
@@ -1832,8 +1835,8 @@ function renderRabRecapSummary() {
     else expanded.push({ r, jabatanRow: jabatanRows[0] || null, isFirst: true });
   });
   $('#rab-recap-summary-list').innerHTML = expanded.length ? `<div class="table-wrap"><table><thead><tr><th>No</th><th>Nama lokasi</th><th>Durasi kontrak</th>${rincianHead}<th>Nilai kontrak</th><th>Preview</th><th>Download</th></tr></thead><tbody>${expanded.map(({ r, jabatanRow, isFirst }, i) => {
-    const rincianCells = admin ? RAB_JABATAN_COLUMNS.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') + `<td>${esc(rabJabatanRowKeteranganText(jabatanRow))}</td><td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah'))}</td>` + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${esc(rabRincianDisplay(r.rincian, key, isRupiah))}</td>`).join('') + `<td>${isFirst ? esc(rabJabatanFieldText(r.rincian, 'biaya_total_kontrak')) : '—'}</td>` : '';
-    return `<tr><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
+    const rincianCells = admin ? RAB_JABATAN_COLUMNS.map(([key, , mode]) => `<td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, key, mode))}</td>`).join('') + `<td>${esc(rabJabatanRowKeteranganText(jabatanRow))}</td><td>${esc(rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah'))}</td>` + RAB_RINCIAN_COLUMNS.map(([key, , isRupiah]) => `<td>${isFirst ? esc(rabRincianDisplay(r.rincian, key, isRupiah)) : '—'}</td>`).join('') + `<td>${isFirst ? esc(rabJabatanFieldText(r.rincian, 'biaya_total_kontrak')) : '—'}</td>` : '';
+    return `<tr><td>${i + 1}</td><td>${esc(r.nama)}</td><td>${esc(r.durasi_kontrak || '—')}</td>${rincianCells}<td>${isFirst ? (r.nilai_kontrak ? 'Rp' + Number(r.nilai_kontrak).toLocaleString('id-ID') : '—') : '—'}</td><td><button type="button" class="offer-preview-btn" data-preview-url="${esc(previewUrlFor(r.link))}" data-preview-open="${esc(r.link)}" data-preview-title="RAB · ${esc(r.nama)}">Preview</button></td><td><a href="${esc(pdfUrlFor(r.link))}" target="_blank" rel="noopener noreferrer" download>Unduh PDF</a></td></tr>`;
   }).join('')}</tbody></table></div>`
     : `<p class="hint">${rabRecapCache.length ? 'Tidak ada RAB yang cocok dengan pencarian.' : 'Belum ada RAB final yang ditambahkan.'}</p>`;
 }
@@ -1843,7 +1846,8 @@ async function exportRabRecapSummary() {
   if (!rows.length) { status('#rab-recap-summary-status', 'Tidak ada baris untuk diekspor.', true); return; }
   try { await loadXlsx(); } catch (error) { status('#rab-recap-summary-status', error.message, true); return; }
   // Sama seperti tabel di layar: pecah jadi beberapa baris Excel per Jabatan kalau 1 RAB punya beberapa Bagian
-  // Kerja/Jabatan, dan Biaya Total Kontrak cuma diisi di baris pertama (hindari kesan nilai kontrak ganda/triple).
+  // Kerja/Jabatan, dan kolom yang nilainya cuma diisi sekali untuk seluruh RAB (Nilai Kontrak, Seragam/Peralatan/
+  // Pelatihan/Pembinaan/Management Fee/PPN/PPH, Biaya Total Kontrak) cuma diisi di baris Excel pertama.
   const data = [];
   rows.forEach((r) => {
     const jabatanRows = admin ? rabJabatanRowsOf(r.rincian) : [];
@@ -1855,12 +1859,12 @@ async function exportRabRecapSummary() {
         out['Item Tambahan (Keterangan)'] = rabJabatanRowKeteranganText(jabatanRow);
         out['Item Tambahan (Nominal)'] = rabJabatanRowFieldText(r.rincian, jabatanRow, 'item_tambahan_nominal', 'rupiah');
         for (const [key, label] of RAB_RINCIAN_COLUMNS) {
-          const v = rabRincianRawValue(r.rincian, key);
+          const v = isFirst ? rabRincianRawValue(r.rincian, key) : 0;
           out[label] = key === 'management_fee_persen' ? (v ? v + '%' : '') : v;
         }
         out['Biaya Total Kontrak'] = isFirst ? rabJabatanFieldText(r.rincian, 'biaya_total_kontrak') : '';
       }
-      out['Nilai Kontrak'] = r.nilai_kontrak || 0;
+      out['Nilai Kontrak'] = isFirst ? (r.nilai_kontrak || 0) : 0;
       out['Link Spreadsheet'] = r.link;
       data.push(out);
     });

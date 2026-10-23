@@ -1,3 +1,9 @@
+VERSION: 0.9.25 (Rekapitulasi RAB: kolom level-RAB — Nilai Kontrak, Management Fee, PPN/PPH, dst — cuma tampil sekali per klien)
+DATE: 2026-10-23
+
+FIXED: Sejak baris Rekapitulasi RAB dipecah per Jabatan (0.9.21), kolom yang memang 1 nilai untuk SELURUH RAB (bukan per Jabatan) — Nilai Kontrak, Seragam Kerja, Peralatan Kerja, Pelatihan & Supervisi, Pembinaan & Monitoring, Management Fee (%/Rp), PPN Ps 23, PPH — ikut dicetak berulang di tiap baris pecahan, padahal 1 nilai itu memang sudah mewakili semua Jabatan (misal Management Fee diisi 1x untuk RAB yang punya 3 Jabatan). Sekarang kolom-kolom itu cuma tampil di baris pertama tiap klien (baris sisanya "—"), persis seperti "Biaya Total Kontrak" yang sudah benar dari awal.
+Berlaku di tabel di layar maupun sheet "Rekapitulasi RAB" di Excel. **Hanya** berlaku untuk baris pecahan dalam 1 RAB yang sama — kalau 1 klien punya beberapa RAB *terpisah* (diinput satu-satu, bukan lewat beberapa baris Jabatan dalam 1 RAB), semua RAB itu tetap tampil normal dengan nilainya masing-masing walau nama lokasinya sama. Murni frontend (`app.js`), tidak ada migrasi baru.
+
 VERSION: 0.9.24 (Pembayaran Diluar RAB: pecah per Jabatan + kolom Jumlah Personil/Nilai per Orang/Total)
 DATE: 2026-10-23
 
