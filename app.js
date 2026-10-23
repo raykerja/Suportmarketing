@@ -2115,7 +2115,7 @@ function recomputeRabFeesPajak() {
 
   const pphAcuan = $('#rab-r-pph-acuan').value;
   if (!rabManualOverrides.has('rab-r-pph')) {
-    const pphBase = pphAcuan === 'fee_saja' ? feeRp : pphAcuan === 'fasilitas_fee' ? (fasilitasGroup + feeRp) : (gajiGroup + fasilitasGroup + peningkatanGroup + feeRp);
+    const pphBase = pphAcuan === 'tidak_ada' ? 0 : pphAcuan === 'fee_saja' ? feeRp : pphAcuan === 'fasilitas_fee' ? (fasilitasGroup + feeRp) : (gajiGroup + fasilitasGroup + peningkatanGroup + feeRp);
     $('#rab-r-pph').value = pphBase ? groupThousands(String(Math.round(0.02 * pphBase))) : '';
   }
 }

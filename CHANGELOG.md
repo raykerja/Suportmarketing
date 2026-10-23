@@ -1,3 +1,8 @@
+VERSION: 0.9.42 (Acuan PPH: opsi baru "Tidak ada PPH")
+DATE: 2026-10-23
+
+ADDED: Dropdown "Acuan PPH" di "Input RAB Fix" dapat opsi baru **"Tidak ada PPH"** — pilih ini kalau RAB memang tidak ada potongan PPH sama sekali (misal RAB Excel sumbernya tidak menghitung PPH). PPH (Rp) langsung jadi kosong/0, dan otomatis hilang dari perhitungan Biaya Per Orang Per Bulan — tidak perlu lagi akal-akalan kosongkan manual field PPH (meski cara manual itu, lihat 0.9.41, tetap jalan dan tidak ketimpa).
+
 VERSION: 0.9.41 (Fix: Management Fee/PPN/PPH/Biaya Per Orang yang dikosongkan manual tidak lagi ketimpa otomatis)
 DATE: 2026-10-23
 
