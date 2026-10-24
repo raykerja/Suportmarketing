@@ -1838,8 +1838,11 @@ function rabScaleMultiplier(mode, jabatanRow, durasiKontrak) {
   if (mode === 'personil_tahun') return jumlah * bulan;
   return 1;
 }
+// Acuan Nilai BPJS adalah NILAI DASAR (basis persentase JKK/JKM/JHT/JP/BPJS Kesehatan), bukan hasil paket —
+// jadi tetap apa adanya berapapun filter "Tampilkan rincian sebagai" dipilih. Yang ikut dikalikan cuma hasil
+// paketnya (JKK/JKM/JHT/JP/BPJS Kesehatan) dan kolom rupiah lain di PART1/PART2.
 function rabJabatanRowFieldTextScaled(rincian, jabatanRow, key, mode, multiplier) {
-  if (mode === 'text' || mode === 'jumlah') return rabJabatanRowFieldText(rincian, jabatanRow, key, mode);
+  if (mode === 'text' || mode === 'jumlah' || key === 'acuan_bpjs') return rabJabatanRowFieldText(rincian, jabatanRow, key, mode);
   if (!jabatanRow) return '—';
   const masked = mode === 'rupiah-masked' && (rincian || {})[key + '_lokasi'] === 'luar_rab';
   if (masked) return '—';
