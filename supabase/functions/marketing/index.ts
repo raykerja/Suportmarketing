@@ -6,6 +6,7 @@ const publishableKey = Deno.env.get('SUPABASE_ANON_KEY')!;
 const webhookUrl = Deno.env.get('MARKETING_N8N_WEBHOOK')!;
 const letterWebhookUrl = Deno.env.get('MARKETING_N8N_LETTER_WEBHOOK')!;
 const offerWebhookUrl = Deno.env.get('MARKETING_N8N_OFFER_WEBHOOK')!;
+const employeeLocationWebhookUrl = Deno.env.get('MARKETING_N8N_EMPLOYEE_LOCATION_WEBHOOK')!;
 const visitWebhookUrl = webhookUrl.replace(/raykerja-target$/, 'raykerja-visit');
 const driveGatewayUrl = Deno.env.get('DRIVE_GATEWAY_URL') || '';
 const driveGatewaySecret = Deno.env.get('DRIVE_GATEWAY_SECRET') || '';
@@ -244,6 +245,28 @@ Deno.serve(async (request) => {
       const { error } = await admin.from('marketing_letters').update({ drive_status: saved ? 'done' : 'error',
         drive_file_id: fileId, drive_file_url: fileId ? `https://drive.google.com/file/d/${fileId}/view` : null,
         drive_error: saved ? null : String(data.drive_error || 'Gagal menyimpan ke Drive').slice(0, 300) }).eq('id', letterId);
+      return error ? response({ error: 'Database gagal diperbarui' }, 500, origin) : response({ ok: true }, 200, origin);
+    }
+    if (data.kind === 'employee_location') {
+      const locationId = String(data.location_id || '');
+      if (!/^[0-9a-f-]{36}$/i.test(locationId)) return response({ error: 'location_id tidak valid' }, 400, origin);
+      const { data: location } = await admin.from('marketing_employee_locations').select('id').eq('id', locationId).maybeSingle();
+      if (!location) return response({ error: 'Lokasi tidak ditemukan' }, 404, origin);
+      const validFileId = (value: unknown) => /^[A-Za-z0-9_-]{10,200}$/.test(String(value || ''));
+      const folderId = validFileId(data.drive_folder_id) ? String(data.drive_folder_id) : null;
+      const formId = validFileId(data.form_id) ? String(data.form_id) : null;
+      const mediaFolderId = validFileId(data.media_folder_id) ? String(data.media_folder_id) : null;
+      const formViewUrl = typeof data.form_view_url === 'string' && /^https:\/\//.test(data.form_view_url) ? data.form_view_url.slice(0, 500) : null;
+      const status = folderId && formId ? 'done' : 'error';
+      const { error } = await admin.from('marketing_employee_locations').update({
+        status,
+        drive_folder_id: folderId, drive_folder_url: folderId ? `https://drive.google.com/drive/folders/${folderId}` : null,
+        form_id: formId, form_edit_url: formId ? `https://docs.google.com/forms/d/${formId}/edit` : null,
+        form_view_url: formViewUrl,
+        media_folder_id: mediaFolderId, media_folder_url: mediaFolderId ? `https://drive.google.com/drive/folders/${mediaFolderId}` : null,
+        error: status === 'done' ? null : String(data.error || 'Gagal membuat folder/form').slice(0, 300),
+        updated_at: new Date().toISOString(),
+      }).eq('id', locationId);
       return error ? response({ error: 'Database gagal diperbarui' }, 500, origin) : response({ ok: true }, 200, origin);
     }
     if (data.kind === 'visit') {
@@ -731,6 +754,37 @@ Deno.serve(async (request) => {
       return response({ error: 'Penawaran dicatat, tetapi generator gagal dimulai', offer_id: created.id }, 502, origin);
     }
     return response({ ok: true, offer_id: created.id, status: 'processing' }, 200, origin);
+  }
+  if (data.action === 'create_employee_location') {
+    const requestId = String(data.request_id || '');
+    const namaLokasi = String(data.nama_lokasi || '').trim().slice(0, 180);
+    if (!/^[0-9a-f-]{36}$/i.test(requestId) || namaLokasi.length < 2)
+      return response({ error: 'Nama lokasi atau ID permintaan tidak valid' }, 400, origin);
+    const { data: created, error: insertError } = await admin.from('marketing_employee_locations').insert({
+      request_id: requestId, nama_lokasi: namaLokasi, created_by: authData.user.id, created_by_name: membership.display_name,
+    }).select('id').single();
+    if (insertError) {
+      if (insertError.code === '23505') {
+        const { data: existing } = await admin.from('marketing_employee_locations').select('id,status')
+          .eq('request_id', requestId).maybeSingle();
+        return existing?.status === 'error' ? response({ error: 'Permintaan sebelumnya gagal. Periksa status sebelum membuat ulang', location_id: existing.id }, 409, origin)
+          : existing ? response({ ok: true, location_id: existing.id, status: existing.status }, 200, origin)
+          : response({ error: 'Permintaan ganda gagal diperiksa' }, 409, origin);
+      }
+      return response({ error: 'Permintaan lokasi gagal dicatat' }, 500, origin);
+    }
+    try {
+      const ack = await callWorkflow(employeeLocationWebhookUrl, { location_id: created.id, request_id: requestId, nama_lokasi: namaLokasi });
+      if (String(ack.location_id || '') !== created.id) throw new Error('ID lokasi dari n8n berbeda');
+    } catch (e) {
+      const { data: latest } = await admin.from('marketing_employee_locations').select('status')
+        .eq('id', created.id).maybeSingle();
+      if (latest?.status === 'done') return response({ ok: true, location_id: created.id, status: latest.status }, 200, origin);
+      await admin.from('marketing_employee_locations').update({ status: 'error',
+        error: `Proses n8n gagal dimulai: ${String(e).slice(0, 160)}`, updated_at: new Date().toISOString() }).eq('id', created.id);
+      return response({ error: 'Lokasi dicatat, tetapi pembuatan folder/form gagal dimulai', location_id: created.id }, 502, origin);
+    }
+    return response({ ok: true, location_id: created.id, status: 'processing' }, 200, origin);
   }
   if (data.action !== 'research') return response({ error: 'Aksi tidak dikenal' }, 400, origin);
   if (!membership.drive_folder_id) return response({ error: 'Atur folder Google Drive di Pengaturan sebelum mencari target' }, 400, origin);

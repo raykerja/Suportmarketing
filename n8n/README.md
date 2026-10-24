@@ -20,6 +20,14 @@ Sambungan yang sama (`Resolve Folder Client` sub-workflow) dipanggil dari workfl
 
 Panggilan webhook sinkron ke endpoint yang memproses banyak akun/grup sekaligus berisiko 504 gateway timeout pada instance ini; proses dalam batch kecil (atau satu akun per panggilan) kalau memanggil endpoint serupa untuk volume besar.
 
+## Data Karyawan per lokasi (2026-10-24)
+
+`employee-location.template.json` adalah workflow baru untuk menu "Data Karyawan" di portal: staf/admin input nama lokasi, Edge Function mencatat baris `processing` lalu memanggil webhook `raykerja-employee-location`. Workflow memanggil ulang sub-workflow `Resolve Folder Client` (`parentFolderId` = folder "DATA KARYAWAN", `namaClient` = nama lokasi) untuk cari-dulu-baru-buat folder lokasi, menyalin form template "Form Data Karyawan - KLIEN TEMPLATE" (`fileId` ditulis langsung di template, sama seperti `SET_RAB_TEMPLATE_ID`/`SET_DOC_TEMPLATE_ID` pada workflow penawaran) ke folder lokasi, membuat subfolder "Media" (lewat HTTP Request mentah ke `files.create`, bukan node Drive native — alasan sama seperti node "Buat Folder Client"), lalu callback ke Supabase dengan `kind: 'employee_location'`.
+
+Ganti `SET_RESOLVE_FOLDER_CLIENT_WORKFLOW_ID` dengan ID workflow `Resolve Folder Client` yang sudah aktif, `SET_DATA_KARYAWAN_PARENT_FOLDER_ID` dengan ID folder "DATA KARYAWAN" (sengaja placeholder, bukan ditulis di Git — lihat larangan ID folder Drive di `docs/00-MULAI-DI-SINI.md`), dan `SET_MARKETING_WEBHOOK_SECRET` dengan secret yang sama pada Edge Function. Pilih ulang credential `googleDriveOAuth2Api` pada setiap node sebelum aktivasi; pastikan sub-workflow `Resolve Folder Client` sudah aktif dulu (lihat catatan Execute Workflow di bagian "Folder klien per akun").
+
+Node `Ambil Link Isi Form` memanggil Google Forms API (`forms.googleapis.com/v1/forms/{id}`) untuk ambil `responderUri` (link isi form, bukan link edit) — **ini bersifat best-effort**: kalau credential Drive OAuth yang dipakai ulang belum punya scope Forms API, node ini gagal tapi `onError: continueRegularOutput` membuat alur tetap lanjut tanpa `form_view_url` (staf tetap dapat link edit, cukup klik "Kirim" di form itu sendiri untuk dapat link isi form secara manual). Kalau mau link isi form otomatis, tambahkan scope `https://www.googleapis.com/auth/forms.body.readonly` ke OAuth client yang dipakai, atau buat credential Google OAuth2 terpisah dengan scope itu dan pasang di node ini saja.
+
 ## Penyesuaian RAB (2026-10-09)
 
 Node `Isi Data RAB` pada `offer-documents.template.json` kini juga: mengosongkan `I13:L13` (Kompensasi) dan `G19`, `I19:L19` (JP, persentase dan nilai), mengisi `M13`/`M19` dengan "Sesuai Kebijakan Client", dan `M16:M18`, `M20` dengan "Dihitung dari UMK Setempat <kota> <tahun>". Rumus template (`G10` = UMK Setempat; BPJS = `G10 × persentase`; subtotal memakai `SUM`) tidak diubah, sehingga subtotal A/B dan persentase subtotal menyesuaikan otomatis.

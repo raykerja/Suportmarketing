@@ -54,6 +54,9 @@ let editingVisitId = null;
 let activeVisitStep = '1';
 let editingLetterId = null;
 let expenseCache = [];
+let employeeLocationCache = [];
+let employeeLocationRequestId = null;
+let employeeLocationPollTimer = null;
 
 function status(id, message, error = false) {
   const el = $(id); el.textContent = message; el.style.color = error ? '#b73729' : '#0a4fa6';
@@ -96,6 +99,8 @@ function showWorkspace(user) {
     visitCache = []; $('#visit-list').textContent = ''; $('#visit-saved').innerHTML = '<option value="">Pilih kunjungan</option>';
     publishVisitSnapshot();
     expenseCache = []; $('#expense-list').textContent = '';
+    employeeLocationCache = []; employeeLocationRequestId = null; $('#employee-location-list').textContent = '';
+    if (employeeLocationPollTimer) { clearInterval(employeeLocationPollTimer); employeeLocationPollTimer = null; }
     expenseRecapRows = []; $('#expense-recap-table').textContent = ''; $('#expense-recap-pdf').disabled = true; status('#expense-recap-status', '');
     $('#review-list').textContent = ''; $('#offer-list').textContent = ''; $('#lead-list').textContent = '';
     $('#ai-answer').textContent = ''; $('#ai-answer').hidden = true; $('#ai-sources').textContent = '';
@@ -162,6 +167,7 @@ const pipelineTabs = new Set(['research', 'review', 'letters', 'manual-offer', '
 const databaseTabs = new Set(['leads']);
 const rabTabs = new Set(['rab-recap', 'rab-recap-summary', 'rab-recap-luar']);
 const expenseTabs = new Set(['expenses']);
+const employeeLocationTabs = new Set(['data-karyawan']);
 const isMobileViewport = () => window.matchMedia('(max-width: 760px)').matches;
 function showMobileHome() {
   $('.hero').hidden = false;
@@ -169,10 +175,10 @@ function showMobileHome() {
   document.querySelectorAll('.panel').forEach((panel) => { panel.hidden = true; });
   document.querySelectorAll('.sub-tabs').forEach((nav) => { nav.hidden = true; });
   document.querySelectorAll('[data-tab].active').forEach((button) => button.classList.remove('active'));
-  ['active-client-menu', 'sales-menu', 'pipeline-menu', 'database-menu', 'rab-menu', 'expense-menu'].forEach((id) => {
+  ['active-client-menu', 'sales-menu', 'pipeline-menu', 'database-menu', 'rab-menu', 'expense-menu', 'data-karyawan-menu'].forEach((id) => {
     $('#' + id).classList.remove('active'); $('#' + id).setAttribute('aria-expanded', 'false');
   });
-  ['mobile-menu-active-client', 'mobile-menu-pipeline', 'mobile-menu-sales', 'mobile-menu-database', 'mobile-menu-rab', 'mobile-menu-expense']
+  ['mobile-menu-active-client', 'mobile-menu-pipeline', 'mobile-menu-sales', 'mobile-menu-database', 'mobile-menu-rab', 'mobile-menu-expense', 'mobile-menu-data-karyawan']
     .forEach((id) => $('#' + id).classList.remove('active'));
   $('#mobile-menu-home').classList.add('active');
 }
@@ -221,7 +227,12 @@ function activateTab(tab, record = true) {
   $('#expense-menu').classList.toggle('active', inExpense);
   $('#expense-menu').setAttribute('aria-expanded', String(inExpense));
   $('#mobile-menu-expense').classList.toggle('active', inExpense);
+  const inDataKaryawan = employeeLocationTabs.has(tab);
+  $('#data-karyawan-menu').classList.toggle('active', inDataKaryawan);
+  $('#data-karyawan-menu').setAttribute('aria-expanded', String(inDataKaryawan));
+  $('#mobile-menu-data-karyawan').classList.toggle('active', inDataKaryawan);
   document.querySelectorAll('.panel').forEach((panel) => { panel.hidden = panel.id !== tab; });
+  if (tab === 'data-karyawan') loadEmployeeLocations();
   if (tab === 'review') loadLeads();
   if (tab === 'letters') { loadLeads(); loadOffers(); }
   if (tab === 'manual-offer') loadOffers();
@@ -243,6 +254,7 @@ $('#pipeline-menu').addEventListener('click', () => activateTab('research'));
 $('#database-menu').addEventListener('click', () => activateTab('leads'));
 $('#rab-menu').addEventListener('click', () => activateTab('rab-recap'));
 $('#expense-menu').addEventListener('click', () => activateTab('expenses'));
+$('#data-karyawan-menu').addEventListener('click', () => activateTab('data-karyawan'));
 
 function openMobileDrawer() {
   $('#mobile-drawer-backdrop').hidden = false;
@@ -266,6 +278,7 @@ $('#mobile-menu-sales').addEventListener('click', () => { activateTab('visits');
 $('#mobile-menu-database').addEventListener('click', () => { activateTab('leads'); closeMobileDrawer(); });
 $('#mobile-menu-rab').addEventListener('click', () => { activateTab('rab-recap'); closeMobileDrawer(); });
 $('#mobile-menu-expense').addEventListener('click', () => { activateTab('expenses'); closeMobileDrawer(); });
+$('#mobile-menu-data-karyawan').addEventListener('click', () => { activateTab('data-karyawan'); closeMobileDrawer(); });
 
 window.addEventListener('popstate', (event) => {
   if (currentUser && !invitePending) activateTab(event.state?.marketingTab || 'visits', false);
@@ -1689,6 +1702,37 @@ async function loadOffers() {
 }
 $('#refresh-offers').addEventListener('click', loadOffers);
 $('#refresh-offers-manual').addEventListener('click', loadOffers);
+$('#employee-location-form').addEventListener('input', () => { employeeLocationRequestId = null; });
+$('#employee-location-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const button = event.submitter || $('#employee-location-form button[type="submit"]'); button.disabled = true;
+  const namaLokasi = $('#employee-location-name').value.trim();
+  if (namaLokasi.length < 2) { status('#employee-location-status', 'Isi nama lokasi terlebih dahulu.', true); button.disabled = false; return; }
+  employeeLocationRequestId ||= crypto.randomUUID();
+  status('#employee-location-status', 'Membuat folder & form di Google Drive…');
+  try {
+    const { data, error } = await invokeFn('marketing', { body: { action: 'create_employee_location', nama_lokasi: namaLokasi, request_id: employeeLocationRequestId } });
+    if (error || !data?.ok) throw new Error(data?.error || error?.message || 'Pembuatan folder/form gagal dimulai');
+    employeeLocationRequestId = null;
+    status('#employee-location-status', 'Diterima. Folder & form akan muncul di daftar setelah selesai (beberapa saat).');
+    $('#employee-location-form').reset();
+    await loadEmployeeLocations();
+  } catch (error) { status('#employee-location-status', String(error.message || error), true); }
+  finally { button.disabled = false; }
+});
+async function loadEmployeeLocations() {
+  if (!client || !currentUser) return;
+  const { data, error } = await client.from('marketing_employee_locations')
+    .select('id,nama_lokasi,created_by_name,status,drive_folder_url,form_edit_url,form_view_url,media_folder_url,error,created_at')
+    .order('created_at', { ascending: false }).limit(200);
+  if (error) { $('#employee-location-list').textContent = 'Daftar lokasi belum dapat dibaca: ' + error.message; return; }
+  employeeLocationCache = data || [];
+  const recent = (row) => row.status === 'processing' && Date.now() - new Date(row.created_at).getTime() < 600000;
+  $('#employee-location-list').innerHTML = employeeLocationCache.length ? `<table><thead><tr><th>Nama Lokasi</th><th>Dibuat oleh</th><th>Tanggal</th><th>Status</th><th>Form</th><th>Folder</th></tr></thead><tbody>${employeeLocationCache.map((row) => `<tr><td>${esc(row.nama_lokasi)}</td><td>${esc(row.created_by_name)}</td><td>${esc(date(row.created_at))}</td><td><span class="badge ${row.status === 'error' ? 'error' : row.status === 'processing' ? 'processing' : ''}">${esc(row.status.toUpperCase())}</span>${row.error ? `<br><small class="error">${esc(row.error)}</small>` : row.status === 'processing' && !recent(row) ? '<br><small class="error">Proses lebih dari 10 menit. Muat ulang atau minta admin memeriksa eksekusi n8n.</small>' : ''}</td><td>${row.form_edit_url ? `<a href="${esc(row.form_edit_url)}" target="_blank" rel="noopener noreferrer">Edit</a>` : '—'}${row.form_view_url ? ` · <a href="${esc(row.form_view_url)}" target="_blank" rel="noopener noreferrer">Isi</a>` : ''}</td><td>${row.drive_folder_url ? `<a href="${esc(row.drive_folder_url)}" target="_blank" rel="noopener noreferrer">Lokasi</a>` : '—'}${row.media_folder_url ? ` · <a href="${esc(row.media_folder_url)}" target="_blank" rel="noopener noreferrer">Media</a>` : ''}</td></tr>`).join('')}</tbody></table>` : '<p class="hint">Belum ada lokasi yang dibuat.</p>';
+  if (employeeLocationCache.some(recent) && !employeeLocationPollTimer) employeeLocationPollTimer = setInterval(loadEmployeeLocations, 5000);
+  if (!employeeLocationCache.some(recent) && employeeLocationPollTimer) { clearInterval(employeeLocationPollTimer); employeeLocationPollTimer = null; }
+}
+$('#refresh-employee-locations').addEventListener('click', loadEmployeeLocations);
 document.addEventListener('click', (event) => {
   const btn = event.target.closest('[data-preview-url]');
   if (!btn) return;

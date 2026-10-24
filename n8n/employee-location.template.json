@@ -1,0 +1,210 @@
+{
+  "name": "Raykerja Marketing - Data Karyawan Lokasi",
+  "nodes": [
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000001",
+      "name": "Webhook Lokasi Karyawan",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [0, 0],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "raykerja-employee-location",
+        "responseMode": "responseNode",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000002",
+      "name": "Validasi Lokasi Karyawan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0],
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst secret = (input.headers || {})['x-ray-secret'];\nif (secret !== 'SET_MARKETING_WEBHOOK_SECRET') throw new Error('Unauthorized');\nconst b = input.body || {};\nconst validId = (v) => /^[0-9a-f-]{36}$/i.test(String(v || ''));\nconst namaLokasi = String(b.nama_lokasi || '').trim().slice(0, 180);\nif (!validId(b.location_id) || !validId(b.request_id) || namaLokasi.length < 2)\n  throw new Error('Data lokasi tidak valid');\nreturn [{ json: { location_id: String(b.location_id), request_id: String(b.request_id), nama_lokasi: namaLokasi } }];\n"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000003",
+      "name": "Respons Lokasi Diterima",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [440, 0],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ {ok:true,status:'processing',location_id:$json.location_id} }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000004",
+      "name": "Resolve Folder Lokasi",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "onError": "continueRegularOutput",
+      "position": [660, 0],
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "SET_RESOLVE_FOLDER_CLIENT_WORKFLOW_ID"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "parentFolderId": "SET_DATA_KARYAWAN_PARENT_FOLDER_ID",
+            "namaClient": "={{ $('Validasi Lokasi Karyawan').first().json.nama_lokasi }}"
+          }
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000005",
+      "name": "Salin Form Template",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "onError": "continueRegularOutput",
+      "position": [880, 0],
+      "parameters": {
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "value": "1tpcfFgLjaacqkCg8-rIBDgnELdX_O4pZrzZ8DdnQ7wo",
+          "mode": "id"
+        },
+        "name": "={{ 'Form Data Karyawan - ' + $('Validasi Lokasi Karyawan').first().json.nama_lokasi }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000006",
+      "name": "Pindahkan Form ke Folder Lokasi",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "onError": "continueRegularOutput",
+      "position": [1100, 0],
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Salin Form Template').first().json.id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Resolve Folder Lokasi').first().json.clientFolderId }}",
+          "mode": "id"
+        }
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000007",
+      "name": "Buat Folder Media",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "onError": "continueRegularOutput",
+      "position": [1320, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/drive/v3/files",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            { "name": "fields", "value": "id,name,parents" },
+            { "name": "supportsAllDrives", "value": "true" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {name: 'Media', mimeType: 'application/vnd.google-apps.folder', parents: [$('Resolve Folder Lokasi').first().json.clientFolderId]} }}",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000008",
+      "name": "Ambil Link Isi Form",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "onError": "continueRegularOutput",
+      "position": [1540, 0],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://forms.googleapis.com/v1/forms/' + $('Pindahkan Form ke Folder Lokasi').first().json.id }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {}
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000009",
+      "name": "Siapkan Payload Callback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1760, 0],
+      "parameters": {
+        "jsCode": "const val = (name) => {\n  try { return $(name).first().json; } catch (e) { return { error: `Node ${name} tidak terbaca: ${e.message}` }; }\n};\ntry {\n  const validasi = val('Validasi Lokasi Karyawan');\n  const resolve = val('Resolve Folder Lokasi');\n  const salinForm = val('Salin Form Template');\n  const pindahForm = val('Pindahkan Form ke Folder Lokasi');\n  const buatMedia = val('Buat Folder Media');\n  const ambilLink = val('Ambil Link Isi Form');\n\n  const errors = [resolve?.error, salinForm?.error, pindahForm?.error, buatMedia?.error]\n    .map((e) => (e ? String(e.message || e) : ''))\n    .filter(Boolean);\n\n  return [{\n    json: {\n      kind: 'employee_location',\n      location_id: validasi?.location_id || null,\n      request_id: validasi?.request_id || null,\n      drive_folder_id: resolve?.clientFolderId || null,\n      form_id: (!pindahForm?.error && pindahForm?.id) || (!salinForm?.error && salinForm?.id) || null,\n      form_view_url: (!ambilLink?.error && ambilLink?.responderUri) || null,\n      media_folder_id: (!buatMedia?.error && buatMedia?.id) || null,\n      error: errors.join('; ') || null,\n    },\n  }];\n} catch (e) {\n  let locationId = null;\n  try { locationId = $('Validasi Lokasi Karyawan').first().json.location_id || null; } catch (_) {}\n  return [{\n    json: {\n      kind: 'employee_location',\n      location_id: locationId,\n      request_id: null,\n      drive_folder_id: null,\n      form_id: null,\n      form_view_url: null,\n      media_folder_id: null,\n      error: `Gagal menyusun payload callback: ${e.message}`,\n    },\n  }];\n}\n"
+      }
+    },
+    {
+      "id": "a1b2c3d4-0001-4000-8000-000000000010",
+      "name": "Callback Lokasi Supabase",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [1980, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "https://ewicmiekwzmxkkokmpzf.supabase.co/functions/v1/marketing",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "X-RAY-Secret", "value": "SET_MARKETING_WEBHOOK_SECRET" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}",
+        "options": { "timeout": 15000 }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Lokasi Karyawan": {
+      "main": [[{ "node": "Validasi Lokasi Karyawan", "type": "main", "index": 0 }]]
+    },
+    "Validasi Lokasi Karyawan": {
+      "main": [[{ "node": "Respons Lokasi Diterima", "type": "main", "index": 0 }]]
+    },
+    "Respons Lokasi Diterima": {
+      "main": [[{ "node": "Resolve Folder Lokasi", "type": "main", "index": 0 }]]
+    },
+    "Resolve Folder Lokasi": {
+      "main": [[{ "node": "Salin Form Template", "type": "main", "index": 0 }]]
+    },
+    "Salin Form Template": {
+      "main": [[{ "node": "Pindahkan Form ke Folder Lokasi", "type": "main", "index": 0 }]]
+    },
+    "Pindahkan Form ke Folder Lokasi": {
+      "main": [[{ "node": "Buat Folder Media", "type": "main", "index": 0 }]]
+    },
+    "Buat Folder Media": {
+      "main": [[{ "node": "Ambil Link Isi Form", "type": "main", "index": 0 }]]
+    },
+    "Ambil Link Isi Form": {
+      "main": [[{ "node": "Siapkan Payload Callback", "type": "main", "index": 0 }]]
+    },
+    "Siapkan Payload Callback": {
+      "main": [[{ "node": "Callback Lokasi Supabase", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
