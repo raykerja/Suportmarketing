@@ -1824,15 +1824,19 @@ function rabJabatanRowKeteranganText(jabatanRow) {
 // jadi ikut membesar kalau basisnya (Komponen Gaji/BPJS/Fasilitas/Peningkatan) membesar. Management Fee (%) (persentase,
 // bukan Rupiah), Nilai Kontrak (sudah angka total seluruh RAB, bukan per-orang), dan 3 kolom Biaya
 // Akhir TIDAK ikut dikalikan lagi — tetap tampil apa adanya. 'orang' = ×1 (nilai per orang, default/lama),
-// 'personil_bulan' = × Jumlah Anggota baris itu, 'personil_tahun' = × Jumlah Anggota × jumlah bulan Durasi Kontrak
-// (default 12 bulan kalau kosong).
+// 'orang_tahun' = × jumlah bulan Durasi Kontrak (biaya SATU orang selama satu tahun/durasi kontrak, tanpa dikali
+// Jumlah Anggota), 'personil_bulan' = × Jumlah Anggota baris itu, 'personil_tahun' = × Jumlah Anggota × jumlah bulan
+// Durasi Kontrak (default 12 bulan kalau kosong).
 const RAB_RINCIAN_SCALE_KEYS = new Set(['seragam_kerja', 'peralatan_kerja', 'pelatihan_supervisi', 'pembinaan_monitoring', 'management_fee_rupiah', 'ppn_ps23', 'pph']);
 function rabScaleMultiplier(mode, jabatanRow, durasiKontrak) {
-  if (mode !== 'personil_bulan' && mode !== 'personil_tahun') return 1;
+  if (mode === 'orang') return 1;
+  const bulanMatch = (durasiKontrak || '').match(/\d+/);
+  const bulan = bulanMatch ? Number(bulanMatch[0]) : 12;
+  if (mode === 'orang_tahun') return bulan;
   const jumlah = Number(jabatanRow?.jumlah_anggota) || 0;
   if (mode === 'personil_bulan') return jumlah;
-  const bulanMatch = (durasiKontrak || '').match(/\d+/);
-  return jumlah * (bulanMatch ? Number(bulanMatch[0]) : 12);
+  if (mode === 'personil_tahun') return jumlah * bulan;
+  return 1;
 }
 function rabJabatanRowFieldTextScaled(rincian, jabatanRow, key, mode, multiplier) {
   if (mode === 'text' || mode === 'jumlah') return rabJabatanRowFieldText(rincian, jabatanRow, key, mode);
