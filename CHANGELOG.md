@@ -1,3 +1,9 @@
+VERSION: 0.9.44 (Fix: Rekap Penawaran Klien Baru salah hitung PIC)
+DATE: 2026-10-30
+
+FIXED: Kartu "Rekap Penawaran per PIC Lapangan" (0.9.43) untuk Klien Baru salah mencari pemilik laporan lewat cache `progressVisits` (dibatasi 500 kunjungan terbaru) — kalau barisnya tidak ada/terpotong di cache itu, PIC-nya jatuh ke bucket "(tidak diketahui)" alih-alih staf aslinya, sehingga banyak PIC yang sebenarnya input laporan di menu Client Baru malah tidak kelihatan terpisah. Tabel `marketing_progress` sebenarnya sudah punya kolom `owner_id` sendiri di setiap baris — sekarang dipakai langsung, tidak lewat cache lain.
+NOTES: Murni frontend (`app.js`), tidak ada migrasi/Edge Function.
+
 VERSION: 0.9.43 (Dashboard: kartu Rekap Penawaran per PIC Lapangan)
 DATE: 2026-10-30
 

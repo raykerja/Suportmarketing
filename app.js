@@ -2711,10 +2711,9 @@ function offerRecapKorlapStats() {
   }).filter((s) => s.total);
 }
 function offerRecapBaruStats() {
-  const visitOwner = new Map(progressVisits.map((v) => [v.id, v.owner_id]));
   const byOwner = new Map();
   for (const row of progressCache) {
-    const ownerId = visitOwner.get(row.visit_id) || '';
+    const ownerId = row.owner_id || '';
     if (!byOwner.has(ownerId)) byOwner.set(ownerId, []);
     byOwner.get(ownerId).push(row);
   }
