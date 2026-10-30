@@ -2690,6 +2690,49 @@ function dashTrendChart(days) {
     <div class="dash-trend-axis"><span>${esc(days[0]?.axis || '')}</span><span>${esc(days[days.length - 1]?.axis || '')}</span></div>
   </div>`;
 }
+function offerRecapTable(stats, wonLabel, lostLabel) {
+  if (!stats.length) return '<p class="hint">Belum ada data.</p>';
+  const total = stats.reduce((sum, s) => sum + s.total, 0);
+  const berjalan = stats.reduce((sum, s) => sum + s.berjalan, 0);
+  const won = stats.reduce((sum, s) => sum + s.won, 0);
+  const lost = stats.reduce((sum, s) => sum + s.lost, 0);
+  return `<div class="table-wrap"><table><thead><tr><th>PIC Lapangan</th><th>Berjalan</th><th>${esc(wonLabel)}</th><th>${esc(lostLabel)}</th><th>Total</th></tr></thead><tbody>${stats.map((s) => `<tr><td><strong>${esc(s.pic)}</strong></td><td>${s.berjalan}</td><td>${s.won}</td><td>${s.lost}</td><td>${s.total}</td></tr>`).join('')}</tbody></table></div>
+    <p class="hint">Total: <strong>${berjalan}</strong> berjalan &middot; <strong>${won}</strong> ${wonLabel.toLowerCase()} &middot; <strong>${lost}</strong> ${lostLabel.toLowerCase()} &middot; <strong>${total}</strong> keseluruhan.</p>`;
+}
+function offerRecapKorlapStats() {
+  const aliases = [...new Map(picAliases.filter((a) => a.pic_role === 'korlap').map((a) => [a.alias, a])).values()].sort((a, b) => a.alias.localeCompare(b.alias));
+  const clientsById = new Map(activeClients.map((c) => [c.id, c]));
+  return aliases.map((a) => {
+    const rows = dashboardMonitoring.filter((r) => korlapTokens(clientsById.get(r.client_id) || {}).includes(a.alias));
+    const won = rows.filter((r) => r.stage === 'won').length;
+    const lost = rows.filter((r) => r.stage === 'lost').length;
+    const member = memberOptions.find((m) => m.user_id === a.user_id);
+    return { pic: member?.display_name || a.alias, total: rows.length, berjalan: rows.length - won - lost, won, lost };
+  }).filter((s) => s.total);
+}
+function offerRecapBaruStats() {
+  const visitOwner = new Map(progressVisits.map((v) => [v.id, v.owner_id]));
+  const byOwner = new Map();
+  for (const row of progressCache) {
+    const ownerId = visitOwner.get(row.visit_id) || '';
+    if (!byOwner.has(ownerId)) byOwner.set(ownerId, []);
+    byOwner.get(ownerId).push(row);
+  }
+  return [...byOwner.entries()].map(([ownerId, rows]) => {
+    const deal = rows.filter((r) => r.stage === 'deal').length;
+    const gagal = rows.filter((r) => r.stage === 'gagal').length;
+    const member = allMembers.find((m) => m.user_id === ownerId);
+    return { pic: member?.display_name || '(tidak diketahui)', total: rows.length, berjalan: rows.length - deal - gagal, won: deal, lost: gagal };
+  }).filter((s) => s.total).sort((a, b) => b.total - a.total);
+}
+function renderPicOfferRecap() {
+  const lamaStats = offerRecapKorlapStats();
+  const baruStats = offerRecapBaruStats();
+  $('#dash-picrecap-summary').innerHTML = dashMiniStats([
+    [lamaStats.length, 'PIC Korlap (Klien Lama) ada penawaran'], [lamaStats.reduce((sum, s) => sum + s.berjalan, 0), 'Penawaran Klien Lama berjalan'],
+    [baruStats.length, 'Staf (Klien Baru) ada progress'], [baruStats.reduce((sum, s) => sum + s.berjalan, 0), 'Progress Klien Baru berjalan'],
+  ]);
+}
 function renderOpsDashboard() {
   if (!isAdmin()) return;
   const todayStr = localToday();
@@ -2760,6 +2803,8 @@ function renderOpsDashboard() {
     { label: `${progressOverdue} Follow up terlewat`, tone: progressOverdue ? 'critical' : 'neutral' },
   ], 'progress');
 
+  renderPicOfferRecap();
+
   const researchProcessing = researchCache.filter((r) => r.status === 'processing').length;
   const leadPending = leadCache.filter((r) => r.review_status === 'pending').length;
   const leadApproved = leadCache.filter((r) => r.review_status === 'approved').length;
@@ -2826,7 +2871,7 @@ function showDashboardOverview() {
 }
 const dashboardDetailTitles = {
   clients: 'Client Aktif', visits: 'Kunjungan', repitch: 'Progres Penawaran Ulang', monitoring: 'Monitoring & Tindaklanjut (Client Lama)',
-  progress: 'Progress (Client Baru)', pipeline: 'Target & Penawaran', database: 'Database Harga & Rekap RAB',
+  progress: 'Progress (Client Baru)', picrecap: 'Rekap Penawaran per PIC Lapangan', pipeline: 'Target & Penawaran', database: 'Database Harga & Rekap RAB',
   expenses: 'Pengeluaran Bulan Ini', team: 'Tim & Akun',
 };
 function renderDashboardDetailClients() {
@@ -2912,9 +2957,15 @@ function renderDashboardDetailTeam() {
   const rows = [...allMembers].sort((a, b) => a.role === b.role ? a.display_name.localeCompare(b.display_name) : (a.role === 'admin' ? -1 : 1));
   return rows.length ? `<div class="table-wrap"><table><thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.display_name)}</td><td>${esc(r.email)}</td><td>${r.role === 'admin' ? 'Admin' : 'Staf'}</td><td>${r.active === false ? '<span class="badge error">Nonaktif</span>' : 'Aktif'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada data akun.</p>';
 }
+function renderDashboardDetailPicRecap() {
+  const lama = offerRecapKorlapStats();
+  const baru = offerRecapBaruStats();
+  return `<h3>Klien Lama &middot; per PIC Lapangan (Korlap)</h3>${offerRecapTable(lama, 'Disetujui', 'Tidak lanjut')}
+    <h3>Klien Baru &middot; per staf pencatat</h3><p class="hint">Prospek baru belum punya PIC Korlap karena belum jadi client aktif &mdash; dikelompokkan berdasarkan staf yang mencatat kunjungan/progres-nya.</p>${offerRecapTable(baru, 'Deal', 'Gagal')}`;
+}
 const dashboardDetailRenderers = {
   clients: renderDashboardDetailClients, visits: renderDashboardDetailVisits, repitch: renderDashboardDetailRepitch, monitoring: renderDashboardDetailMonitoring,
-  progress: renderDashboardDetailProgress, pipeline: renderDashboardDetailPipeline, database: renderDashboardDetailDatabase,
+  progress: renderDashboardDetailProgress, picrecap: renderDashboardDetailPicRecap, pipeline: renderDashboardDetailPipeline, database: renderDashboardDetailDatabase,
   expenses: renderDashboardDetailExpenses, team: renderDashboardDetailTeam,
 };
 function showDashboardDetail(key) {

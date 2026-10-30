@@ -1,3 +1,9 @@
+VERSION: 0.9.43 (Dashboard: kartu Rekap Penawaran per PIC Lapangan)
+DATE: 2026-10-30
+
+ADDED: Kartu baru "Rekap Penawaran per PIC Lapangan" di menu Dashboard (khusus admin), dipisah dua kelompok. **Klien Lama** (data Monitoring & Tindaklanjut): dikelompokkan per PIC Korlap asli (`korlap_raw`), kode gabungan seperti "DDK BROWN" tetap dipecah ke masing-masing PIC — kolom Berjalan/Disetujui/Tidak lanjut/Total. **Klien Baru** (data Progress): tahap ini belum punya field PIC Korlap karena prospek belum jadi client aktif, jadi dikelompokkan per staf yang mencatat kunjungan/progres-nya (ditandai jelas di tampilan detail agar tidak disalahartikan sebagai PIC Korlap sungguhan) — kolom Berjalan/Deal/Gagal/Total. Overview tampil ringkas (jumlah PIC/staf + total berjalan), tabel lengkap di "Lihat detail".
+NOTES: Murni frontend (`app.js`, `index.html`), tidak ada migrasi/Edge Function. Belum dicoba manusia dengan akun admin sungguhan.
+
 VERSION: 0.9.42 (Acuan PPH: opsi baru "Tidak ada PPH")
 DATE: 2026-10-23
 
