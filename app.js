@@ -2618,136 +2618,31 @@ $('#ai-search-form').addEventListener('submit', async (event) => {
 // MARKETING, per 7 Nov 2026) - bukan dari Supabase, murni tampilan + perhitungan di browser.
 // Status Selesai/Terjadwal dihitung otomatis dari tanggal hari ini; Hasil Kunjungan masih "-"
 // untuk semua baris karena sumber data belum mencatat hasil kunjungan sungguhan.
-const WORKPLAN_RAW = [
-  ["2026-11-09", "BADAN KEPEGAWAIAN, PENDIDIKAN DAN PELATIHAN (BPKP)", "Kota Semarang", "Denis"],
-  ["2026-11-09", "BADAN PENDAPATAN DAERAH (BAPEDA)", "Kota Semarang", "Denis"],
-  ["2026-11-09", "BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH (BPKAD)", "Kota Semarang", "Denis"],
-  ["2026-11-09", "DINAS PENATAAN RUANG (DISTARU)", "Kota Semarang", "Denis"],
-  ["2026-11-10", "BADAN KESATUAN BANGSA DAN POLITIK (BAKESBANGPOL)", "Kota Semarang", "Denis"],
-  ["2026-11-10", "BADAN RISET DAN INOVASI DAERAH (BRIDA)", "Kota Semarang", "Denis"],
-  ["2026-11-10", "DINAS ARSIP DAN PERPUSTAKAAN DAERAH", "Kota Semarang", "Denis"],
-  ["2026-11-10", "DINAS PERINDUSTRIAN", "Kota Semarang", "Denis"],
-  ["2026-11-11", "KECAMATAN CANDISARI", "Kota Semarang", "Denis"],
-  ["2026-11-11", "KECAMATAN GAJAHMUNGKUR", "Kota Semarang", "Denis"],
-  ["2026-11-11", "DINAS PEMADAM KEBAKARAN", "Kota Semarang", "Denis"],
-  ["2026-11-11", "DINAS KEPEMUDAAN DAN OLAH RAGA", "Kota Semarang", "Denis"],
-  ["2026-11-12", "KECAMATAN BANYUMANIK", "Kota Semarang", "Denis"],
-  ["2026-11-12", "DINAS PEMBERDAYAAN PEREMPUAN DAN PERLINDUNGAN ANAK", "Kota Semarang", "Denis"],
-  ["2026-11-12", "DINAS PENGENDALIAN PENDUDUK DAN KELUARGA BERENCANA", "Kota Semarang", "Denis"],
-  ["2026-11-12", "KECAMATAN TEMBALANG", "Kota Semarang", "Denis"],
-  ["2026-11-13", "DINAS PENDIDIKAN", "Kota Semarang", "Denis"],
-  ["2026-11-13", "KECAMATAN GUNUNG PATI", "Kota Semarang", "Denis"],
-  ["2026-11-13", "KECAMATAN GENUK", "Kota Semarang", "Denis"],
-  ["2026-11-13", "KECAMATAN PEDURUNGAN", "Kota Semarang", "Denis"],
-  ["2026-11-16", "DINSOS", "Kota Semarang", "Denis"],
-  ["2026-11-16", "DINAS KOMUNIKASI, INFORMATIKA, STATISTIK DAN PERSANDIAN", "Kota Semarang", "Denis"],
-  ["2026-11-16", "BAGIAN RUMAH TANGGA", "Kota Semarang", "Denis"],
-  ["2026-11-16", "SEKRETARIAT DPRD (SEKWAN)", "Kota Semarang", "Denis"],
-  ["2026-11-16", "DINAS KEBUDAYAAN DAN PARIWISATA", "Kota Semarang", "Denis"],
-  ["2026-11-17", "DINAS KOPERASI DAN USAHA MIKRO", "Kota Semarang", "Denis"],
-  ["2026-11-17", "DINAS PERIKANAN", "Kota Semarang", "Denis"],
-  ["2026-11-17", "DINAS KESEHATAN", "Kota Semarang", "Denis"],
-  ["2026-11-17", "DINAS KETAHANAN PANGAN", "Kota Semarang", "Denis"],
-  ["2026-11-17", "DINAS TENAGA KERJA", "Kota Semarang", "Denis"],
-  ["2026-11-18", "DINAS PEKERJAAN UMUM", "Kota Semarang", "Denis"],
-  ["2026-11-18", "DINAS PENANAMAN MODAL DAN PELAYANAN TERPADU SATU PINTU", "Kota Semarang", "Denis"],
-  ["2026-11-18", "KECAMATAN TUGU", "Kota Semarang", "Denis"],
-  ["2026-11-18", "DINAS PERHUBUNGAN", "Kota Semarang", "Denis"],
-  ["2026-11-18", "KECAMATAN NGALIYAN", "Kota Semarang", "Denis"],
-  ["2026-11-19", "KECAMATAN SEMARANG UTARA", "Kota Semarang", "Denis"],
-  ["2026-11-19", "DINAS PERTANIAN", "Kota Semarang", "Denis"],
-  ["2026-11-19", "RSUD KRMT WONGSONEGORO", "Kota Semarang", "Denis"],
-  ["2026-11-19", "BADAN PENANGGULANGAN BENCANA DAERAH (BPBD)", "Kota Semarang", "Denis"],
-  ["2026-11-19", "DINAS KEPENDUDUKAN DAN PENCATATAN SIPIL", "Kota Semarang", "Denis"],
-  ["2026-11-09", "POLITEKNIK INDUSTRI FURNITUR & PENGOLAHAN KAYU KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-09", "PENGADILAN AGAMA KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-09", "POLRES KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-09", "KEJAKSAAN NEGERI KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-09", "BAGIAN UMUM KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-10", "PENGADILAN NEGERI KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-10", "DINAS KESEHATAN DAERAH KABUPATEN KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-10", "KANTOR KEMENTERIAN AGAMA KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-10", "DINAS KEARSIPAN & PERPUSTAKAAN", "Kab. Kendal", "Asmono"],
-  ["2026-11-10", "KECAMATAN KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-11", "DINAS PEKERJAAN UMUM & PENATAAN RUANG KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-11", "DINAS PERHUBUNGAN KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-11", "BADAN PENDAPATAN DAERAH", "Kab. Kendal", "Asmono"],
-  ["2026-11-11", "DINAS PERDAGANGAN, KOPERASI & USAHA KECIL & MENENGAH KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-11", "DINAS LINGKUNGAN HIDUP KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-12", "DINAS KEPEMUDAAN, OLAHRAGA & PARIWISATA KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-12", "DINAS PERUMAHAN RAKYAT & KAWASAN PERMUKIMAN KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-12", "DINAS PEMBERDAYAAN MASYARAKAT & DESA KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-12", "DINAS SOSIAL KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-12", "INSPEKTORAT DAERAH KENDAL", "Kab. Kendal", "Asmono"],
-  ["2026-11-04", "KECAMATAN AMBARAWA", "Kab. Semarang", "Ihsan"],
-  ["2026-11-04", "KECAMATAN BAWEN", "Kab. Semarang", "Ihsan"],
-  ["2026-11-04", "KELURAHAN BAWEN", "Kab. Semarang", "Ihsan"],
-  ["2026-11-06", "PT MOD INDO (GARMENT)", "Kab. Semarang", "Ihsan"],
-  ["2026-11-09", "SEKRETARIAT DAERAH", "Kab. Demak", "Ihsan"],
-  ["2026-11-09", "SEKRETARIAT DPRD", "Kab. Demak", "Ihsan"],
-  ["2026-11-09", "DINAS KEPEMUDAAN DAN OLAH RAGA", "Kab. Demak", "Ihsan"],
-  ["2026-11-10", "DINAS KESEHATAN DAERAH", "Kab. Demak", "Ihsan"],
-  ["2026-11-10", "DINAS PERDAGANGAN, KOPERASI, USAHA KECIL DAN MENENGAH", "Kab. Demak", "Ihsan"],
-  ["2026-11-10", "DINAS PEMBERDAYAAN MASYARAKAT DAN DESA, P2KB", "Kab. Demak", "Ihsan"],
-  ["2026-11-11", "PUSKESMAS KARANGAWEN I", "Kab. Demak", "Ihsan"],
-  ["2026-11-11", "PUSKESMAS KARANGAWEN II", "Kab. Demak", "Ihsan"],
-  ["2026-11-11", "PUSKESMAS MRANGGEN III", "Kab. Demak", "Ihsan"],
-  ["2026-11-12", "BALAI BAHASA JAWA TENGAH", "Kab. Semarang", "Ihsan"],
-  ["2026-11-12", "DINAS PERTANIAN, PERIKANAN DAN PANGAN", "Kab. Semarang", "Ihsan"],
-  ["2026-11-12", "DINAS LINGKUNGAN HIDUP", "Kab. Semarang", "Ihsan"],
-  ["2026-11-12", "DINAS PARIWISATA", "Kab. Semarang", "Ihsan"],
-  ["2026-11-12", "DINAS PENANAMAN MODAL DAN PELAYANAN TERPADU SATU PINTU", "Kab. Semarang", "Ihsan"],
-  ["2026-11-12", "SEKRETARIAT DPRD", "Kab. Semarang", "Ihsan"],
-  ["2026-11-12", "DINAS SOSIAL", "Kab. Semarang", "Ihsan"],
-  ["2026-11-13", "PT GLORY INDUSTRIAL SEMARANG", "Kab. Semarang", "Ihsan"],
-  ["2026-11-13", "SEKRETARIAT DAERAH", "Kab. Semarang", "Ihsan"],
-  ["2026-11-13", "PENGADILAN AGAMA AMBARAWA", "Kab. Semarang", "Ihsan"],
-  ["2026-11-16", "DINAS LINGKUNGAN HIDUP", "Kab. Grobogan", "Ihsan"],
-  ["2026-11-16", "DINAS PEKERJAAN UMUM DAN PENATAAN RUANG", "Kab. Grobogan", "Ihsan"],
-  ["2026-11-16", "DINAS PERHUBUNGAN", "Kab. Grobogan", "Ihsan"],
-  ["2026-11-16", "DINAS PERINDUSTRIAN DAN PERDAGANGAN", "Kab. Grobogan", "Ihsan"],
-  ["2026-11-17", "SEKRETARIAT DAERAH", "Kab. Grobogan", "Ihsan"],
-  ["2026-11-17", "SEKRETARIAT DPRD", "Kab. Grobogan", "Ihsan"],
-  ["2026-11-17", "DINAS PERTANIAN", "Kab. Grobogan", "Ihsan"],
-  ["2026-11-18", "DINAS PERDAGANGAN, KOPERASI, USAHA KECIL DAN MENENGAH", "Kab. Blora", "Ihsan"],
-  ["2026-11-18", "SEKRETARIAT DAERAH", "Kab. Blora", "Ihsan"],
-  ["2026-11-19", "KECAMATAN BLORA", "Kab. Blora", "Ihsan"],
-  ["2026-11-20", "DINAS LINGKUNGAN HIDUP", "Kab. Blora", "Ihsan"],
-  ["2026-11-09", "DINAS PENDIDIKAN PEMUDA & OLAHRAGA", "Kab. Jepara", "Rendi"],
-  ["2026-11-09", "KEMENHAJ JEPARA", "Kab. Jepara", "Rendi"],
-  ["2026-11-09", "DP3AP2KB", "Kab. Jepara", "Rendi"],
-  ["2026-11-09", "KEJARI JEPARA", "Kab. Jepara", "Rendi"],
-  ["2026-11-09", "KESBANGPOL", "Kab. Jepara", "Rendi"],
-  ["2026-11-09", "BBPBAP", "Kab. Jepara", "Rendi"],
-  ["2026-11-09", "PT HORESTCO INDONESIA (SWASTA)", "Kab. Jepara", "Rendi"],
-  ["2026-11-09", "PT DIAN ADI FURNI (SWASTA)", "Kab. Jepara", "Rendi"],
-  ["2026-11-10", "DINAS KOMINFO KABUPATEN KUDUS", "Kab. Kudus", "Rendi"],
-  ["2026-11-10", "KESBANGPOL", "Kab. Kudus", "Rendi"],
-  ["2026-11-10", "BALAI PSDA SERANG LUSI JUANA", "Kab. Kudus", "Rendi"],
-  ["2026-11-10", "KEMENAGAJ KUDUS", "Kab. Kudus", "Rendi"],
-  ["2026-11-10", "DINAS SOSIAL P3AP2KB", "Kab. Kudus", "Rendi"],
-  ["2026-11-11", "KEJARI PATI", "Kab. Pati", "Rendi"],
-  ["2026-11-11", "DINAS TENAGA KERJA", "Kab. Pati", "Rendi"],
-  ["2026-11-11", "KEMENHAJ", "Kab. Pati", "Rendi"],
-  ["2026-11-11", "KESBANGPOL", "Kab. Pati", "Rendi"],
-  ["2026-11-11", "UPTD PPA DINSOSP3AKB", "Kab. Pati", "Rendi"],
-  ["2026-11-12", "DINSOS", "Kab. Rembang", "Rendi"],
-  ["2026-11-12", "POLRES REMBANG", "Kab. Rembang", "Rendi"],
-  ["2026-11-12", "DINAS PERHUBUNGAN", "Kab. Rembang", "Rendi"],
-  ["2026-11-12", "KESBANGPOL", "Kab. Rembang", "Rendi"],
-  ["2026-11-12", "DINAS PENDIDIKAN, PEMUDA DAN OLAHRAGA", "Kab. Rembang", "Rendi"],
-];
-
-
-const WORKPLAN_BASE = WORKPLAN_RAW.map(([tanggal, lokasi, area, marketing], i) => ({ id: i + 1, tanggal, lokasi, area, marketing }));
+// Dashboard Workplan Marketing: daftar rencana kunjungan dibaca dari tabel Supabase
+// marketing_workplan (lihat migrasi 20261107_marketing_workplan.sql) -- bukan lagi kode statis,
+// supaya ada satu sumber data di database (termasuk untuk dibaca alat lain di luar situs ini).
+// Baca-saja untuk saat ini -- belum ada form tambah/ubah/hapus rencana lewat Dashboard.
+let workplanBaseCache = [];
+let workplanBaseLoaded = false;
+let workplanBaseLoading = false;
+async function loadWorkplanBase() {
+  if (!client || !currentUser || !isAdmin() || workplanBaseLoading) return;
+  workplanBaseLoading = true;
+  const { data, error } = await client.from('marketing_workplan').select('*').order('id');
+  workplanBaseCache = error ? [] : (data || []);
+  workplanBaseLoaded = true;
+  workplanBaseLoading = false;
+  wpdFiltersReady = false;
+  renderWorkplanDashboard();
+}
 let wpdSelectedId = null;
 let wpdFiltersReady = false;
 function wpdFillSelect(sel, options, allLabel) {
   $(sel).innerHTML = [`<option value="">${esc(allLabel)}</option>`, ...options.map((o) => `<option value="${esc(o)}">${esc(o)}</option>`)].join('');
 }
 function wpdInitFilters() {
-  const marketing = [...new Set(WORKPLAN_BASE.map((r) => r.marketing))].sort((a, b) => a.localeCompare(b));
-  const area = [...new Set(WORKPLAN_BASE.map((r) => r.area))].sort((a, b) => a.localeCompare(b));
+  const marketing = [...new Set(workplanBaseCache.map((r) => r.marketing))].sort((a, b) => a.localeCompare(b));
+  const area = [...new Set(workplanBaseCache.map((r) => r.area))].sort((a, b) => a.localeCompare(b));
   wpdFillSelect('#wpd-filter-marketing', marketing, 'Semua Marketing');
   wpdFillSelect('#wpd-filter-area', area, 'Semua Area');
   const periods = [
@@ -2805,7 +2700,7 @@ function wpdComputeRow(base, liveIndex, manualHasilMap) {
 function wpdFullLiveData() {
   const liveIndex = wpdLiveIndex();
   const manualHasilMap = new Map(workplanHasilCache.map((r) => [r.workplan_id, r.hasil]));
-  return WORKPLAN_BASE.map((base) => wpdComputeRow(base, liveIndex, manualHasilMap));
+  return workplanBaseCache.map((base) => wpdComputeRow(base, liveIndex, manualHasilMap));
 }
 // Hasil Kunjungan manual (dropdown di tabel) — disimpan di tabel marketing_workplan_hasil lewat
 // RPC marketing_set_workplan_hasil, supaya tetap ada walau halaman di-refresh/dibuka admin lain.
@@ -2862,8 +2757,13 @@ function wpdHasilSelect(row) {
   return `<select class="wpd-hasil-select wpd-hasil-${row.hasil ? row.hasil.toLowerCase().replace(/\s+/g, '-').replace('tidak-lanjut', 'bad') : 'auto'}" data-wpd-hasil="${row.id}" aria-label="Hasil Kunjungan ${esc(row.lokasi)}">${opts}</select>`;
 }
 function wpdRenderTable(rows, allRows) {
+  if (!workplanBaseLoaded) {
+    $('#wpd-table-note').textContent = 'Memuat daftar workplan dari database…';
+    $('#wpd-table-body').innerHTML = '<tr><td colspan="8" class="hint">Memuat…</td></tr>';
+    return;
+  }
   const matched = allRows.filter((r) => r.realVisit).length;
-  $('#wpd-table-note').textContent = `Menampilkan ${rows.length} dari ${WORKPLAN_BASE.length} rencana kunjungan — ${matched} sudah ada laporan Kunjungan Marketing yang cocok (dicek otomatis dari menu Client Baru). Hasil Kunjungan bisa dipilih manual lewat dropdown di kolom Hasil.`;
+  $('#wpd-table-note').textContent = `Menampilkan ${rows.length} dari ${workplanBaseCache.length} rencana kunjungan — ${matched} sudah ada laporan Kunjungan Marketing yang cocok (dicek otomatis dari menu Client Baru). Hasil Kunjungan bisa dipilih manual lewat dropdown di kolom Hasil.`;
   $('#wpd-table-body').innerHTML = rows.length ? rows.map((r, i) => `<tr${r.id === wpdSelectedId ? ' class="wpd-row-active"' : ''}>
     <td>${i + 1}</td><td>${esc(wpdShortDate(r.tanggal))}</td><td>${esc(r.lokasi)}</td><td>${esc(r.area)}</td><td>${esc(r.marketing)}</td>
     <td>${wpdStatusBadge(r.status)}</td><td>${wpdHasilSelect(r)}</td>
@@ -2926,7 +2826,8 @@ function wpdRenderDetail(row) {
     <div class="wpd-detail-note"><strong>Catatan</strong><p>${catatan}</p></div>`;
 }
 function renderWorkplanDashboard() {
-  if (!wpdFiltersReady) { wpdInitFilters(); wpdFiltersReady = true; }
+  if (!workplanBaseLoaded && !workplanBaseLoading) loadWorkplanBase();
+  if (!wpdFiltersReady && workplanBaseLoaded) { wpdInitFilters(); wpdFiltersReady = true; }
   if (!workplanHasilLoaded && !workplanHasilLoading) loadWorkplanHasil();
   const allRows = wpdFullLiveData();
   const rows = wpdFiltered(allRows);

@@ -1,3 +1,9 @@
+VERSION: 0.9.53 (Dashboard Workplan: daftar rencana kunjungan dipindah ke Supabase)
+DATE: 2026-11-07
+
+CHANGED: Daftar 117 rencana kunjungan (tanggal/lokasi/area/marketing) sebelumnya ditulis statis di kode (`app.js`, konstanta `WORKPLAN_RAW`) — tidak bisa dibaca dari luar situs (mis. agen/alat monitoring pemilik yang perlu akses langsung ke database). Sekarang dipindah jadi tabel Supabase **`marketing_workplan`** (id 1-117, tanggal, lokasi, area, marketing) — Dashboard membacanya lewat query sekali saat pertama dibuka, bukan lagi tertanam di kode. Isi datanya sama persis dengan sebelumnya, cuma sumbernya pindah.
+NOTES: Migrasi `20261107_marketing_workplan.sql` sudah diterapkan & diverifikasi di produksi — tabel/117 baris/RLS/policy (admin-only SELECT, sama pola dengan `marketing_workplan_hasil`) sesuai. Migrasi yang sama juga menambahkan **foreign key** dari `marketing_workplan_hasil.workplan_id` ke `marketing_workplan.id` (terverifikasi ada) supaya Hasil manual selalu merujuk baris yang benar-benar ada. **Belum ada form tambah/ubah/hapus rencana lewat Dashboard** (baca-saja) — kalau ada workplan baru, masih lewat migrasi/script langsung ke tabel, bukan lewat UI. `app.js` kehilangan ~130 baris data statis (konstanta `WORKPLAN_RAW` dihapus total, diganti `workplanBaseCache` yang dimuat dari `client.from('marketing_workplan')`). Diuji lewat pratinjau standalone dengan `client.from` tiruan, belum dicoba login admin sungguhan di situs aktif — tapi tabel & isinya sendiri sudah dipastikan benar langsung di database.
+
 VERSION: 0.9.52 (Dashboard Workplan: dropdown Hasil diperkecil)
 DATE: 2026-11-07
 
