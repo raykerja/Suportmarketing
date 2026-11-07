@@ -1,3 +1,9 @@
+VERSION: 0.9.48 (Dashboard Workplan: kotak dropdown terpisah untuk teks + panah)
+DATE: 2026-11-07
+
+CHANGED: Setelah 0.9.47 (kotak chip luar per filter), pemilik masih merasa bagian teks nilai ("Semua Marketing" dkk) dan tanda panah bawahnya belum cukup jelas sebagai tombol dropdown. Sekarang tiap filter (termasuk "Periode Kunjungan") punya **kotak kedua** khusus membungkus teks nilai + panah — kotak putih dengan border, berubah biru saat disorot/fokus — terpisah dari kotak chip ikon+label di luarnya. Area panah sepenuhnya di atas elemen `<select>` sehingga ikut bisa diklik (dicek lewat `elementFromPoint`, bukan cuma asumsi).
+NOTES: Markup select dibungkus `<span class="wpd-select-box">` baru di `index.html`; styling di `theme-ray.css` (chevron lama yang nempel ke `.wpd-filter`/`.wpd-period` diganti, dipindah ke kotak baru ini). Tidak ada perubahan JS/data. Dicek lewat pratinjau standalone (desktop & HP, termasuk tes klik tepat di titik panah), tidak ada overflow baru. Belum dicoba di situs aktif dengan login admin sungguhan.
+
 VERSION: 0.9.47 (Dashboard Workplan: kotak penanda dropdown filter)
 DATE: 2026-11-07
 

@@ -25,7 +25,7 @@
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
   <link rel="stylesheet" href="style.css?v=20261023-3">
-  <link rel="stylesheet" href="theme-ray.css?v=20261107-2">
+  <link rel="stylesheet" href="theme-ray.css?v=20261107-3">
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
@@ -91,15 +91,15 @@
               <div><h1>Dashboard Workplan Marketing</h1><p>Rencana Kunjungan, Realisasi, dan Hasil</p></div>
             </div>
             <label class="wpd-period"><span class="wpd-period-icon"><svg class="menu-icon"><use href="#icon-sheet"></use></svg></span>
-              <span><small>Periode Kunjungan</small><select id="wpd-filter-period"></select></span>
+              <span><small>Periode Kunjungan</small><span class="wpd-select-box"><select id="wpd-filter-period"></select></span></span>
             </label>
           </div>
 
           <div class="wpd-filterbar card">
-            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-blue"><svg class="menu-icon"><use href="#icon-users"></use></svg></span><span><small>Marketing</small><select id="wpd-filter-marketing"></select></span></label>
-            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-navy"><svg class="menu-icon"><use href="#icon-pin"></use></svg></span><span><small>Area / Lokasi</small><select id="wpd-filter-area"></select></span></label>
-            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-amber"><svg class="menu-icon"><use href="#icon-activity"></use></svg></span><span><small>Status Kunjungan</small><select id="wpd-filter-status"><option value="">Semua Status</option><option value="Selesai">Selesai</option><option value="Terjadwal">Terjadwal</option></select></span></label>
-            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-red"><svg class="menu-icon"><use href="#icon-tag"></use></svg></span><span><small>Hasil Kunjungan</small><select id="wpd-filter-hasil"><option value="">Semua Hasil</option><option value="Positif">Positif</option><option value="Proses">Proses Lanjut</option><option value="Tidak Lanjut">Tidak Lanjut</option></select></span></label>
+            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-blue"><svg class="menu-icon"><use href="#icon-users"></use></svg></span><span><small>Marketing</small><span class="wpd-select-box"><select id="wpd-filter-marketing"></select></span></span></label>
+            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-navy"><svg class="menu-icon"><use href="#icon-pin"></use></svg></span><span><small>Area / Lokasi</small><span class="wpd-select-box"><select id="wpd-filter-area"></select></span></span></label>
+            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-amber"><svg class="menu-icon"><use href="#icon-activity"></use></svg></span><span><small>Status Kunjungan</small><span class="wpd-select-box"><select id="wpd-filter-status"><option value="">Semua Status</option><option value="Selesai">Selesai</option><option value="Terjadwal">Terjadwal</option></select></span></span></label>
+            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-red"><svg class="menu-icon"><use href="#icon-tag"></use></svg></span><span><small>Hasil Kunjungan</small><span class="wpd-select-box"><select id="wpd-filter-hasil"><option value="">Semua Hasil</option><option value="Positif">Positif</option><option value="Proses">Proses Lanjut</option><option value="Tidak Lanjut">Tidak Lanjut</option></select></span></span></label>
             <button id="wpd-reset-filter" class="primary wpd-reset" type="button"><svg class="menu-icon"><use href="#icon-close"></use></svg> Reset Filter</button>
           </div>
 
