@@ -1,3 +1,9 @@
+VERSION: 0.9.54 (Dashboard Workplan: tabel dipadatkan sesuai mockup)
+DATE: 2026-11-07
+
+CHANGED: Kroscek ulang ke gambar mockup pemilik ("PT Ray Mitra Perkasa Marketing Dashboard.png") — tinggi baris tabel "Daftar Workplan & Laporan Kunjungan" jauh lebih besar (~75px) dari mockup (~30px) karena kolom Tanggal dan Area ikut melipat jadi 2 baris di kolom sempit. Warna & ketebalan teks sudah sesuai mockup (navy, normal), tidak diubah. Sekarang kolom No/Tanggal/Area/Marketing/Status/Aksi dibuat tidak melipat (satu baris), kolom Lokasi/Instansi tetap boleh melipat untuk nama lokasi yang panjang. Hasilnya baris jadi ~36px, mendekati kepadatan mockup.
+NOTES: Murni CSS (`theme-ray.css`). Ketemu penyebab tersembunyi sekaligus diperbaiki: dropdown Hasil (0.9.51/0.9.52) ikut tertarik tinggi 54px oleh aturan CSS global `select{height:54px}` (dipakai form lain di situs ini) karena belum ada override `min-height` sendiri — sekarang `.wpd-hasil-select` punya `height`/`min-height:22px` eksplisit + diganti ke `appearance:none` dengan panah custom (SVG background-image) supaya ukurannya konsisten lintas browser. Dicek lewat pratinjau: tinggi baris terkonfirmasi turun dari 75px → 36px, tidak ada overflow baru di desktop/HP. Belum dicoba di situs aktif dengan login admin sungguhan.
+
 VERSION: 0.9.53 (Dashboard Workplan: daftar rencana kunjungan dipindah ke Supabase)
 DATE: 2026-11-07
 
