@@ -197,7 +197,6 @@ function activateTab(tab, record = true) {
     history.pushState({ ...history.state, marketingTab: tab }, '');
   }
   document.querySelectorAll('[data-tab]').forEach((button) => button.classList.toggle('active', button.dataset.tab === tab));
-  if (tab === 'dashboard') showDashboardOverview();
   const inActiveClient = activeClientTabs.has(tab);
   $('#active-client-tabs').hidden = !inActiveClient;
   $('#active-client-menu').classList.toggle('active', inActiveClient);
@@ -239,15 +238,10 @@ function activateTab(tab, record = true) {
   if (tab === 'price-simulation') { if (!priceLoaded) loadPrices(); else renderSimTable(); }
   if (tab === 'repitch') { if (!repitchLoaded) loadRepitch(); else renderRepitch(); }
   if (tab === 'rab-recap' || tab === 'rab-recap-summary' || tab === 'rab-recap-luar') loadRabRecap();
-  if (tab === 'dashboard') loadDashboard();
+  if (tab === 'dashboard') renderWorkplanDashboard();
   if (tab === 'offer-recap') renderOfferRecap();
 }
 document.querySelectorAll('[data-tab]').forEach((button) => button.addEventListener('click', () => activateTab(button.dataset.tab)));
-$('#dashboard-overview').addEventListener('click', (event) => {
-  const button = event.target.closest('[data-dash-detail]');
-  if (button) showDashboardDetail(button.dataset.dashDetail);
-});
-$('#dashboard-detail-back').addEventListener('click', showDashboardOverview);
 $('#active-client-menu').addEventListener('click', () => activateTab('clients'));
 $('#sales-menu').addEventListener('click', () => activateTab('visits'));
 $('#pipeline-menu').addEventListener('click', () => activateTab('research'));
@@ -868,7 +862,6 @@ async function loadRepitch() {
   else { repitchRows = data || []; repitchError = ''; }
   repitchLoaded = true;
   renderRepitch();
-  if (isAdmin()) renderOpsDashboard();
 }
 const repitchStatus = (clientId) => repitchRows.find((r) => r.client_id === clientId);
 const myAdminAliases = () => picAliases.filter((a) => a.pic_role === 'admin' && a.user_id === currentUser?.id).map((a) => a.alias);
@@ -926,7 +919,6 @@ $('#repitch-table').addEventListener('change', async (event) => {
   if (existing) { existing.offer_made = box.checked; existing.marked_at = box.checked ? new Date().toISOString() : existing.marked_at; }
   else repitchRows.push({ client_id: id, offer_made: box.checked, marked_by: currentUser?.id, marked_at: box.checked ? new Date().toISOString() : null });
   renderRepitch();
-  if (isAdmin()) renderOpsDashboard();
 });
 window.marketingApi = {
   async saveOffer({ clientId, stage, offerType, activityDate, note, next }) {
@@ -2618,360 +2610,259 @@ $('#ai-search-form').addEventListener('submit', async (event) => {
   status('#ai-search-status', data.sources?.length ? `${data.sources.length} sumber ditemukan.${data.ai_ready ? '' : ' Ringkasan AI belum aktif; API key belum terpasang.'}` : 'Belum ada data yang cocok.');
 });
 
-// Dashboard (khusus admin): ringkasan seluruh menu. Sebagian besar dibaca dari cache yang sudah
-// termuat menu lain; Monitoring, Pengeluaran bulan ini, dan Database Harga diambil ulang di sini
-// karena belum tentu sudah dimuat saat Dashboard dibuka.
-const monitoringStageNames = { review: 'Perlu review', proposal: 'Menyiapkan penawaran', sent: 'Penawaran terkirim',
-  follow_up: 'Negosiasi / follow up', won: 'Disetujui', lost: 'Tidak lanjut' };
-let dashboardMonitoring = [];
-let dashboardExpenseMonth = [];
-let dashboardLoaded = false;
-async function loadDashboard() {
-  if (!client || !currentUser || !isAdmin()) return;
-  status('#dashboard-status', 'Memuat Monitoring, Pengeluaran bulan ini, dan Database Harga…');
-  const now = new Date();
-  const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-  const [monitoring, expenseMonth] = await Promise.all([
-    client.from('marketing_client_offers').select('client_id,stage,next_follow_up'),
-    client.from('marketing_expenses').select('tanggal_realisasi,nama_marketing,jenis_pengeluaran,nominal').gte('tanggal_realisasi', monthStart),
-    priceLoaded ? Promise.resolve() : loadPrices(),
-  ]);
-  dashboardMonitoring = monitoring.error ? [] : (monitoring.data || []);
-  dashboardExpenseMonth = expenseMonth.error ? [] : (expenseMonth.data || []);
-  dashboardLoaded = true;
-  const errMsg = [monitoring.error, expenseMonth.error].filter(Boolean).map((e) => e.message).join('; ');
-  status('#dashboard-status', errMsg ? 'Sebagian data gagal dimuat: ' + errMsg : `Diperbarui: ${date(new Date().toISOString())}`, !!errMsg);
-  renderOpsDashboard();
+// Dashboard Workplan Marketing: tampilan rencana kunjungan, realisasi, dan hasil per marketing.
+// Data di bawah adalah snapshot workplan asli (file Excel/PDF staf marketing di folder AREA
+// MARKETING, per 7 Nov 2026) - bukan dari Supabase, murni tampilan + perhitungan di browser.
+// Status Selesai/Terjadwal dihitung otomatis dari tanggal hari ini; Hasil Kunjungan masih "-"
+// untuk semua baris karena sumber data belum mencatat hasil kunjungan sungguhan.
+const WORKPLAN_RAW = [
+  ["2026-11-09", "BADAN KEPEGAWAIAN, PENDIDIKAN DAN PELATIHAN (BPKP)", "Kota Semarang", "Denis"],
+  ["2026-11-09", "BADAN PENDAPATAN DAERAH (BAPEDA)", "Kota Semarang", "Denis"],
+  ["2026-11-09", "BADAN PENGELOLAAN KEUANGAN DAN ASET DAERAH (BPKAD)", "Kota Semarang", "Denis"],
+  ["2026-11-09", "DINAS PENATAAN RUANG (DISTARU)", "Kota Semarang", "Denis"],
+  ["2026-11-10", "BADAN KESATUAN BANGSA DAN POLITIK (BAKESBANGPOL)", "Kota Semarang", "Denis"],
+  ["2026-11-10", "BADAN RISET DAN INOVASI DAERAH (BRIDA)", "Kota Semarang", "Denis"],
+  ["2026-11-10", "DINAS ARSIP DAN PERPUSTAKAAN DAERAH", "Kota Semarang", "Denis"],
+  ["2026-11-10", "DINAS PERINDUSTRIAN", "Kota Semarang", "Denis"],
+  ["2026-11-11", "KECAMATAN CANDISARI", "Kota Semarang", "Denis"],
+  ["2026-11-11", "KECAMATAN GAJAHMUNGKUR", "Kota Semarang", "Denis"],
+  ["2026-11-11", "DINAS PEMADAM KEBAKARAN", "Kota Semarang", "Denis"],
+  ["2026-11-11", "DINAS KEPEMUDAAN DAN OLAH RAGA", "Kota Semarang", "Denis"],
+  ["2026-11-12", "KECAMATAN BANYUMANIK", "Kota Semarang", "Denis"],
+  ["2026-11-12", "DINAS PEMBERDAYAAN PEREMPUAN DAN PERLINDUNGAN ANAK", "Kota Semarang", "Denis"],
+  ["2026-11-12", "DINAS PENGENDALIAN PENDUDUK DAN KELUARGA BERENCANA", "Kota Semarang", "Denis"],
+  ["2026-11-12", "KECAMATAN TEMBALANG", "Kota Semarang", "Denis"],
+  ["2026-11-13", "DINAS PENDIDIKAN", "Kota Semarang", "Denis"],
+  ["2026-11-13", "KECAMATAN GUNUNG PATI", "Kota Semarang", "Denis"],
+  ["2026-11-13", "KECAMATAN GENUK", "Kota Semarang", "Denis"],
+  ["2026-11-13", "KECAMATAN PEDURUNGAN", "Kota Semarang", "Denis"],
+  ["2026-11-16", "DINSOS", "Kota Semarang", "Denis"],
+  ["2026-11-16", "DINAS KOMUNIKASI, INFORMATIKA, STATISTIK DAN PERSANDIAN", "Kota Semarang", "Denis"],
+  ["2026-11-16", "BAGIAN RUMAH TANGGA", "Kota Semarang", "Denis"],
+  ["2026-11-16", "SEKRETARIAT DPRD (SEKWAN)", "Kota Semarang", "Denis"],
+  ["2026-11-16", "DINAS KEBUDAYAAN DAN PARIWISATA", "Kota Semarang", "Denis"],
+  ["2026-11-17", "DINAS KOPERASI DAN USAHA MIKRO", "Kota Semarang", "Denis"],
+  ["2026-11-17", "DINAS PERIKANAN", "Kota Semarang", "Denis"],
+  ["2026-11-17", "DINAS KESEHATAN", "Kota Semarang", "Denis"],
+  ["2026-11-17", "DINAS KETAHANAN PANGAN", "Kota Semarang", "Denis"],
+  ["2026-11-17", "DINAS TENAGA KERJA", "Kota Semarang", "Denis"],
+  ["2026-11-18", "DINAS PEKERJAAN UMUM", "Kota Semarang", "Denis"],
+  ["2026-11-18", "DINAS PENANAMAN MODAL DAN PELAYANAN TERPADU SATU PINTU", "Kota Semarang", "Denis"],
+  ["2026-11-18", "KECAMATAN TUGU", "Kota Semarang", "Denis"],
+  ["2026-11-18", "DINAS PERHUBUNGAN", "Kota Semarang", "Denis"],
+  ["2026-11-18", "KECAMATAN NGALIYAN", "Kota Semarang", "Denis"],
+  ["2026-11-19", "KECAMATAN SEMARANG UTARA", "Kota Semarang", "Denis"],
+  ["2026-11-19", "DINAS PERTANIAN", "Kota Semarang", "Denis"],
+  ["2026-11-19", "RSUD KRMT WONGSONEGORO", "Kota Semarang", "Denis"],
+  ["2026-11-19", "BADAN PENANGGULANGAN BENCANA DAERAH (BPBD)", "Kota Semarang", "Denis"],
+  ["2026-11-19", "DINAS KEPENDUDUKAN DAN PENCATATAN SIPIL", "Kota Semarang", "Denis"],
+  ["2026-11-09", "POLITEKNIK INDUSTRI FURNITUR & PENGOLAHAN KAYU KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-09", "PENGADILAN AGAMA KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-09", "POLRES KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-09", "KEJAKSAAN NEGERI KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-09", "BAGIAN UMUM KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-10", "PENGADILAN NEGERI KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-10", "DINAS KESEHATAN DAERAH KABUPATEN KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-10", "KANTOR KEMENTERIAN AGAMA KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-10", "DINAS KEARSIPAN & PERPUSTAKAAN", "Kab. Kendal", "Asmono"],
+  ["2026-11-10", "KECAMATAN KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-11", "DINAS PEKERJAAN UMUM & PENATAAN RUANG KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-11", "DINAS PERHUBUNGAN KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-11", "BADAN PENDAPATAN DAERAH", "Kab. Kendal", "Asmono"],
+  ["2026-11-11", "DINAS PERDAGANGAN, KOPERASI & USAHA KECIL & MENENGAH KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-11", "DINAS LINGKUNGAN HIDUP KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-12", "DINAS KEPEMUDAAN, OLAHRAGA & PARIWISATA KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-12", "DINAS PERUMAHAN RAKYAT & KAWASAN PERMUKIMAN KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-12", "DINAS PEMBERDAYAAN MASYARAKAT & DESA KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-12", "DINAS SOSIAL KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-12", "INSPEKTORAT DAERAH KENDAL", "Kab. Kendal", "Asmono"],
+  ["2026-11-04", "KECAMATAN AMBARAWA", "Kab. Semarang", "Ihsan"],
+  ["2026-11-04", "KECAMATAN BAWEN", "Kab. Semarang", "Ihsan"],
+  ["2026-11-04", "KELURAHAN BAWEN", "Kab. Semarang", "Ihsan"],
+  ["2026-11-06", "PT MOD INDO (GARMENT)", "Kab. Semarang", "Ihsan"],
+  ["2026-11-09", "SEKRETARIAT DAERAH", "Kab. Demak", "Ihsan"],
+  ["2026-11-09", "SEKRETARIAT DPRD", "Kab. Demak", "Ihsan"],
+  ["2026-11-09", "DINAS KEPEMUDAAN DAN OLAH RAGA", "Kab. Demak", "Ihsan"],
+  ["2026-11-10", "DINAS KESEHATAN DAERAH", "Kab. Demak", "Ihsan"],
+  ["2026-11-10", "DINAS PERDAGANGAN, KOPERASI, USAHA KECIL DAN MENENGAH", "Kab. Demak", "Ihsan"],
+  ["2026-11-10", "DINAS PEMBERDAYAAN MASYARAKAT DAN DESA, P2KB", "Kab. Demak", "Ihsan"],
+  ["2026-11-11", "PUSKESMAS KARANGAWEN I", "Kab. Demak", "Ihsan"],
+  ["2026-11-11", "PUSKESMAS KARANGAWEN II", "Kab. Demak", "Ihsan"],
+  ["2026-11-11", "PUSKESMAS MRANGGEN III", "Kab. Demak", "Ihsan"],
+  ["2026-11-12", "BALAI BAHASA JAWA TENGAH", "Kab. Semarang", "Ihsan"],
+  ["2026-11-12", "DINAS PERTANIAN, PERIKANAN DAN PANGAN", "Kab. Semarang", "Ihsan"],
+  ["2026-11-12", "DINAS LINGKUNGAN HIDUP", "Kab. Semarang", "Ihsan"],
+  ["2026-11-12", "DINAS PARIWISATA", "Kab. Semarang", "Ihsan"],
+  ["2026-11-12", "DINAS PENANAMAN MODAL DAN PELAYANAN TERPADU SATU PINTU", "Kab. Semarang", "Ihsan"],
+  ["2026-11-12", "SEKRETARIAT DPRD", "Kab. Semarang", "Ihsan"],
+  ["2026-11-12", "DINAS SOSIAL", "Kab. Semarang", "Ihsan"],
+  ["2026-11-13", "PT GLORY INDUSTRIAL SEMARANG", "Kab. Semarang", "Ihsan"],
+  ["2026-11-13", "SEKRETARIAT DAERAH", "Kab. Semarang", "Ihsan"],
+  ["2026-11-13", "PENGADILAN AGAMA AMBARAWA", "Kab. Semarang", "Ihsan"],
+  ["2026-11-16", "DINAS LINGKUNGAN HIDUP", "Kab. Grobogan", "Ihsan"],
+  ["2026-11-16", "DINAS PEKERJAAN UMUM DAN PENATAAN RUANG", "Kab. Grobogan", "Ihsan"],
+  ["2026-11-16", "DINAS PERHUBUNGAN", "Kab. Grobogan", "Ihsan"],
+  ["2026-11-16", "DINAS PERINDUSTRIAN DAN PERDAGANGAN", "Kab. Grobogan", "Ihsan"],
+  ["2026-11-17", "SEKRETARIAT DAERAH", "Kab. Grobogan", "Ihsan"],
+  ["2026-11-17", "SEKRETARIAT DPRD", "Kab. Grobogan", "Ihsan"],
+  ["2026-11-17", "DINAS PERTANIAN", "Kab. Grobogan", "Ihsan"],
+  ["2026-11-18", "DINAS PERDAGANGAN, KOPERASI, USAHA KECIL DAN MENENGAH", "Kab. Blora", "Ihsan"],
+  ["2026-11-18", "SEKRETARIAT DAERAH", "Kab. Blora", "Ihsan"],
+  ["2026-11-19", "KECAMATAN BLORA", "Kab. Blora", "Ihsan"],
+  ["2026-11-20", "DINAS LINGKUNGAN HIDUP", "Kab. Blora", "Ihsan"],
+  ["2026-11-09", "DINAS PENDIDIKAN PEMUDA & OLAHRAGA", "Kab. Jepara", "Rendi"],
+  ["2026-11-09", "KEMENHAJ JEPARA", "Kab. Jepara", "Rendi"],
+  ["2026-11-09", "DP3AP2KB", "Kab. Jepara", "Rendi"],
+  ["2026-11-09", "KEJARI JEPARA", "Kab. Jepara", "Rendi"],
+  ["2026-11-09", "KESBANGPOL", "Kab. Jepara", "Rendi"],
+  ["2026-11-09", "BBPBAP", "Kab. Jepara", "Rendi"],
+  ["2026-11-09", "PT HORESTCO INDONESIA (SWASTA)", "Kab. Jepara", "Rendi"],
+  ["2026-11-09", "PT DIAN ADI FURNI (SWASTA)", "Kab. Jepara", "Rendi"],
+  ["2026-11-10", "DINAS KOMINFO KABUPATEN KUDUS", "Kab. Kudus", "Rendi"],
+  ["2026-11-10", "KESBANGPOL", "Kab. Kudus", "Rendi"],
+  ["2026-11-10", "BALAI PSDA SERANG LUSI JUANA", "Kab. Kudus", "Rendi"],
+  ["2026-11-10", "KEMENAGAJ KUDUS", "Kab. Kudus", "Rendi"],
+  ["2026-11-10", "DINAS SOSIAL P3AP2KB", "Kab. Kudus", "Rendi"],
+  ["2026-11-11", "KEJARI PATI", "Kab. Pati", "Rendi"],
+  ["2026-11-11", "DINAS TENAGA KERJA", "Kab. Pati", "Rendi"],
+  ["2026-11-11", "KEMENHAJ", "Kab. Pati", "Rendi"],
+  ["2026-11-11", "KESBANGPOL", "Kab. Pati", "Rendi"],
+  ["2026-11-11", "UPTD PPA DINSOSP3AKB", "Kab. Pati", "Rendi"],
+  ["2026-11-12", "DINSOS", "Kab. Rembang", "Rendi"],
+  ["2026-11-12", "POLRES REMBANG", "Kab. Rembang", "Rendi"],
+  ["2026-11-12", "DINAS PERHUBUNGAN", "Kab. Rembang", "Rendi"],
+  ["2026-11-12", "KESBANGPOL", "Kab. Rembang", "Rendi"],
+  ["2026-11-12", "DINAS PENDIDIKAN, PEMUDA DAN OLAHRAGA", "Kab. Rembang", "Rendi"],
+];
+
+
+const WORKPLAN_DATA = WORKPLAN_RAW.map(([tanggal, lokasi, area, marketing], i) => ({
+  id: i + 1, tanggal, lokasi, area, marketing,
+  status: tanggal < localToday() ? 'Selesai' : 'Terjadwal',
+  hasil: '',
+}));
+let wpdSelectedId = null;
+let wpdFiltersReady = false;
+function wpdFillSelect(sel, options, allLabel) {
+  $(sel).innerHTML = [`<option value="">${esc(allLabel)}</option>`, ...options.map((o) => `<option value="${esc(o)}">${esc(o)}</option>`)].join('');
 }
-const dashOrdinalRamp = ['#8fb6e6', '#6396d8', '#4a7fcc', '#0a4fa6'];
-function dashHeroTile(icon, value, label, tone) {
-  return `<div class="dash-tile${tone ? ' ' + tone : ''}"><svg class="menu-icon"><use href="#icon-${icon}"></use></svg><div><strong>${esc(value)}</strong><small>${esc(label)}</small></div></div>`;
+function wpdInitFilters() {
+  const marketing = [...new Set(WORKPLAN_DATA.map((r) => r.marketing))].sort((a, b) => a.localeCompare(b));
+  const area = [...new Set(WORKPLAN_DATA.map((r) => r.area))].sort((a, b) => a.localeCompare(b));
+  wpdFillSelect('#wpd-filter-marketing', marketing, 'Semua Marketing');
+  wpdFillSelect('#wpd-filter-area', area, 'Semua Area');
+  const periods = [
+    { value: '', label: 'Semua Periode' },
+    { value: '2026-11-04:2026-11-06', label: '04 - 06 Nov 2026' },
+    { value: '2026-11-09:2026-11-13', label: '09 - 13 Nov 2026' },
+    { value: '2026-11-16:2026-11-20', label: '16 - 20 Nov 2026' },
+  ];
+  $('#wpd-filter-period').innerHTML = periods.map((p) => `<option value="${esc(p.value)}">${esc(p.label)}</option>`).join('');
 }
-function dashMiniStats(items) {
-  return `<div class="dash-mini-stats">${items.map(([v, l]) => `<div><strong>${esc(v)}</strong><small>${esc(l)}</small></div>`).join('')}</div>`;
+function wpdShortDate(iso) {
+  return new Date(`${iso}T12:00:00`).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
-function dashBarChart(rows, detailKey) {
-  const max = Math.max(1, ...rows.map((r) => r.value));
-  return `<div class="dash-bars">${rows.map((r) => {
-    const pct = r.value ? Math.max(5, Math.round((r.value / max) * 100)) : 0;
-    return `<button type="button" class="dash-bar-row" data-dash-detail="${detailKey}" data-tip="${esc(r.tip || `${r.label}: ${r.value}`)}">
-      <span class="dash-bar-label">${esc(r.label)}</span>
-      <span class="dash-bar-track"><span class="dash-bar-fill" style="width:${pct}%;background:${r.color}"></span></span>
-      <span class="dash-bar-value">${esc(r.value)}</span>
-    </button>`;
-  }).join('')}</div>`;
+function wpdFiltered() {
+  const marketing = $('#wpd-filter-marketing').value;
+  const area = $('#wpd-filter-area').value;
+  const status = $('#wpd-filter-status').value;
+  const hasil = $('#wpd-filter-hasil').value;
+  const period = $('#wpd-filter-period').value;
+  return WORKPLAN_DATA.filter((r) => {
+    if (marketing && r.marketing !== marketing) return false;
+    if (area && r.area !== area) return false;
+    if (status && r.status !== status) return false;
+    if (hasil && r.hasil !== hasil) return false;
+    if (period) { const [from, to] = period.split(':'); if (r.tanggal < from || r.tanggal > to) return false; }
+    return true;
+  }).sort((a, b) => a.tanggal.localeCompare(b.tanggal) || a.marketing.localeCompare(b.marketing) || a.lokasi.localeCompare(b.lokasi));
 }
-function dashChips(chips, detailKey) {
-  return `<div class="dash-chip-row">${chips.map((c) => `<button type="button" class="dash-chip ${c.tone}" data-dash-detail="${detailKey}" data-tip="${esc(c.tip || c.label)}">${esc(c.label)}</button>`).join('')}</div>`;
+function wpdHasilBadge(hasil) {
+  if (hasil === 'Positif') return '<span class="badge wpd-badge-good">&#10003; Positif</span>';
+  if (hasil === 'Proses') return '<span class="badge wpd-badge-proses">&#8635; Proses</span>';
+  if (hasil === 'Tidak Lanjut') return '<span class="badge wpd-badge-bad">&#10007; Tidak Lanjut</span>';
+  return '<span class="wpd-dash">-</span>';
 }
-function localDateKey(iso) {
-  const d = new Date(iso);
-  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+function wpdStatusBadge(status) {
+  return status === 'Selesai' ? '<span class="badge wpd-badge-good">Selesai</span>' : '<span class="badge wpd-badge-warn">Terjadwal</span>';
 }
-function buildVisitTrend() {
-  const days = [];
-  const todayDate = new Date(localToday() + 'T00:00:00');
-  for (let i = 13; i >= 0; i--) {
-    const d = new Date(todayDate); d.setDate(d.getDate() - i);
-    days.push({ key: d.toISOString().slice(0, 10), axis: d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' }), pic: 0, sales: 0 });
+function wpdRenderTable(rows) {
+  $('#wpd-table-note').textContent = `Menampilkan ${rows.length} dari ${WORKPLAN_DATA.length} rencana kunjungan (data workplan asli, diperbarui 7 Nov 2026).`;
+  $('#wpd-table-body').innerHTML = rows.length ? rows.map((r, i) => `<tr${r.id === wpdSelectedId ? ' class="wpd-row-active"' : ''}>
+    <td>${i + 1}</td><td>${esc(wpdShortDate(r.tanggal))}</td><td>${esc(r.lokasi)}</td><td>${esc(r.area)}</td><td>${esc(r.marketing)}</td>
+    <td>${wpdStatusBadge(r.status)}</td><td>${wpdHasilBadge(r.hasil)}</td>
+    <td><button type="button" class="wpd-eye" data-wpd-detail="${r.id}" aria-label="Lihat detail kunjungan ${esc(r.lokasi)}">&#128065;</button></td>
+  </tr>`).join('') : '<tr><td colspan="8" class="hint">Tidak ada workplan yang cocok dengan filter ini.</td></tr>';
+}
+function wpdRenderStats(rows) {
+  const selesai = rows.filter((r) => r.status === 'Selesai').length;
+  const terjadwal = rows.filter((r) => r.status === 'Terjadwal').length;
+  const positif = rows.filter((r) => r.hasil === 'Positif').length;
+  const proses = rows.filter((r) => r.hasil === 'Proses').length;
+  const tidak = rows.filter((r) => r.hasil === 'Tidak Lanjut').length;
+  $('#wpd-stat-total').textContent = rows.length;
+  $('#wpd-stat-selesai').textContent = selesai;
+  $('#wpd-stat-terjadwal').textContent = terjadwal;
+  $('#wpd-stat-positif').textContent = positif;
+  $('#wpd-stat-proses').textContent = proses;
+  $('#wpd-stat-tidak').textContent = tidak;
+}
+function wpdRenderRekap(rows) {
+  const byMarketing = new Map();
+  for (const r of rows) {
+    if (!byMarketing.has(r.marketing)) byMarketing.set(r.marketing, { marketing: r.marketing, total: 0, selesai: 0, terjadwal: 0, positif: 0, proses: 0 });
+    const m = byMarketing.get(r.marketing);
+    m.total++;
+    if (r.status === 'Selesai') m.selesai++; else m.terjadwal++;
+    if (r.hasil === 'Positif') m.positif++;
+    if (r.hasil === 'Proses') m.proses++;
   }
-  const byKey = Object.fromEntries(days.map((d) => [d.key, d]));
-  for (const r of picVisitRows) { const row = byKey[localDateKey(r.created_at)]; if (row) row.pic++; }
-  for (const r of visitCache) { const row = byKey[localDateKey(r.created_at)]; if (row) row.sales++; }
-  return days.map((d) => ({ ...d, value: d.pic + d.sales, tip: `${d.axis}: ${d.pic + d.sales} kunjungan (${d.pic} PIC, ${d.sales} Marketing)` }));
+  const list = [...byMarketing.values()].sort((a, b) => a.marketing.localeCompare(b.marketing));
+  const totals = list.reduce((acc, m) => ({
+    total: acc.total + m.total, selesai: acc.selesai + m.selesai, terjadwal: acc.terjadwal + m.terjadwal,
+    positif: acc.positif + m.positif, proses: acc.proses + m.proses,
+  }), { total: 0, selesai: 0, terjadwal: 0, positif: 0, proses: 0 });
+  $('#wpd-rekap-body').innerHTML = (list.length ? list.map((m) => `<tr><td><strong>${esc(m.marketing)}</strong></td><td>${m.total}</td><td>${m.selesai}</td><td>${m.terjadwal}</td><td>${m.positif}</td><td>${m.proses}</td></tr>`).join('')
+    : '<tr><td colspan="6" class="hint">Tidak ada data.</td></tr>')
+    + (list.length ? `<tr class="wpd-row-total"><td><strong>Total</strong></td><td><strong>${totals.total}</strong></td><td><strong>${totals.selesai}</strong></td><td><strong>${totals.terjadwal}</strong></td><td><strong>${totals.positif}</strong></td><td><strong>${totals.proses}</strong></td></tr>` : '');
 }
-function dashTrendChart(days) {
-  const max = Math.max(1, ...days.map((d) => d.value));
-  return `<div class="dash-trend">
-    <div class="dash-trend-bars">${days.map((d) => {
-      const h = d.value ? Math.max(6, Math.round((d.value / max) * 100)) : 2;
-      return `<div class="dash-trend-col" tabindex="0" data-tip="${esc(d.tip)}"><span class="dash-trend-fill" style="height:${h}%"></span></div>`;
-    }).join('')}</div>
-    <div class="dash-trend-axis"><span>${esc(days[0]?.axis || '')}</span><span>${esc(days[days.length - 1]?.axis || '')}</span></div>
-  </div>`;
+function wpdRenderDetail(row) {
+  if (!row) { $('#wpd-detail-body').innerHTML = '<p class="hint">Klik ikon mata pada salah satu baris untuk melihat detail kunjungan.</p>'; return; }
+  const catatan = row.status === 'Selesai'
+    ? 'Kunjungan sudah lewat tanggalnya; hasil kunjungan belum dicatat di sumber data workplan.'
+    : 'Belum berlangsung &mdash; jadwal kunjungan rencana sesuai workplan marketing.';
+  $('#wpd-detail-body').innerHTML = `
+    <dl class="wpd-detail-list">
+      <div><dt>Lokasi / Instansi</dt><dd>${esc(row.lokasi)}</dd></div>
+      <div><dt>Tanggal Kunjungan</dt><dd>${esc(wpdShortDate(row.tanggal))}</dd></div>
+      <div><dt>Area</dt><dd>${esc(row.area)}</dd></div>
+      <div><dt>Marketing</dt><dd>${esc(row.marketing)}</dd></div>
+      <div><dt>Status</dt><dd>${wpdStatusBadge(row.status)}</dd></div>
+      <div><dt>Hasil Kunjungan</dt><dd>${wpdHasilBadge(row.hasil)}</dd></div>
+    </dl>
+    <div class="wpd-detail-note"><strong>Catatan</strong><p>${catatan}</p></div>`;
 }
-function offerRecapTable(stats, wonLabel, lostLabel) {
-  if (!stats.length) return '<p class="hint">Belum ada data.</p>';
-  const total = stats.reduce((sum, s) => sum + s.total, 0);
-  const berjalan = stats.reduce((sum, s) => sum + s.berjalan, 0);
-  const won = stats.reduce((sum, s) => sum + s.won, 0);
-  const lost = stats.reduce((sum, s) => sum + s.lost, 0);
-  return `<div class="table-wrap"><table><thead><tr><th>PIC Lapangan</th><th>Berjalan</th><th>${esc(wonLabel)}</th><th>${esc(lostLabel)}</th><th>Total</th></tr></thead><tbody>${stats.map((s) => `<tr><td><strong>${esc(s.pic)}</strong></td><td>${s.berjalan}</td><td>${s.won}</td><td>${s.lost}</td><td>${s.total}</td></tr>`).join('')}</tbody></table></div>
-    <p class="hint">Total: <strong>${berjalan}</strong> berjalan &middot; <strong>${won}</strong> ${wonLabel.toLowerCase()} &middot; <strong>${lost}</strong> ${lostLabel.toLowerCase()} &middot; <strong>${total}</strong> keseluruhan.</p>`;
+function renderWorkplanDashboard() {
+  if (!wpdFiltersReady) { wpdInitFilters(); wpdFiltersReady = true; }
+  const rows = wpdFiltered();
+  wpdRenderStats(rows);
+  wpdRenderTable(rows);
+  wpdRenderRekap(rows);
+  const stillVisible = rows.find((r) => r.id === wpdSelectedId);
+  wpdRenderDetail(stillVisible || null);
+  if (!stillVisible) wpdSelectedId = null;
 }
-function offerRecapKorlapStats() {
-  const aliases = [...new Map(picAliases.filter((a) => a.pic_role === 'korlap').map((a) => [a.alias, a])).values()].sort((a, b) => a.alias.localeCompare(b.alias));
-  const clientsById = new Map(activeClients.map((c) => [c.id, c]));
-  return aliases.map((a) => {
-    const rows = dashboardMonitoring.filter((r) => korlapTokens(clientsById.get(r.client_id) || {}).includes(a.alias));
-    const won = rows.filter((r) => r.stage === 'won').length;
-    const lost = rows.filter((r) => r.stage === 'lost').length;
-    const member = memberOptions.find((m) => m.user_id === a.user_id);
-    return { pic: member?.display_name || a.alias, total: rows.length, berjalan: rows.length - won - lost, won, lost };
-  }).filter((s) => s.total);
-}
-function offerRecapBaruStats() {
-  const byOwner = new Map();
-  for (const row of progressCache) {
-    const ownerId = row.owner_id || '';
-    if (!byOwner.has(ownerId)) byOwner.set(ownerId, []);
-    byOwner.get(ownerId).push(row);
-  }
-  return [...byOwner.entries()].map(([ownerId, rows]) => {
-    const deal = rows.filter((r) => r.stage === 'deal').length;
-    const gagal = rows.filter((r) => r.stage === 'gagal').length;
-    const member = allMembers.find((m) => m.user_id === ownerId);
-    return { pic: member?.display_name || '(tidak diketahui)', total: rows.length, berjalan: rows.length - deal - gagal, won: deal, lost: gagal };
-  }).filter((s) => s.total).sort((a, b) => b.total - a.total);
-}
-function renderPicOfferRecap() {
-  const lamaStats = offerRecapKorlapStats();
-  const baruStats = offerRecapBaruStats();
-  $('#dash-picrecap-summary').innerHTML = dashMiniStats([
-    [lamaStats.length, 'PIC Korlap (Klien Lama) ada penawaran'], [lamaStats.reduce((sum, s) => sum + s.berjalan, 0), 'Penawaran Klien Lama berjalan'],
-    [baruStats.length, 'Staf (Klien Baru) ada progress'], [baruStats.reduce((sum, s) => sum + s.berjalan, 0), 'Progress Klien Baru berjalan'],
-  ]);
-}
-function renderOpsDashboard() {
-  if (!isAdmin()) return;
-  const todayStr = localToday();
-  const live = activeClients.filter((r) => r.status === 'aktif');
-  const soon = live.filter((r) => { const l = daysLeft(r); return l !== null && l >= 0 && l <= 90; }).length;
-  const noDate = live.filter((r) => !r.kontrak_akhir).length;
-  const korlapAliases = picAliases.filter((a) => a.pic_role === 'korlap');
-  const korlapNoAccount = korlapAliases.filter((a) => !a.user_id).length;
-  $('#dash-clients-summary').innerHTML = dashMiniStats([
-    [live.length, 'Client aktif'], [activeClients.length - live.length, 'Diarsipkan'],
-    [soon, 'Kontrak ≤ 90 hari'], [noDate, 'Tanpa tanggal kontrak'], [korlapNoAccount, 'PIC Korlap belum punya akun'],
-  ]);
-
-  const picInitial = picVisitRows.filter((r) => r.visit_stage === 'initial').length;
-  const salesInitial = visitCache.filter((r) => r.data?.visit_stage === 'initial').length;
-  const trend = buildVisitTrend();
-  $('#dash-visits-trend').innerHTML = dashTrendChart(trend);
-  $('#dash-visits-summary').innerHTML = dashMiniStats([
-    [picVisitRows.length, 'Kunjungan PIC'], [picInitial, 'PIC perlu detail'],
-    [visitCache.length, 'Kunjungan Marketing'], [salesInitial, 'Marketing perlu detail'],
-  ]);
-
-  if (repitchLoaded) {
-    const stats = repitchAdminStats();
-    const totalDone = stats.reduce((sum, s) => sum + s.done, 0);
-    const totalAll = stats.reduce((sum, s) => sum + s.total, 0);
-    const overallPct = totalAll ? Math.round((totalDone / totalAll) * 100) : 0;
-    $('#dash-repitch-summary').innerHTML = (stats.length ? `<div class="table-wrap"><table><thead><tr><th>Admin (PIC)</th><th>Surat penawaran dibuat</th><th>Total client PIC</th><th>Progres</th></tr></thead><tbody>${stats.map((s) => `<tr><td><strong>${esc(s.name)}</strong></td><td>${s.done}</td><td>${s.total}</td><td>${s.total ? Math.round((s.done / s.total) * 100) : 0}%</td></tr>`).join('')}</tbody></table></div>`
-      : '<p class="hint">Belum ada PIC Admin dengan client aktif.</p>')
-      + `<p class="hint">Total: <strong>${totalDone}</strong> dari <strong>${totalAll}</strong> client sudah dibuatkan penawaran ulang &middot; progres keseluruhan <strong>${overallPct}%</strong>.</p>`;
-  } else {
-    $('#dash-repitch-summary').innerHTML = '<p class="hint">Memuat…</p>';
-  }
-
-  let monitoringOverdue = 0;
-  if (dashboardLoaded) {
-    const monitoringCounts = Object.fromEntries(Object.keys(monitoringStageNames).map((k) => [k, 0]));
-    for (const row of dashboardMonitoring) {
-      if (row.stage in monitoringCounts) monitoringCounts[row.stage]++;
-      if (row.next_follow_up && row.next_follow_up < todayStr && !['won', 'lost'].includes(row.stage)) monitoringOverdue++;
-    }
-    const total = dashboardMonitoring.length || 1;
-    const funnelKeys = ['review', 'proposal', 'sent', 'follow_up'];
-    const bars = funnelKeys.map((k, i) => ({ label: monitoringStageNames[k], value: monitoringCounts[k], color: dashOrdinalRamp[i],
-      tip: `${monitoringStageNames[k]}: ${monitoringCounts[k]} dari ${total} (${Math.round(monitoringCounts[k] / total * 100)}%)` }));
-    $('#dash-monitoring-summary').innerHTML = dashBarChart(bars, 'monitoring') + dashChips([
-      { label: `${monitoringCounts.won} ${monitoringStageNames.won}`, tone: 'good' },
-      { label: `${monitoringCounts.lost} ${monitoringStageNames.lost}`, tone: 'neutral' },
-      { label: `${monitoringOverdue} Follow up terlewat`, tone: monitoringOverdue ? 'critical' : 'neutral' },
-    ], 'monitoring');
-  } else {
-    $('#dash-monitoring-summary').innerHTML = '<p class="hint">Memuat…</p>';
-  }
-
-  const progressCounts = Object.fromEntries(Object.keys(stageNames).map((k) => [k, 0]));
-  let progressOverdue = 0;
-  for (const row of progressCache) {
-    if (row.stage in progressCounts) progressCounts[row.stage]++;
-    if (row.next_follow_up && row.next_follow_up < todayStr && !['deal', 'gagal'].includes(row.stage)) progressOverdue++;
-  }
-  const progressTotal = progressCache.length || 1;
-  const progressFunnelKeys = ['kunjungan', 'proposal', 'penawaran', 'follow_up'];
-  const progressBars = progressFunnelKeys.map((k, i) => ({ label: stageNames[k], value: progressCounts[k], color: dashOrdinalRamp[i],
-    tip: `${stageNames[k]}: ${progressCounts[k]} dari ${progressTotal} (${Math.round(progressCounts[k] / progressTotal * 100)}%)` }));
-  $('#dash-progress-summary').innerHTML = dashBarChart(progressBars, 'progress') + dashChips([
-    { label: `${progressCounts.deal} ${stageNames.deal}`, tone: 'good' },
-    { label: `${progressCounts.gagal} ${stageNames.gagal}`, tone: 'neutral' },
-    { label: `${progressOverdue} Follow up terlewat`, tone: progressOverdue ? 'critical' : 'neutral' },
-  ], 'progress');
-
-  renderPicOfferRecap();
-
-  const researchProcessing = researchCache.filter((r) => r.status === 'processing').length;
-  const leadPending = leadCache.filter((r) => r.review_status === 'pending').length;
-  const leadApproved = leadCache.filter((r) => r.review_status === 'approved').length;
-  const offerProcessingOrError = offerCache.filter((r) => r.status === 'processing' || r.status === 'error').length;
-  $('#dash-pipeline-summary').innerHTML = dashMiniStats([
-    [researchCache.length, 'Riset target'], [researchProcessing, 'Riset masih proses'],
-    [leadPending, 'Lead perlu direview'], [leadApproved, 'Lead disetujui'],
-    [offerCache.length, 'Dokumen penawaran'], [offerProcessingOrError, 'Penawaran proses/gagal'],
-  ]);
-
-  const seragamCount = priceRows.filter((r) => r.kategori === 'seragam').length;
-  const peralatanCount = priceRows.filter((r) => r.kategori === 'peralatan').length;
-  const perluVerifikasi = priceRows.filter((r) => r.perlu_verifikasi).length;
-  $('#dash-database-summary').innerHTML = dashMiniStats([
-    [seragamCount, 'Item harga seragam'], [peralatanCount, 'Item harga peralatan'],
-    [perluVerifikasi, 'Harga perlu diverifikasi'], [rabRecapCache.length, 'RAB final tercatat'],
-  ]);
-
-  const totalExpenseMonth = dashboardExpenseMonth.reduce((sum, r) => sum + Number(r.nominal || 0), 0);
-  $('#dash-expense-summary').innerHTML = dashMiniStats([
-    [dashboardExpenseMonth.length, 'Transaksi bulan ini'], [rupiah(totalExpenseMonth), 'Total bulan ini'],
-  ]);
-  const byType = {};
-  for (const row of dashboardExpenseMonth) byType[row.jenis_pengeluaran] = (byType[row.jenis_pengeluaran] || 0) + Number(row.nominal || 0);
-  const expenseRows = Object.entries(byType).sort((a, b) => b[1] - a[1])
-    .map(([jenis, total]) => ({ label: jenis, value: rupiah(total), color: 'var(--ray-blue)', tip: `${jenis}: ${rupiah(total)}` }));
-  if (expenseRows.length) {
-    const maxAmount = Math.max(1, ...Object.values(byType));
-    $('#dash-expense-breakdown').innerHTML = `<div class="dash-bars">${expenseRows.map((r) => {
-      const amount = byType[r.label];
-      const pct = Math.max(5, Math.round((amount / maxAmount) * 100));
-      return `<button type="button" class="dash-bar-row" data-dash-detail="expenses" data-tip="${esc(r.tip)}">
-        <span class="dash-bar-label">${esc(r.label)}</span>
-        <span class="dash-bar-track"><span class="dash-bar-fill" style="width:${pct}%;background:${r.color}"></span></span>
-        <span class="dash-bar-value">${esc(rupiah(amount))}</span>
-      </button>`;
-    }).join('')}</div>`;
-  } else {
-    $('#dash-expense-breakdown').innerHTML = '<p class="hint">Belum ada pengeluaran bulan ini.</p>';
-  }
-
-  const adminCount = allMembers.filter((m) => m.role === 'admin').length;
-  const staffCount = allMembers.filter((m) => m.role !== 'admin').length;
-  const inactiveCount = allMembers.filter((m) => m.active === false).length;
-  $('#dash-team-summary').innerHTML = dashMiniStats([
-    [adminCount, 'Admin'], [staffCount, 'Staf'], [inactiveCount, 'Akun nonaktif'], [korlapAliases.length, 'Total alias PIC Korlap'],
-  ]);
-
-  const visits7d = trend.slice(7).reduce((sum, d) => sum + d.value, 0);
-  const overdueTotal = monitoringOverdue + progressOverdue;
-  $('#dash-hero').innerHTML = [
-    dashHeroTile('users', live.length, 'Client aktif'),
-    dashHeroTile('pin', soon, 'Kontrak ≤ 90 hari', soon ? 'warning' : ''),
-    dashHeroTile('activity', overdueTotal, 'Follow up terlewat', overdueTotal ? 'critical' : 'good'),
-    dashHeroTile('user-plus', visits7d, 'Kunjungan 7 hari terakhir'),
-    dashHeroTile('wallet', rupiah(totalExpenseMonth), 'Pengeluaran bulan ini'),
-    dashHeroTile('search', leadPending, 'Lead perlu direview', leadPending ? 'warning' : ''),
-  ].join('');
-}
-$('#dashboard-refresh').addEventListener('click', loadDashboard);
-function showDashboardOverview() {
-  $('#dashboard-overview').hidden = false;
-  $('#dashboard-detail').hidden = true;
-}
-const dashboardDetailTitles = {
-  clients: 'Client Aktif', visits: 'Kunjungan', repitch: 'Progres Penawaran Ulang', monitoring: 'Monitoring & Tindaklanjut (Client Lama)',
-  progress: 'Progress (Client Baru)', picrecap: 'Rekap Penawaran per PIC Lapangan', pipeline: 'Target & Penawaran', database: 'Database Harga & Rekap RAB',
-  expenses: 'Pengeluaran Bulan Ini', team: 'Tim & Akun',
-};
-function renderDashboardDetailClients() {
-  const live = activeClients.filter((r) => r.status === 'aktif');
-  const soon = live.filter((r) => r.kontrak_akhir).map((r) => ({ ...r, left: daysLeft(r) }))
-    .filter((r) => r.left !== null && r.left <= 90).sort((a, b) => a.left - b.left);
-  const noDate = live.filter((r) => !r.kontrak_akhir);
-  const table = (rows) => `<div class="table-wrap"><table><thead><tr><th>Nama client</th><th>Cabang</th><th>Kategori</th><th>PIC Korlap</th><th>Sisa kontrak</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.nama_client)}</td><td>${esc(r.cabang)}</td><td>${esc(r.kategori)}</td><td>${esc(r.korlap_raw)}</td><td>${r.kontrak_akhir ? (r.left < 0 ? `<span class="badge error">Lewat ${Math.abs(r.left)} hari</span>` : `${r.left} hari`) : '—'}</td></tr>`).join('')}</tbody></table></div>`;
-  return `<p class="hint">Client aktif: ${live.length} · diarsipkan: ${activeClients.length - live.length}</p>
-    <h3>Kontrak &le; 90 hari, paling mendesak dulu (${soon.length})</h3>${soon.length ? table(soon) : '<p class="hint">Tidak ada yang mendesak.</p>'}
-    <h3>Belum ada tanggal kontrak (${noDate.length})</h3>${noDate.length ? table(noDate) : '<p class="hint">Semua client sudah punya tanggal kontrak.</p>'}`;
-}
-function renderDashboardDetailVisits() {
-  const staffName = (id) => allMembers.find((m) => m.user_id === id)?.display_name || '(tidak diketahui)';
-  const clientName = (id) => activeClients.find((c) => c.id === id)?.nama_client || '(client tidak ditemukan)';
-  const detailFields = (d) => [
-    d?.nama_pejabat_pic_1 && `PIC klien: ${esc(d.nama_pejabat_pic_1)}${d.jabatan_pic ? ' (' + esc(d.jabatan_pic) + ')' : ''}`,
-    d?.nomor_kontak_pic && `Kontak: ${esc(d.nomor_kontak_pic)}`,
-    d?.status_marketing && `Status: ${esc(d.status_marketing)}`,
-    d?.tanggal_follow_up && `Follow up: ${displayDateId(d.tanggal_follow_up)}`,
-    d?.informasi_penting && `Info penting: ${esc(d.informasi_penting)}`,
-    d?.catatan && `Catatan: ${esc(d.catatan)}`,
-  ].filter(Boolean);
-  const itemHtml = (name, tanggal, pic, stageLabel, d) => {
-    const extra = detailFields(d);
-    return `<div class="item"><strong>${esc(name)}</strong><small>${esc(tanggal)} · PIC yang mengunjungi: ${esc(pic)} · ${stageLabel}</small>${extra.length ? `<details><summary>Lihat info lengkap</summary><p>${extra.join('<br>')}</p></details>` : ''}</div>`;
-  };
-  const picRows = [...picVisitRows].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 15);
-  const picHtml = picRows.length ? picRows.map((r) => itemHtml(clientName(r.client_id), date(r.created_at), staffName(r.owner_id), r.visit_stage === 'initial' ? 'Tahap 1' : 'Detail terisi', r.data)).join('') : '<p class="hint">Belum ada Kunjungan PIC.</p>';
-  const salesRows = [...visitCache].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 15);
-  const salesHtml = salesRows.length ? salesRows.map((r) => itemHtml(r.data?.nama_perusahaan || '(belum diisi)', r.data?.tanggal_realisasi_kunjungan ? displayDateId(r.data.tanggal_realisasi_kunjungan) : date(r.created_at), staffName(r.owner_id), r.data?.visit_stage === 'initial' ? 'Tahap 1' : 'Detail terisi', r.data)).join('') : '<p class="hint">Belum ada Kunjungan Marketing.</p>';
-  return `<h3>Kunjungan PIC terbaru (${picVisitRows.length} total, menampilkan 15)</h3><div class="list">${picHtml}</div>
-    <h3>Kunjungan Marketing terbaru (${visitCache.length} total, menampilkan 15)</h3><div class="list">${salesHtml}</div>`;
-}
-function renderDashboardDetailRepitch() {
-  if (!repitchLoaded) return '<p class="hint">Memuat…</p>';
-  const rows = [...activeClients.filter((r) => r.status === 'aktif' && r.admin_raw)].sort((a, b) => a.admin_raw.localeCompare(b.admin_raw) || a.nama_client.localeCompare(b.nama_client));
-  const html = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Client</th><th>PIC Admin</th><th>Status</th></tr></thead><tbody>${rows.map((r) => { const st = repitchStatus(r.id);
-    return `<tr><td>${esc(r.nama_client)}</td><td>${esc(r.admin_raw)}</td><td>${st?.offer_made ? '<span class="badge">Sudah dibuat</span>' : '<span class="badge error">Belum</span>'}</td></tr>`; }).join('')}</tbody></table></div>` : '<p class="hint">Belum ada client dengan PIC Admin.</p>';
-  const done = rows.filter((r) => repitchStatus(r.id)?.offer_made).length;
-  return `<p class="hint">${done} dari ${rows.length} client sudah dibuatkan penawaran ulang.</p>${html}`;
-}
-function renderDashboardDetailMonitoring() {
-  if (!dashboardLoaded) return '<p class="hint">Memuat…</p>';
-  const clientInfo = (id) => activeClients.find((c) => c.id === id);
-  const todayStr = localToday();
-  const rows = [...dashboardMonitoring].filter((r) => !['won', 'lost'].includes(r.stage))
-    .sort((a, b) => (a.next_follow_up || '9999-99-99').localeCompare(b.next_follow_up || '9999-99-99'));
-  const html = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Client</th><th>PIC Lapangan</th><th>PIC Admin</th><th>Tahap</th><th>Follow up</th></tr></thead><tbody>${rows.map((r) => { const c = clientInfo(r.client_id);
-    return `<tr><td>${esc(c?.nama_client || '(client tidak ditemukan)')}</td><td>${esc(c?.korlap_raw || '—')}</td><td>${esc(c?.admin_raw || '—')}</td><td>${esc(monitoringStageNames[r.stage] || r.stage)}</td><td>${r.next_follow_up ? (r.next_follow_up < todayStr ? `<span class="badge error">${displayDateId(r.next_follow_up)} · terlewat</span>` : displayDateId(r.next_follow_up)) : '—'}</td></tr>`; }).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada yang masih berjalan.</p>';
-  return `<p class="hint">Yang masih berjalan (bukan "Disetujui"/"Tidak lanjut"): ${rows.length} dari ${dashboardMonitoring.length} total.</p>${html}`;
-}
-function renderDashboardDetailProgress() {
-  const companyName = (visitId) => progressVisits.find((v) => v.id === visitId)?.data?.nama_perusahaan || '(belum diisi)';
-  const todayStr = localToday();
-  const rows = [...progressCache].filter((r) => !['deal', 'gagal'].includes(r.stage))
-    .sort((a, b) => (a.next_follow_up || '9999-99-99').localeCompare(b.next_follow_up || '9999-99-99'));
-  const html = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Perusahaan</th><th>Tahap</th><th>Follow up</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(companyName(r.visit_id))}</td><td>${esc(stageNames[r.stage] || r.stage)}</td><td>${r.next_follow_up ? (r.next_follow_up < todayStr ? `<span class="badge error">${displayDateId(r.next_follow_up)} · terlewat</span>` : displayDateId(r.next_follow_up)) : '—'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada yang masih berjalan.</p>';
-  return `<p class="hint">Yang masih berjalan (bukan "Deal"/"Gagal"): ${rows.length} dari ${progressCache.length} total.</p>${html}`;
-}
-function renderDashboardDetailPipeline() {
-  const pending = leadCache.filter((r) => r.review_status === 'pending');
-  const pendingHtml = pending.length ? pending.slice(0, 30).map((r) => `<div class="item"><strong>${esc(r.nama_target)}</strong><small>${esc(r.kabupaten_kota || '')}, ${esc(r.provinsi || '')}</small></div>`).join('') : '<p class="hint">Tidak ada lead menunggu review.</p>';
-  const trouble = offerCache.filter((r) => r.status === 'processing' || r.status === 'error');
-  const troubleHtml = trouble.length ? trouble.map((r) => `<div class="item"><strong>${esc(r.client_name)}</strong><small><span class="badge ${esc(r.status)}">${esc(r.status)}</span>${r.error ? ' · ' + esc(r.error) : ''}</small></div>`).join('') : '<p class="hint">Tidak ada penawaran yang masih proses/gagal.</p>';
-  return `<h3>Lead menunggu review (${pending.length})</h3><div class="list">${pendingHtml}</div>
-    <h3>Penawaran proses/gagal</h3><div class="list">${troubleHtml}</div>`;
-}
-function renderDashboardDetailDatabase() {
-  const needsVerify = priceRows.filter((r) => r.perlu_verifikasi);
-  const verifyHtml = needsVerify.length ? `<div class="table-wrap"><table><thead><tr><th>Item</th><th>Kategori</th><th>Harga jual</th></tr></thead><tbody>${needsVerify.map((r) => `<tr><td>${esc(r.item)}</td><td>${esc(r.kategori)}</td><td>${rupiah(r.harga_jual)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada harga yang perlu diverifikasi.</p>';
-  const rabHtml = rabRecapCache.length ? rabRecapCache.map((r) => `<div class="item"><strong>${esc(r.nama)}</strong>${r.catatan ? `<small>${esc(r.catatan)}</small>` : ''}<br><a href="${esc(r.link)}" target="_blank" rel="noopener noreferrer">Buka link</a></div>`).join('') : '<p class="hint">Belum ada RAB final tercatat.</p>';
-  return `<h3>Harga perlu diverifikasi (${needsVerify.length})</h3>${verifyHtml}
-    <h3>Rekap RAB final (${rabRecapCache.length})</h3><div class="list">${rabHtml}</div>`;
-}
-function renderDashboardDetailExpenses() {
-  if (!dashboardLoaded) return '<p class="hint">Memuat…</p>';
-  const rows = [...dashboardExpenseMonth].sort((a, b) => b.tanggal_realisasi.localeCompare(a.tanggal_realisasi));
-  const html = rows.length ? `<div class="table-wrap"><table><thead><tr><th>Tanggal</th><th>Nama</th><th>Jenis</th><th>Nominal</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${displayDateId(r.tanggal_realisasi)}</td><td>${esc(r.nama_marketing)}</td><td>${esc(r.jenis_pengeluaran)}</td><td style="text-align:right">${rupiah(r.nominal)}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Belum ada pengeluaran bulan ini.</p>';
-  return `<p class="hint">${rows.length} transaksi bulan ini.</p>${html}`;
-}
-function renderDashboardDetailTeam() {
-  const rows = [...allMembers].sort((a, b) => a.role === b.role ? a.display_name.localeCompare(b.display_name) : (a.role === 'admin' ? -1 : 1));
-  return rows.length ? `<div class="table-wrap"><table><thead><tr><th>Nama</th><th>Email</th><th>Role</th><th>Status</th></tr></thead><tbody>${rows.map((r) => `<tr><td>${esc(r.display_name)}</td><td>${esc(r.email)}</td><td>${r.role === 'admin' ? 'Admin' : 'Staf'}</td><td>${r.active === false ? '<span class="badge error">Nonaktif</span>' : 'Aktif'}</td></tr>`).join('')}</tbody></table></div>` : '<p class="hint">Tidak ada data akun.</p>';
-}
-function renderDashboardDetailPicRecap() {
-  const lama = offerRecapKorlapStats();
-  const baru = offerRecapBaruStats();
-  return `<h3>Klien Lama &middot; per PIC Lapangan (Korlap)</h3>${offerRecapTable(lama, 'Disetujui', 'Tidak lanjut')}
-    <h3>Klien Baru &middot; per staf pencatat</h3><p class="hint">Prospek baru belum punya PIC Korlap karena belum jadi client aktif &mdash; dikelompokkan berdasarkan staf yang mencatat kunjungan/progres-nya.</p>${offerRecapTable(baru, 'Deal', 'Gagal')}`;
-}
-const dashboardDetailRenderers = {
-  clients: renderDashboardDetailClients, visits: renderDashboardDetailVisits, repitch: renderDashboardDetailRepitch, monitoring: renderDashboardDetailMonitoring,
-  progress: renderDashboardDetailProgress, picrecap: renderDashboardDetailPicRecap, pipeline: renderDashboardDetailPipeline, database: renderDashboardDetailDatabase,
-  expenses: renderDashboardDetailExpenses, team: renderDashboardDetailTeam,
-};
-function showDashboardDetail(key) {
-  const renderer = dashboardDetailRenderers[key];
-  if (!renderer) return;
-  $('#dashboard-detail-title').textContent = dashboardDetailTitles[key] || '';
-  $('#dashboard-detail-body').innerHTML = renderer();
-  $('#dashboard-overview').hidden = true;
-  $('#dashboard-detail').hidden = false;
-}
+['#wpd-filter-marketing', '#wpd-filter-area', '#wpd-filter-status', '#wpd-filter-hasil', '#wpd-filter-period'].forEach((sel) => {
+  $(sel).addEventListener('change', renderWorkplanDashboard);
+});
+$('#wpd-reset-filter').addEventListener('click', () => {
+  ['#wpd-filter-marketing', '#wpd-filter-area', '#wpd-filter-status', '#wpd-filter-hasil', '#wpd-filter-period'].forEach((sel) => { $(sel).value = ''; });
+  wpdSelectedId = null;
+  renderWorkplanDashboard();
+});
+$('#wpd-table-body').addEventListener('click', (event) => {
+  const btn = event.target.closest('[data-wpd-detail]');
+  if (!btn) return;
+  wpdSelectedId = Number(btn.dataset.wpdDetail);
+  renderWorkplanDashboard();
+});

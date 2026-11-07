@@ -25,11 +25,11 @@
   </script>
   <script>if (location.hostname === 'marketing.raykerja.cloud' && location.protocol !== 'https:') location.replace('https://' + location.host + location.pathname + location.search + location.hash);</script>
   <link rel="stylesheet" href="style.css?v=20261023-3">
-  <link rel="stylesheet" href="theme-ray.css?v=20261012-10">
+  <link rel="stylesheet" href="theme-ray.css?v=20261107-1">
   <script src="config.js"></script>
   <script defer src="clients-preview.js?v=20261009-3"></script>
   <script defer src="vendor/read-excel-file-9.3.10.min.js"></script>
-  <script type="module" src="app.js?v=20261024-1"></script>
+  <script type="module" src="app.js?v=20261107-1"></script>
   <script defer src="pwa.js?v=20261010-1"></script>
 </head>
 <body>
@@ -85,24 +85,50 @@
       <nav id="database-tabs" class="tabs sub-tabs" aria-label="Isi database target dan harga" hidden><button type="button" class="active" data-db-view="target"><svg class="menu-icon"><use href="#icon-database"></use></svg><span class="label-full">1. Database Target</span><span class="label-short">Database Target</span></button><button type="button" data-db-view="seragam"><svg class="menu-icon"><use href="#icon-tag"></use></svg><span class="label-full">2. Harga Seragam</span><span class="label-short">Harga Seragam</span></button><button type="button" data-db-view="peralatan"><svg class="menu-icon"><use href="#icon-box"></use></svg><span class="label-full">3. Harga Peralatan</span><span class="label-short">Harga Peralatan</span></button></nav>
       <nav id="rab-tabs" class="tabs sub-tabs" aria-label="Tahapan Rekap RAB" hidden><button data-tab="rab-recap" class="active"><svg class="menu-icon"><use href="#icon-sheet"></use></svg><span class="label-full">1. Input RAB Fix</span><span class="label-short">Input RAB Fix</span></button><button data-tab="rab-recap-summary"><svg class="menu-icon"><use href="#icon-file"></use></svg><span class="label-full">2. Rekapitulasi RAB</span><span class="label-short">Rekapitulasi RAB</span></button><button data-tab="rab-recap-luar"><svg class="menu-icon"><use href="#icon-file"></use></svg><span class="label-full">3. Pembayaran Diluar RAB</span><span class="label-short">Luar RAB</span></button></nav>
       <section id="dashboard" class="panel" hidden>
-        <div id="dashboard-overview" class="dash-overview">
-          <div class="card"><div class="section-head"><div><p class="eyebrow">KHUSUS ADMIN</p><h2>Dashboard</h2></div><button id="dashboard-refresh" type="button">Muat ulang</button></div><p class="hint">Ringkasan seluruh menu. Klik kartu, batang, atau "Lihat detail" untuk rincian datanya. Sebagian angka ikut data yang sudah termuat dari menu lain; "Muat ulang" mengambil ulang angka Monitoring, Pengeluaran bulan ini, dan Database Harga.</p><p id="dashboard-status" class="hint" role="status"></p></div>
-          <div class="dash-hero" id="dash-hero"></div>
-          <div class="dash-grid">
-            <div class="card dash-card"><div class="section-head"><h2>Client Aktif</h2><button type="button" data-dash-detail="clients">Lihat detail &rarr;</button></div><div id="dash-clients-summary"></div></div>
-            <div class="card dash-card"><div class="section-head"><h2>Kunjungan 14 Hari Terakhir</h2><button type="button" data-dash-detail="visits">Lihat detail &rarr;</button></div><div id="dash-visits-trend"></div><div id="dash-visits-summary"></div></div>
-            <div class="card dash-card dash-card-wide"><div class="section-head"><h2>Progres Penawaran Ulang</h2><button type="button" data-dash-detail="repitch">Lihat detail &rarr;</button></div><div id="dash-repitch-summary"></div></div>
-            <div class="card dash-card dash-card-wide"><div class="section-head"><h2>Monitoring &amp; Tindaklanjut (Client Lama)</h2><button type="button" data-dash-detail="monitoring">Lihat detail &rarr;</button></div><div id="dash-monitoring-summary"></div></div>
-            <div class="card dash-card dash-card-wide"><div class="section-head"><h2>Progress (Client Baru)</h2><button type="button" data-dash-detail="progress">Lihat detail &rarr;</button></div><div id="dash-progress-summary"></div></div>
-            <div class="card dash-card dash-card-wide"><div class="section-head"><h2>Rekap Penawaran per PIC Lapangan</h2><button type="button" data-dash-detail="picrecap">Lihat detail &rarr;</button></div><div id="dash-picrecap-summary"></div></div>
-            <div class="card dash-card"><div class="section-head"><h2>Target &amp; Penawaran</h2><button type="button" data-dash-detail="pipeline">Lihat detail &rarr;</button></div><div id="dash-pipeline-summary"></div></div>
-            <div class="card dash-card"><div class="section-head"><h2>Database Harga &amp; Rekap RAB</h2><button type="button" data-dash-detail="database">Lihat detail &rarr;</button></div><div id="dash-database-summary"></div></div>
-            <div class="card dash-card dash-card-wide"><div class="section-head"><h2>Pengeluaran Bulan Ini</h2><button type="button" data-dash-detail="expenses">Lihat detail &rarr;</button></div><div id="dash-expense-summary"></div><div id="dash-expense-breakdown"></div></div>
-            <div class="card dash-card"><div class="section-head"><h2>Tim &amp; Akun</h2><button type="button" data-dash-detail="team">Lihat detail &rarr;</button></div><div id="dash-team-summary"></div></div>
+        <div class="wpd">
+          <div class="wpd-topbar card">
+            <div class="wpd-topbar-title"><span class="wpd-icon-circle wpd-icon-blue"><svg class="menu-icon"><use href="#icon-sheet"></use></svg></span>
+              <div><h1>Dashboard Workplan Marketing</h1><p>Rencana Kunjungan, Realisasi, dan Hasil</p></div>
+            </div>
+            <label class="wpd-period"><span class="wpd-period-icon"><svg class="menu-icon"><use href="#icon-sheet"></use></svg></span>
+              <span><small>Periode Kunjungan</small><select id="wpd-filter-period"></select></span>
+            </label>
           </div>
-        </div>
-        <div id="dashboard-detail" hidden>
-          <div class="card"><div class="section-head"><h2 id="dashboard-detail-title"></h2><button id="dashboard-detail-back" type="button">&larr; Kembali ke ringkasan</button></div><div id="dashboard-detail-body"></div></div>
+
+          <div class="wpd-filterbar card">
+            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-blue"><svg class="menu-icon"><use href="#icon-users"></use></svg></span><span><small>Marketing</small><select id="wpd-filter-marketing"></select></span></label>
+            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-navy"><svg class="menu-icon"><use href="#icon-pin"></use></svg></span><span><small>Area / Lokasi</small><select id="wpd-filter-area"></select></span></label>
+            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-amber"><svg class="menu-icon"><use href="#icon-activity"></use></svg></span><span><small>Status Kunjungan</small><select id="wpd-filter-status"><option value="">Semua Status</option><option value="Selesai">Selesai</option><option value="Terjadwal">Terjadwal</option></select></span></label>
+            <label class="wpd-filter"><span class="wpd-filter-icon wpd-icon-red"><svg class="menu-icon"><use href="#icon-tag"></use></svg></span><span><small>Hasil Kunjungan</small><select id="wpd-filter-hasil"><option value="">Semua Hasil</option><option value="Positif">Positif</option><option value="Proses">Proses Lanjut</option><option value="Tidak Lanjut">Tidak Lanjut</option></select></span></label>
+            <button id="wpd-reset-filter" class="primary wpd-reset" type="button"><svg class="menu-icon"><use href="#icon-close"></use></svg> Reset Filter</button>
+          </div>
+
+          <div class="wpd-stats">
+            <div class="wpd-stat wpd-stat-blue"><svg class="menu-icon"><use href="#icon-sheet"></use></svg><div><strong id="wpd-stat-total">0</strong><small>Total Workplan</small></div></div>
+            <div class="wpd-stat wpd-stat-green"><svg class="menu-icon"><use href="#icon-check"></use></svg><div><strong id="wpd-stat-selesai">0</strong><small>Kunjungan Selesai</small></div></div>
+            <div class="wpd-stat wpd-stat-amber"><svg class="menu-icon"><use href="#icon-activity"></use></svg><div><strong id="wpd-stat-terjadwal">0</strong><small>Terjadwal</small></div></div>
+            <div class="wpd-stat wpd-stat-lavender"><svg class="menu-icon"><use href="#icon-check"></use></svg><div><strong id="wpd-stat-positif">0</strong><small>Hasil Positif</small></div></div>
+            <div class="wpd-stat wpd-stat-purple"><svg class="menu-icon"><use href="#icon-file"></use></svg><div><strong id="wpd-stat-proses">0</strong><small>Proses Lanjut</small></div></div>
+            <div class="wpd-stat wpd-stat-red"><svg class="menu-icon"><use href="#icon-close"></use></svg><div><strong id="wpd-stat-tidak">0</strong><small>Tidak Lanjut</small></div></div>
+          </div>
+
+          <div class="wpd-main">
+            <div class="card wpd-table-card">
+              <div class="wpd-card-head"><svg class="menu-icon"><use href="#icon-sheet"></use></svg><h2>Daftar Workplan &amp; Laporan Kunjungan</h2></div>
+              <p id="wpd-table-note" class="hint"></p>
+              <div class="table-wrap"><table><thead><tr><th>No</th><th>Tanggal</th><th>Lokasi / Instansi</th><th>Area</th><th>Marketing</th><th>Status</th><th>Hasil</th><th>Aksi</th></tr></thead><tbody id="wpd-table-body"></tbody></table></div>
+            </div>
+            <div class="wpd-side">
+              <div class="card wpd-rekap-card">
+                <div class="wpd-card-head"><svg class="menu-icon"><use href="#icon-users"></use></svg><h2>Rekap per Marketing</h2></div>
+                <div class="table-wrap"><table><thead><tr><th>Marketing</th><th>Workplan</th><th>Selesai</th><th>Terjadwal</th><th>Hasil Positif</th><th>Proses</th></tr></thead><tbody id="wpd-rekap-body"></tbody></table></div>
+              </div>
+              <div class="card wpd-detail-card">
+                <div class="wpd-card-head"><svg class="menu-icon"><use href="#icon-file"></use></svg><h2>Detail Kunjungan</h2></div>
+                <div id="wpd-detail-body" class="wpd-detail-body"><p class="hint">Klik ikon mata pada salah satu baris untuk melihat detail kunjungan.</p></div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
       <section id="visits" class="panel">

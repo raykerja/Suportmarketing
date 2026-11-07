@@ -1,3 +1,9 @@
+VERSION: 0.9.45 (Dashboard diganti total: Dashboard Workplan Marketing)
+DATE: 2026-11-07
+
+CHANGED: Menu "Dashboard" (khusus admin) diganti total dari 9 kartu ringkasan operasional (0.9.43/0.9.44 dkk) menjadi **Dashboard Workplan Marketing** sesuai mockup gambar pemilik ("PT Ray Mitra Perkasa Marketing Dashboard.png"): title bar + Periode Kunjungan, 4 filter (Marketing/Area/Status Kunjungan/Hasil Kunjungan) + Reset Filter, 6 kartu statistik, tabel "Daftar Workplan & Laporan Kunjungan", panel "Rekap per Marketing", panel "Detail Kunjungan" (klik ikon mata per baris).
+NOTES: Murni frontend (`index.html` + `app.js` + `theme-ray.css`), tidak ada migrasi/Edge Function. Data tabel **statis** (bukan dari Supabase) — 117 baris digabung dari 4 dari 6 file workplan marketing staf di `AREA MARKETING` (Denis, Asmono, Ihsan, Rendi; Dodik & Moel tidak ikut karena file mereka bukan jadwal kunjungan bertanggal). Status Selesai/Terjadwal dihitung otomatis dari tanggal hari ini; Hasil Kunjungan seragam "-" karena sumber asli belum mencatat hasil sungguhan. 9 kartu Dashboard lama dihapus seluruhnya (bukan dipindah). Diuji lewat pratinjau standalone (screenshot desktop & HP, 2 bug CSS ditemukan & diperbaiki — span ikon filter melebar, overflow horizontal di HP); belum dicoba di situs aktif dengan login admin sungguhan.
+
 VERSION: 0.9.44 (Fix: Rekap Penawaran Klien Baru salah hitung PIC)
 DATE: 2026-10-30
 
