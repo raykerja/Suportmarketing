@@ -1,3 +1,9 @@
+VERSION: 0.9.55 (Fix: dropdown Hasil masih kena aturan CSS global #workspace select)
+DATE: 2026-11-07
+
+FIXED: Perbaikan 0.9.54 ternyata belum cukup di situs aktif — pemilik kirim screenshot ("Terlalu lebar.png") menunjukkan kotak dropdown Hasil masih lebar & tinggi (~54px), bikin jarak antar baris tetap jauh. Akar masalahnya: ada aturan CSS `#workspace select { width:100%; height:54px; min-height:54px; }` (dipakai form-form lain di situs ini) yang pakai ID selector — spesifisitasnya MENGALAHKAN class biasa `.wpd-hasil-select` yang saya tulis di 0.9.51-0.9.54, jadi override saya (width:108px, height:22px) tidak pernah benar-benar jalan di situs produksi (lolos di pengujian saya karena pratinjau standalone tidak membungkus elemen di dalam `#workspace`, jadi aturan global itu tidak ikut aktif di sana). Sekarang semua aturan `.wpd-hasil-select` diberi prefix `#dashboard` supaya spesifisitasnya menang.
+NOTES: Murni CSS (`theme-ray.css`). Pratinjau pengujian diperbaiki juga (sekarang membungkus section Dashboard di dalam `#workspace` seperti situs asli) supaya bug serupa ketahuan sebelum dikirim, bukan sesudah. Dicek ulang: kotak Hasil sekarang 108px x 22px, tinggi baris ~36px. Belum dicoba di situs aktif dengan login admin sungguhan.
+
 VERSION: 0.9.54 (Dashboard Workplan: tabel dipadatkan sesuai mockup)
 DATE: 2026-11-07
 

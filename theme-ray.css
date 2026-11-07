@@ -380,18 +380,21 @@ th { color: var(--ray-muted); background: #f7faff; }
 .wpd-badge-proses { background: #e8f0fb; color: var(--ray-blue); }
 .wpd-badge-bad { background: #fbdede; color: #b73729; }
 .wpd-rekap-card tr.wpd-row-total { background: #fdf3da; font-weight: 800; }
-.wpd-hasil-select {
+/* #dashboard (bukan cuma .wpd-hasil-select) sengaja dipakai di tiap rule supaya spesifisitasnya
+   mengalahkan "#workspace select" (width:100%; height/min-height:54px) punya form lain di situs ini
+   -- tanpa ini, kotak Hasil ikut melebar & meninggi mengikuti aturan global itu. */
+#dashboard .wpd-hasil-select {
   appearance: none; -webkit-appearance: none; border: 1px solid var(--ray-line); border-radius: 7px; background-color: #f8fafc; color: var(--ray-navy);
   padding: 2px 18px 2px 6px; font-size: 11px; font-weight: 700; cursor: pointer; width: 108px; max-width: 100%; height: 22px; min-height: 22px; line-height: 1;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6' stroke='%235b6b80' stroke-width='2.4' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 4px center; background-size: 11px;
 }
-.wpd-hasil-select:hover { border-color: var(--ray-blue-mid); }
-.wpd-hasil-select:focus { outline: none; border-color: var(--ray-blue); box-shadow: 0 0 0 2px rgba(10,79,166,.15); }
-.wpd-hasil-select:disabled { opacity: .6; cursor: wait; }
-.wpd-hasil-select.wpd-hasil-positif { background: #e3f6ea; border-color: #b9e6c9; color: #178a4c; }
-.wpd-hasil-select.wpd-hasil-proses { background: #e8f0fb; border-color: #c3d8f7; color: var(--ray-blue); }
-.wpd-hasil-select.wpd-hasil-bad { background: #fbdede; border-color: #f3bcbc; color: #b73729; }
+#dashboard .wpd-hasil-select:hover { border-color: var(--ray-blue-mid); }
+#dashboard .wpd-hasil-select:focus { outline: none; border-color: var(--ray-blue); box-shadow: 0 0 0 2px rgba(10,79,166,.15); }
+#dashboard .wpd-hasil-select:disabled { opacity: .6; cursor: wait; }
+#dashboard .wpd-hasil-select.wpd-hasil-positif { background: #e3f6ea; border-color: #b9e6c9; color: #178a4c; }
+#dashboard .wpd-hasil-select.wpd-hasil-proses { background: #e8f0fb; border-color: #c3d8f7; color: var(--ray-blue); }
+#dashboard .wpd-hasil-select.wpd-hasil-bad { background: #fbdede; border-color: #f3bcbc; color: #b73729; }
 .wpd-detail-list { display: grid; gap: 10px; margin: 0; }
 .wpd-detail-list > div { display: grid; grid-template-columns: 130px minmax(0, 1fr); gap: 10px; font-size: 13px; align-items: baseline; }
 .wpd-detail-list dt { color: var(--ray-muted); margin: 0; }
