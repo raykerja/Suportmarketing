@@ -361,7 +361,10 @@ th { color: var(--ray-muted); background: #f7faff; }
 .wpd-stat-red { background: #fadadd; color: #a3263a; }
 
 .wpd-main { display: grid; grid-template-columns: minmax(0, 1.9fr) minmax(0, 1fr); gap: 16px; align-items: start; }
-.wpd-side { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; }
+.wpd-side {
+  display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-content: start;
+  position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto;
+}
 .wpd-table-card, .wpd-rekap-card, .wpd-detail-card { min-width: 0; }
 .wpd-card-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; color: var(--ray-navy); }
 .wpd-card-head svg { width: 18px; height: 18px; color: var(--ray-blue); }
@@ -386,6 +389,9 @@ th { color: var(--ray-muted); background: #f7faff; }
 @media (max-width: 1000px) {
   .wpd-main { grid-template-columns: minmax(0, 1fr); }
   .wpd-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  /* Kolom kanan (Rekap + Detail) cuma "mengambang" saat layout 2 kolom; di layar sempit tabel
+     Daftar Workplan sudah sendirian paling atas, jadi kolom kanan dibiarkan mengalir normal. */
+  .wpd-side { position: static; max-height: none; overflow-y: visible; }
 }
 @media (max-width: 760px) {
   .wpd-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }

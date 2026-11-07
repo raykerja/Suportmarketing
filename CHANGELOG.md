@@ -1,3 +1,9 @@
+VERSION: 0.9.50 (Dashboard Workplan: kolom kanan mengambang saat scroll)
+DATE: 2026-11-07
+
+CHANGED: Tabel "Daftar Workplan & Laporan Kunjungan" (117 baris) jauh lebih panjang dari kolom kanan ("Rekap per Marketing" + "Detail Kunjungan") — kalau klik ikon mata pada baris yang jauh di bawah, harus scroll balik ke atas untuk lihat hasilnya di panel Detail. Sekarang kolom kanan "mengambang" (`position: sticky`, menempel 16px dari atas layar) selama scroll di layar lebar, jadi Detail Kunjungan langsung kelihatan update di tempat tanpa perlu scroll ke atas. Di layar sempit (≤1000px, tabel & kolom kanan sudah ditumpuk 1 kolom) perilaku dikembalikan normal (tidak mengambang).
+NOTES: Murni CSS (`theme-ray.css`, kelas `.wpd-side`). Dicek lewat pratinjau: scroll dalam ke tabel lalu klik ikon mata baris yang masih terlihat (bukan baris pertama) — `window.scrollY` tidak berubah setelah klik, panel Detail update di tempat. Kolom kanan dibatasi tinggi maksimum layar + bisa scroll sendiri kalau isinya lebih tinggi dari layar pendek. Belum dicoba di situs aktif dengan login admin sungguhan.
+
 VERSION: 0.9.49 (Dashboard Workplan: disambungkan ke data Kunjungan Marketing sungguhan)
 DATE: 2026-11-07
 
