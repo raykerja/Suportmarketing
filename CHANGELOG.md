@@ -1,3 +1,9 @@
+VERSION: 0.9.46 (Dashboard Workplan: sembunyikan hero/pencarian AI/menu utama)
+DATE: 2026-11-07
+
+CHANGED: Saat tab **Dashboard** (khusus admin) aktif, bagian hero biru "Aktivitas Marketing & Klien", kotak "Asisten Marketing" (cari dengan AI), dan baris menu utama (Client Aktif, Client Baru, Target & Penawaran, dst) kini otomatis disembunyikan — sebelumnya tetap tampil di atas Dashboard Workplan Marketing (0.9.45), menumpuk dengan title bar Dashboard sendiri. Ketiganya muncul kembali normal begitu pindah ke menu lain, di desktop maupun HP.
+NOTES: Murni frontend (`app.js`, fungsi `activateTab`), tidak ada migrasi/Edge Function. Belum dicoba di situs aktif dengan login admin sungguhan.
+
 VERSION: 0.9.45 (Dashboard diganti total: Dashboard Workplan Marketing)
 DATE: 2026-11-07
 

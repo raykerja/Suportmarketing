@@ -185,7 +185,8 @@ function showMobileHome() {
 function activateTab(tab, record = true) {
   if (!$('#' + tab)?.classList.contains('panel') || (['dashboard', 'offer-recap', 'rab-recap-luar'].includes(tab) && !isAdmin())) tab = 'visits';
   $('#mobile-menu-home').classList.remove('active');
-  if (isMobileViewport()) { $('.hero').hidden = true; $('.ai-search-card').hidden = true; }
+  if (tab === 'dashboard') { $('.hero').hidden = true; $('.ai-search-card').hidden = true; $('.tabs-main').hidden = true; }
+  else { $('.tabs-main').hidden = false; if (isMobileViewport()) { $('.hero').hidden = true; $('.ai-search-card').hidden = true; } else { $('.hero').hidden = false; $('.ai-search-card').hidden = false; } }
   const current = document.querySelector('.panel:not([hidden])')?.id;
   if (current === 'settings' && tab !== 'settings') {
     if (staffImportBusy && currentUser) { status('#staff-import-status', 'Tunggu sampai pembuatan akun selesai sebelum pindah menu.', true); return; }
