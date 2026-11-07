@@ -1,3 +1,9 @@
+VERSION: 0.9.47 (Dashboard Workplan: kotak penanda dropdown filter)
+DATE: 2026-11-07
+
+CHANGED: 4 filter Dashboard Workplan Marketing (Marketing, Area/Lokasi, Status Kunjungan, Hasil Kunjungan) sebelumnya tidak ada kotak/border sama sekali (0.9.45/0.9.46), jadi rancu apakah bisa diklik atau tidak (ditemukan pemilik dari screenshot "Kartu.png"). Sekarang tiap filter punya kotak dengan border + latar abu-abu muda, berubah biru saat disorot/fokus, dan tanda panah bawah di kanan sebagai penanda dropdown — "Periode Kunjungan" di kanan atas juga dapat tanda panah yang sama.
+NOTES: Murni CSS (`theme-ray.css`), tidak ada perubahan HTML/JS/data. Dicek lewat pratinjau standalone (desktop & HP), tidak ada overflow baru. Belum dicoba di situs aktif dengan login admin sungguhan.
+
 VERSION: 0.9.46 (Dashboard Workplan: sembunyikan hero/pencarian AI/menu utama)
 DATE: 2026-11-07
 

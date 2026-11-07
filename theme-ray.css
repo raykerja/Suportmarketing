@@ -316,8 +316,14 @@ th { color: var(--ray-muted); background: #f7faff; }
 .wpd-period select { appearance: none; -webkit-appearance: none; border: 0; background: none; padding: 0; margin-top: 2px; font-weight: 800; color: var(--ray-navy); font-size: 14px; }
 .wpd-period select:focus { outline: none; }
 
-.wpd-filterbar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; padding: 16px 22px; }
-.wpd-filter { display: flex; align-items: center; gap: 10px; flex: 1 1 200px; min-width: 170px; }
+.wpd-filterbar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 16px 22px; }
+.wpd-filter {
+  display: flex; align-items: center; gap: 10px; flex: 1 1 200px; min-width: 170px;
+  border: 1px solid var(--ray-line); border-radius: 12px; padding: 8px 14px 8px 10px; background: #f8fafc; cursor: pointer;
+  transition: border-color .15s ease, background-color .15s ease, box-shadow .15s ease;
+}
+.wpd-filter:hover { border-color: var(--ray-blue-mid); background: #fff; }
+.wpd-filter:focus-within { border-color: var(--ray-blue); background: #fff; box-shadow: 0 0 0 3px rgba(10,79,166,.12); }
 .wpd-filter-icon { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 50%; flex: none; }
 .wpd-filter-icon svg { width: 15px; height: 15px; }
 .wpd-icon-navy { background: #e3e9f3; color: var(--ray-navy); }
@@ -325,10 +331,19 @@ th { color: var(--ray-muted); background: #f7faff; }
 .wpd-icon-red { background: #fbdede; color: #b73729; }
 .wpd-filter > span:not(.wpd-filter-icon) { display: block; min-width: 0; flex: 1; }
 .wpd-filter small { display: block; color: var(--ray-muted); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; }
-.wpd-filter select { appearance: none; -webkit-appearance: none; border: 0; padding: 2px 0; margin-top: 1px; font-weight: 700; color: var(--ray-navy); font-size: 14px; width: 100%; background: none; }
+.wpd-filter select { appearance: none; -webkit-appearance: none; border: 0; padding: 2px 0; margin-top: 1px; font-weight: 700; color: var(--ray-navy); font-size: 14px; width: 100%; background: none; cursor: pointer; }
 .wpd-filter select:focus { outline: none; }
+.wpd-filter::after {
+  content: ''; flex: none; width: 7px; height: 7px; margin-left: 2px; align-self: center;
+  border-right: 2px solid var(--ray-muted); border-bottom: 2px solid var(--ray-muted); transform: rotate(45deg); translate: 0 -2px;
+}
 .wpd-reset { flex: none; display: inline-flex; align-items: center; gap: 6px; }
 .wpd-reset svg { width: 14px; height: 14px; }
+.wpd-period { position: relative; }
+.wpd-period::after {
+  content: ''; position: absolute; right: 16px; top: 50%; width: 7px; height: 7px; pointer-events: none;
+  border-right: 2px solid var(--ray-blue); border-bottom: 2px solid var(--ray-blue); transform: translateY(-65%) rotate(45deg);
+}
 
 .wpd-stats { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px; }
 .wpd-stat { border-radius: 14px; padding: 16px; display: flex; align-items: center; gap: 12px; }
