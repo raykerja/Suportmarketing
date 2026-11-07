@@ -1,3 +1,9 @@
+VERSION: 0.9.57 (Dashboard Workplan: tambah marketing baru "Mashudi")
+DATE: 2026-11-07
+
+ADDED: 26 rencana kunjungan marketing baru **Mashudi** (area Kab. Klaten, Kota Surakarta/Solo, Kab. Karanganyar, Kab. Wonogiri) ditambahkan ke tabel `marketing_workplan` — total jadi 159 baris (dari 133). Sumber: "Workplan Marketing Klaten-Wonogiri-Karanganyar-Solo 9-13 Nov 2026 (MASHUDI).xlsx" (sheet "Workplan Harian") di folder AREA MARKETING: 6 lokasi 23 Nov (Klaten), 4 lokasi 24 Nov (Solo), 6 lokasi 25 Nov (Solo), 6 lokasi 26 Nov (Karanganyar), 4 lokasi 27 Nov (Wonogiri). Sheet "Backup Lokasi" (opsi cadangan tanpa tanggal pasti) tidak ikut dimasukkan.
+NOTES: Migrasi `20261107_marketing_workplan_mashudi.sql` sudah diterapkan & diverifikasi di produksi (159 baris total, 26 baris Mashudi sesuai). **Catatan penting**: ditemukan nama file dan sheet "Detail Paket" di berkas sumber yang sama menyebut tanggal 9-13 Nov 2026 (bukan 23-27 Nov) untuk lokasi/urutan yang identik persis — selisih tepat 14 hari, kemungkinan bug salin-tempel template. Pemilik dikonfirmasi dan memilih tetap pakai tanggal 23-27 Nov 2026 seperti tertulis di sheet "Workplan Harian". Tidak ada perubahan kode, cukup migrasi data (lihat 0.9.56).
+
 VERSION: 0.9.56 (Dashboard Workplan: tambah marketing baru "Bayoe")
 DATE: 2026-11-07
 
