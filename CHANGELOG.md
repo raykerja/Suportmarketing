@@ -1,3 +1,9 @@
+VERSION: 0.9.56 (Dashboard Workplan: tambah marketing baru "Bayoe")
+DATE: 2026-11-07
+
+ADDED: 16 rencana kunjungan marketing baru **Bayoe** (area Kab. Semarang / Ungaran-Ambarawa) ditambahkan ke tabel `marketing_workplan` — total jadi 133 baris (dari 117). Sumber: "WhatsApp Image 2026-11-07 at 14.46.14 (BAYOE).jpeg" di folder AREA MARKETING. 19 baris KUA Kecamatan (Kementerian Agama) dan 1 baris "Cabang Dinas Pendidikan Wilayah I Jateng" di sumbernya **belum ada tanggal kunjungan**, jadi tidak ikut dimasukkan sesuai arahan pemilik — baru ditambahkan kalau tanggalnya sudah ditentukan. 16 baris yang dimasukkan diurutkan per tanggal (sumber aslinya urutan tanggalnya acak): 5 baris 11 Nov, 3 baris 12 Nov, 4 baris 13 Nov, 4 baris 16 Nov.
+NOTES: Migrasi `20261107_marketing_workplan_bayoe.sql` sudah diterapkan & diverifikasi di produksi (133 baris total, 16 baris Bayoe sesuai). **Tidak ada perubahan kode** (`app.js`/`index.html`/`theme-ray.css`) — berkat migrasi 0.9.53 yang memindahkan data workplan ke Supabase, menambah marketing baru sekarang cukup migrasi data, Dashboard otomatis membacanya di pemuatan berikutnya tanpa perlu deploy ulang.
+
 VERSION: 0.9.55 (Fix: dropdown Hasil masih kena aturan CSS global #workspace select)
 DATE: 2026-11-07
 
