@@ -968,6 +968,7 @@ async function loadVisits() {
   const recentProcessing = visitCache.some((v) => v.sheet_status === 'processing' && Date.now() - new Date(v.updated_at).getTime() < 180000);
   if (recentProcessing && !visitPollTimer) visitPollTimer = setInterval(loadVisits, 5000);
   if (!recentProcessing && visitPollTimer) { clearInterval(visitPollTimer); visitPollTimer = null; }
+  if (isAdmin()) renderWorkplanDashboard();
 }
 $('#refresh-visits').addEventListener('click', loadVisits);
 $('#refresh-activity-sales').addEventListener('click', loadVisits);
@@ -1443,6 +1444,7 @@ async function loadProgress() {
   if (failed) { $('#progress-due').textContent = 'Progres belum dapat dibaca: ' + failed.error.message; return; }
   progressVisits = results[0].data || []; progressCache = results[1].data || []; progressEvents = results[2].data || [];
   renderProgress();
+  if (isAdmin()) renderWorkplanDashboard();
 }
 $('#refresh-progress').addEventListener('click', loadProgress);
 $('#visit-reminder-banner').addEventListener('click', () => document.querySelector('[data-tab="progress"]').click());
@@ -2737,19 +2739,15 @@ const WORKPLAN_RAW = [
 ];
 
 
-const WORKPLAN_DATA = WORKPLAN_RAW.map(([tanggal, lokasi, area, marketing], i) => ({
-  id: i + 1, tanggal, lokasi, area, marketing,
-  status: tanggal < localToday() ? 'Selesai' : 'Terjadwal',
-  hasil: '',
-}));
+const WORKPLAN_BASE = WORKPLAN_RAW.map(([tanggal, lokasi, area, marketing], i) => ({ id: i + 1, tanggal, lokasi, area, marketing }));
 let wpdSelectedId = null;
 let wpdFiltersReady = false;
 function wpdFillSelect(sel, options, allLabel) {
   $(sel).innerHTML = [`<option value="">${esc(allLabel)}</option>`, ...options.map((o) => `<option value="${esc(o)}">${esc(o)}</option>`)].join('');
 }
 function wpdInitFilters() {
-  const marketing = [...new Set(WORKPLAN_DATA.map((r) => r.marketing))].sort((a, b) => a.localeCompare(b));
-  const area = [...new Set(WORKPLAN_DATA.map((r) => r.area))].sort((a, b) => a.localeCompare(b));
+  const marketing = [...new Set(WORKPLAN_BASE.map((r) => r.marketing))].sort((a, b) => a.localeCompare(b));
+  const area = [...new Set(WORKPLAN_BASE.map((r) => r.area))].sort((a, b) => a.localeCompare(b));
   wpdFillSelect('#wpd-filter-marketing', marketing, 'Semua Marketing');
   wpdFillSelect('#wpd-filter-area', area, 'Semua Area');
   const periods = [
@@ -2763,13 +2761,56 @@ function wpdInitFilters() {
 function wpdShortDate(iso) {
   return new Date(`${iso}T12:00:00`).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
 }
-function wpdFiltered() {
+// Pencocokan ke laporan nyata (Kunjungan Marketing / Client Baru) — dicocokkan lewat nama
+// lokasi + nama marketing yang dinormalisasi (huruf besar, tanda baca dibuang), karena data
+// workplan dan laporan ditulis bebas oleh staf (tidak ada ID yang menghubungkan keduanya).
+function wpdNorm(s) {
+  return String(s || '').toUpperCase().replace(/[^A-Z0-9]+/g, ' ').trim().replace(/\s+/g, ' ');
+}
+const WPD_PROGRESS_HASIL = { deal: 'Positif', gagal: 'Tidak Lanjut', kunjungan: 'Proses', proposal: 'Proses', penawaran: 'Proses', follow_up: 'Proses' };
+const WPD_STATUS_MARKETING_HASIL = {
+  'DEAL': 'Positif',
+  'NEGOSIASI': 'Proses', 'PENAWARAN DISAMPAIKAN': 'Proses', 'PROPOSAL DISAMPAIKAN': 'Proses',
+  'PERLU FOLLOW UP': 'Proses', 'PROSPEK BARU': 'Proses',
+};
+function wpdHasilFromVisit(visit) {
+  const progress = progressCache.find((p) => p.visit_id === visit.id);
+  if (progress && WPD_PROGRESS_HASIL[progress.stage]) return WPD_PROGRESS_HASIL[progress.stage];
+  const sm = wpdNorm(visit.data?.status_marketing);
+  if (sm && WPD_STATUS_MARKETING_HASIL[sm]) return WPD_STATUS_MARKETING_HASIL[sm];
+  return '';
+}
+function wpdLiveIndex() {
+  const idx = new Map();
+  const source = progressVisits.length ? progressVisits : visitCache;
+  for (const v of source) {
+    const lokasiNorm = wpdNorm(v.data?.nama_perusahaan);
+    if (!lokasiNorm) continue;
+    const member = allMembers.find((m) => m.user_id === v.owner_id);
+    const marketingTokens = wpdNorm(member?.display_name).split(' ').filter(Boolean);
+    if (!idx.has(lokasiNorm)) idx.set(lokasiNorm, []);
+    idx.get(lokasiNorm).push({ visit: v, marketingTokens });
+  }
+  return idx;
+}
+function wpdComputeRow(base, liveIndex) {
+  const matches = liveIndex.get(wpdNorm(base.lokasi)) || [];
+  const marketingNorm = wpdNorm(base.marketing);
+  const hit = matches.find((m) => m.marketingTokens.includes(marketingNorm));
+  if (hit) return { ...base, status: 'Selesai', hasil: wpdHasilFromVisit(hit.visit), realVisit: hit.visit };
+  return { ...base, status: 'Terjadwal', hasil: '', realVisit: null };
+}
+function wpdFullLiveData() {
+  const liveIndex = wpdLiveIndex();
+  return WORKPLAN_BASE.map((base) => wpdComputeRow(base, liveIndex));
+}
+function wpdFiltered(allRows) {
   const marketing = $('#wpd-filter-marketing').value;
   const area = $('#wpd-filter-area').value;
   const status = $('#wpd-filter-status').value;
   const hasil = $('#wpd-filter-hasil').value;
   const period = $('#wpd-filter-period').value;
-  return WORKPLAN_DATA.filter((r) => {
+  return allRows.filter((r) => {
     if (marketing && r.marketing !== marketing) return false;
     if (area && r.area !== area) return false;
     if (status && r.status !== status) return false;
@@ -2787,8 +2828,9 @@ function wpdHasilBadge(hasil) {
 function wpdStatusBadge(status) {
   return status === 'Selesai' ? '<span class="badge wpd-badge-good">Selesai</span>' : '<span class="badge wpd-badge-warn">Terjadwal</span>';
 }
-function wpdRenderTable(rows) {
-  $('#wpd-table-note').textContent = `Menampilkan ${rows.length} dari ${WORKPLAN_DATA.length} rencana kunjungan (data workplan asli, diperbarui 7 Nov 2026).`;
+function wpdRenderTable(rows, allRows) {
+  const matched = allRows.filter((r) => r.realVisit).length;
+  $('#wpd-table-note').textContent = `Menampilkan ${rows.length} dari ${WORKPLAN_BASE.length} rencana kunjungan — ${matched} sudah ada laporan Kunjungan Marketing yang cocok (dicek otomatis dari menu Client Baru).`;
   $('#wpd-table-body').innerHTML = rows.length ? rows.map((r, i) => `<tr${r.id === wpdSelectedId ? ' class="wpd-row-active"' : ''}>
     <td>${i + 1}</td><td>${esc(wpdShortDate(r.tanggal))}</td><td>${esc(r.lokasi)}</td><td>${esc(r.area)}</td><td>${esc(r.marketing)}</td>
     <td>${wpdStatusBadge(r.status)}</td><td>${wpdHasilBadge(r.hasil)}</td>
@@ -2829,13 +2871,20 @@ function wpdRenderRekap(rows) {
 }
 function wpdRenderDetail(row) {
   if (!row) { $('#wpd-detail-body').innerHTML = '<p class="hint">Klik ikon mata pada salah satu baris untuk melihat detail kunjungan.</p>'; return; }
-  const catatan = row.status === 'Selesai'
-    ? 'Kunjungan sudah lewat tanggalnya; hasil kunjungan belum dicatat di sumber data workplan.'
-    : 'Belum berlangsung &mdash; jadwal kunjungan rencana sesuai workplan marketing.';
+  let catatan;
+  if (row.realVisit) {
+    const v = row.realVisit;
+    const tglRealisasi = v.data?.tanggal_realisasi_kunjungan || String(v.created_at || '').slice(0, 10);
+    const sm = v.data?.status_marketing;
+    const note = v.data?.catatan;
+    catatan = `Laporan masuk lewat menu Kunjungan Marketing (Client Baru), realisasi ${esc(wpdShortDate(tglRealisasi))}${sm ? ` &middot; status marketing: <strong>${esc(sm)}</strong>` : ''}.${note ? `<br>${esc(note)}` : ''}`;
+  } else {
+    catatan = 'Belum ada laporan Kunjungan Marketing yang cocok untuk lokasi ini (dicek otomatis dari nama lokasi + nama marketing).';
+  }
   $('#wpd-detail-body').innerHTML = `
     <dl class="wpd-detail-list">
       <div><dt>Lokasi / Instansi</dt><dd>${esc(row.lokasi)}</dd></div>
-      <div><dt>Tanggal Kunjungan</dt><dd>${esc(wpdShortDate(row.tanggal))}</dd></div>
+      <div><dt>Tanggal Rencana</dt><dd>${esc(wpdShortDate(row.tanggal))}</dd></div>
       <div><dt>Area</dt><dd>${esc(row.area)}</dd></div>
       <div><dt>Marketing</dt><dd>${esc(row.marketing)}</dd></div>
       <div><dt>Status</dt><dd>${wpdStatusBadge(row.status)}</dd></div>
@@ -2845,9 +2894,10 @@ function wpdRenderDetail(row) {
 }
 function renderWorkplanDashboard() {
   if (!wpdFiltersReady) { wpdInitFilters(); wpdFiltersReady = true; }
-  const rows = wpdFiltered();
+  const allRows = wpdFullLiveData();
+  const rows = wpdFiltered(allRows);
   wpdRenderStats(rows);
-  wpdRenderTable(rows);
+  wpdRenderTable(rows, allRows);
   wpdRenderRekap(rows);
   const stillVisible = rows.find((r) => r.id === wpdSelectedId);
   wpdRenderDetail(stillVisible || null);
