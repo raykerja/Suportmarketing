@@ -379,8 +379,8 @@ th { color: var(--ray-muted); background: #f7faff; }
 .wpd-badge-bad { background: #fbdede; color: #b73729; }
 .wpd-rekap-card tr.wpd-row-total { background: #fdf3da; font-weight: 800; }
 .wpd-hasil-select {
-  appearance: auto; border: 1px solid var(--ray-line); border-radius: 8px; background: #f8fafc; color: var(--ray-navy);
-  padding: 5px 8px; font-size: 12px; font-weight: 700; cursor: pointer; min-width: 128px;
+  appearance: auto; border: 1px solid var(--ray-line); border-radius: 7px; background: #f8fafc; color: var(--ray-navy);
+  padding: 3px 4px; font-size: 11px; font-weight: 700; cursor: pointer; width: 108px; max-width: 100%;
 }
 .wpd-hasil-select:hover { border-color: var(--ray-blue-mid); }
 .wpd-hasil-select:focus { outline: none; border-color: var(--ray-blue); box-shadow: 0 0 0 2px rgba(10,79,166,.15); }

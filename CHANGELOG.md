@@ -1,3 +1,9 @@
+VERSION: 0.9.52 (Dashboard Workplan: dropdown Hasil diperkecil)
+DATE: 2026-11-07
+
+CHANGED: Kotak dropdown Hasil (0.9.51) terlalu lebar (min-width 128px) sehingga kolom Lokasi/Instansi ikut terdesak melebar. Diperkecil jadi 108px + padding/font lebih ringkas — dicek semua pilihan ("Proses Lanjut", "Tidak Lanjut", "Positif", "(Otomatis)") tetap muat penuh tanpa terpotong.
+NOTES: Murni CSS (`theme-ray.css`, kelas `.wpd-hasil-select`). Belum dicoba di situs aktif dengan login admin sungguhan.
+
 VERSION: 0.9.51 (Dashboard Workplan: Hasil Kunjungan bisa dipilih manual)
 DATE: 2026-11-07
 
