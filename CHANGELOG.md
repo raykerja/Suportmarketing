@@ -1,3 +1,9 @@
+VERSION: 0.9.58 (Fix: Dashboard Workplan melebar penuh di monitor besar)
+DATE: 2026-11-07
+
+FIXED: Pemilik kirim screenshot kedua ("Terlalu Lebar 2.png") — bukan satu elemen lagi, tapi seluruh halaman Dashboard melebar penuh mengikuti lebar monitor. Akar masalahnya: `style.css` punya aturan `@media(min-width:761px){main{max-width:none}}` yang sengaja menghilangkan batas lebar `<main>` di layar besar (dipakai tab lain yang butuh tabel lebar), tapi ini ikut membuat seluruh Dashboard (title bar, filter, kartu statistik, tabel) merenggang jauh lebih lebar dari mockup di monitor besar (mis. 1920px).
+NOTES: Murni CSS — `.wpd` (pembungkus seluruh konten Dashboard) diberi `max-width:1440px; margin:0 auto` supaya tetap ringkas/terkumpul berapa pun lebar layarnya, independen dari aturan `main` global. Ketemu juga kelemahan pada pratinjau pengujian sendiri: ada override `main{max-width:1480px}` yang sengaja saya tambahkan "demi kenyamanan" di harness, yang justru menutupi perilaku asli situs (`max-width:none`) — override itu dihapus dari harness supaya pengujian berikutnya mencerminkan kondisi nyata. Dicek di 1920px/1680px/1000px, semua rapi.
+
 VERSION: 0.9.57 (Dashboard Workplan: tambah marketing baru "Mashudi")
 DATE: 2026-11-07
 

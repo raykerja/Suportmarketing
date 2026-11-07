@@ -300,7 +300,10 @@ th { color: var(--ray-muted); background: #f7faff; }
 }
 
 /* Dashboard Workplan Marketing */
-.wpd { display: grid; gap: 16px; }
+/* main{max-width:none} di style.css (layar >=761px) bikin seluruh halaman melebar penuh
+   mengikuti layar -- dibatasi lagi khusus di sini supaya Dashboard tetap ringkas/terkumpul
+   seperti mockup, berapa pun lebar monitornya. */
+.wpd { display: grid; gap: 16px; max-width: 1440px; margin: 0 auto; }
 .wpd-topbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 18px 22px; }
 .wpd-topbar-title { display: flex; align-items: center; gap: 14px; min-width: 0; }
 .wpd-topbar-title > div { min-width: 0; }
