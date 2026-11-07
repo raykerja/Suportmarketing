@@ -1,3 +1,9 @@
+VERSION: 0.9.51 (Dashboard Workplan: Hasil Kunjungan bisa dipilih manual)
+DATE: 2026-11-07
+
+ADDED: Kolom "Hasil" di tabel "Daftar Workplan & Laporan Kunjungan" sekarang dropdown — admin bisa pilih manual **Positif / Proses Lanjut / Tidak Lanjut / (Otomatis)** per baris, tidak cuma mengandalkan pencocokan otomatis ke laporan Kunjungan Marketing (0.9.49) yang kadang tidak ketemu (nama tidak cocok, atau memang belum ada laporannya). Pilihan manual langsung memengaruhi Status (jadi "Selesai"), statistik, Rekap per Marketing, dan panel Detail Kunjungan (ditandai "(dipilih manual)"). Pilih "(Otomatis)" untuk menghapus pilihan manual dan kembali ke nilai otomatis/kosong.
+NOTES: Tabel baru `marketing_workplan_hasil` (`workplan_id` int primary key, `hasil` text + check constraint, `updated_by`, `updated_at`) + fungsi `marketing_set_workplan_hasil(p_workplan_id, p_hasil)` (security definer, admin-only, `p_hasil` null = hapus baris) — migrasi `20261107_marketing_workplan_hasil.sql` sudah diterapkan & diverifikasi di produksi (tabel/RLS/policy/grant/fungsi sesuai, `anon` tidak dapat akses). RLS: `authenticated` hanya SELECT langsung (ditapis `marketing_is_admin()`), semua tulis lewat RPC. Frontend murni `app.js` (cache `workplanHasilCache` dimuat sekali saat Dashboard pertama dibuka) + `theme-ray.css` (`.wpd-hasil-select`, warna ikut nilai terpilih). Diuji lewat pratinjau dengan `client.rpc`/`client.from` tiruan — pilih/hapus hasil terkonfirmasi memanggil RPC dengan parameter benar dan UI (status, 6 kartu statistik, Rekap per Marketing, Detail Kunjungan) ikut update. **Belum dicoba lewat RPC sungguhan dengan login admin asli** (migrasi+grant sudah diverifikasi langsung di database, tapi alur klik-di-browser-sungguhan belum).
+
 VERSION: 0.9.50 (Dashboard Workplan: kolom kanan mengambang saat scroll)
 DATE: 2026-11-07
 

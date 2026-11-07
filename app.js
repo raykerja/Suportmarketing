@@ -2793,16 +2793,44 @@ function wpdLiveIndex() {
   }
   return idx;
 }
-function wpdComputeRow(base, liveIndex) {
+function wpdComputeRow(base, liveIndex, manualHasilMap) {
   const matches = liveIndex.get(wpdNorm(base.lokasi)) || [];
   const marketingNorm = wpdNorm(base.marketing);
   const hit = matches.find((m) => m.marketingTokens.includes(marketingNorm));
-  if (hit) return { ...base, status: 'Selesai', hasil: wpdHasilFromVisit(hit.visit), realVisit: hit.visit };
-  return { ...base, status: 'Terjadwal', hasil: '', realVisit: null };
+  const manualHasil = manualHasilMap.get(base.id);
+  if (manualHasil) return { ...base, status: 'Selesai', hasil: manualHasil, realVisit: hit ? hit.visit : null, manual: true };
+  if (hit) return { ...base, status: 'Selesai', hasil: wpdHasilFromVisit(hit.visit), realVisit: hit.visit, manual: false };
+  return { ...base, status: 'Terjadwal', hasil: '', realVisit: null, manual: false };
 }
 function wpdFullLiveData() {
   const liveIndex = wpdLiveIndex();
-  return WORKPLAN_BASE.map((base) => wpdComputeRow(base, liveIndex));
+  const manualHasilMap = new Map(workplanHasilCache.map((r) => [r.workplan_id, r.hasil]));
+  return WORKPLAN_BASE.map((base) => wpdComputeRow(base, liveIndex, manualHasilMap));
+}
+// Hasil Kunjungan manual (dropdown di tabel) — disimpan di tabel marketing_workplan_hasil lewat
+// RPC marketing_set_workplan_hasil, supaya tetap ada walau halaman di-refresh/dibuka admin lain.
+let workplanHasilCache = [];
+let workplanHasilLoaded = false;
+let workplanHasilLoading = false;
+async function loadWorkplanHasil() {
+  if (!client || !currentUser || !isAdmin() || workplanHasilLoading) return;
+  workplanHasilLoading = true;
+  const { data, error } = await client.from('marketing_workplan_hasil').select('*');
+  workplanHasilCache = error ? [] : (data || []);
+  workplanHasilLoaded = true;
+  workplanHasilLoading = false;
+  renderWorkplanDashboard();
+}
+async function wpdSaveHasil(workplanId, hasil, selectEl) {
+  selectEl.disabled = true;
+  const { error } = await client.rpc('marketing_set_workplan_hasil', { p_workplan_id: workplanId, p_hasil: hasil || null });
+  selectEl.disabled = false;
+  if (error) { alert('Gagal menyimpan Hasil Kunjungan: ' + error.message); renderWorkplanDashboard(); return; }
+  const existing = workplanHasilCache.find((r) => r.workplan_id === workplanId);
+  if (!hasil) { workplanHasilCache = workplanHasilCache.filter((r) => r.workplan_id !== workplanId); }
+  else if (existing) { existing.hasil = hasil; }
+  else { workplanHasilCache.push({ workplan_id: workplanId, hasil }); }
+  renderWorkplanDashboard();
 }
 function wpdFiltered(allRows) {
   const marketing = $('#wpd-filter-marketing').value;
@@ -2828,12 +2856,17 @@ function wpdHasilBadge(hasil) {
 function wpdStatusBadge(status) {
   return status === 'Selesai' ? '<span class="badge wpd-badge-good">Selesai</span>' : '<span class="badge wpd-badge-warn">Terjadwal</span>';
 }
+const WPD_HASIL_OPTIONS = [['', '(Otomatis)'], ['Positif', 'Positif'], ['Proses', 'Proses Lanjut'], ['Tidak Lanjut', 'Tidak Lanjut']];
+function wpdHasilSelect(row) {
+  const opts = WPD_HASIL_OPTIONS.map(([v, label]) => `<option value="${esc(v)}"${row.hasil === v ? ' selected' : ''}>${esc(label)}</option>`).join('');
+  return `<select class="wpd-hasil-select wpd-hasil-${row.hasil ? row.hasil.toLowerCase().replace(/\s+/g, '-').replace('tidak-lanjut', 'bad') : 'auto'}" data-wpd-hasil="${row.id}" aria-label="Hasil Kunjungan ${esc(row.lokasi)}">${opts}</select>`;
+}
 function wpdRenderTable(rows, allRows) {
   const matched = allRows.filter((r) => r.realVisit).length;
-  $('#wpd-table-note').textContent = `Menampilkan ${rows.length} dari ${WORKPLAN_BASE.length} rencana kunjungan — ${matched} sudah ada laporan Kunjungan Marketing yang cocok (dicek otomatis dari menu Client Baru).`;
+  $('#wpd-table-note').textContent = `Menampilkan ${rows.length} dari ${WORKPLAN_BASE.length} rencana kunjungan — ${matched} sudah ada laporan Kunjungan Marketing yang cocok (dicek otomatis dari menu Client Baru). Hasil Kunjungan bisa dipilih manual lewat dropdown di kolom Hasil.`;
   $('#wpd-table-body').innerHTML = rows.length ? rows.map((r, i) => `<tr${r.id === wpdSelectedId ? ' class="wpd-row-active"' : ''}>
     <td>${i + 1}</td><td>${esc(wpdShortDate(r.tanggal))}</td><td>${esc(r.lokasi)}</td><td>${esc(r.area)}</td><td>${esc(r.marketing)}</td>
-    <td>${wpdStatusBadge(r.status)}</td><td>${wpdHasilBadge(r.hasil)}</td>
+    <td>${wpdStatusBadge(r.status)}</td><td>${wpdHasilSelect(r)}</td>
     <td><button type="button" class="wpd-eye" data-wpd-detail="${r.id}" aria-label="Lihat detail kunjungan ${esc(r.lokasi)}">&#128065;</button></td>
   </tr>`).join('') : '<tr><td colspan="8" class="hint">Tidak ada workplan yang cocok dengan filter ini.</td></tr>';
 }
@@ -2888,12 +2921,13 @@ function wpdRenderDetail(row) {
       <div><dt>Area</dt><dd>${esc(row.area)}</dd></div>
       <div><dt>Marketing</dt><dd>${esc(row.marketing)}</dd></div>
       <div><dt>Status</dt><dd>${wpdStatusBadge(row.status)}</dd></div>
-      <div><dt>Hasil Kunjungan</dt><dd>${wpdHasilBadge(row.hasil)}</dd></div>
+      <div><dt>Hasil Kunjungan</dt><dd>${wpdHasilBadge(row.hasil)}${row.manual ? ' <small class="hint">(dipilih manual)</small>' : ''}</dd></div>
     </dl>
     <div class="wpd-detail-note"><strong>Catatan</strong><p>${catatan}</p></div>`;
 }
 function renderWorkplanDashboard() {
   if (!wpdFiltersReady) { wpdInitFilters(); wpdFiltersReady = true; }
+  if (!workplanHasilLoaded && !workplanHasilLoading) loadWorkplanHasil();
   const allRows = wpdFullLiveData();
   const rows = wpdFiltered(allRows);
   wpdRenderStats(rows);
@@ -2916,4 +2950,9 @@ $('#wpd-table-body').addEventListener('click', (event) => {
   if (!btn) return;
   wpdSelectedId = Number(btn.dataset.wpdDetail);
   renderWorkplanDashboard();
+});
+$('#wpd-table-body').addEventListener('change', (event) => {
+  const select = event.target.closest('[data-wpd-hasil]');
+  if (!select) return;
+  wpdSaveHasil(Number(select.dataset.wpdHasil), select.value, select);
 });
